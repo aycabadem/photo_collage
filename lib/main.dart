@@ -35,8 +35,8 @@ class CollageScreen extends StatefulWidget {
 }
 
 class _CollageScreenState extends State<CollageScreen> {
-  final double baseWidth = 300;
-  final double minHeight = 200; // Minimum yükseklik
+  final double baseWidth = 350; // Biraz küçülttük
+  final double minHeight = 220; // Biraz küçülttük
   final List<AspectSpec> presets = const [
     AspectSpec(5, 4, '5:4'),
     AspectSpec(4, 5, '4:5'),
@@ -53,23 +53,76 @@ class _CollageScreenState extends State<CollageScreen> {
   List<PhotoBox> photoBoxes = [];
   PhotoBox? selectedBox;
 
-  Size _sizeForAspect(AspectSpec a) {
-    // Önce normal boyutu hesapla
-    double width = baseWidth;
-    double height = baseWidth * a.h / a.w;
+  final TransformationController _transformationController =
+      TransformationController();
 
-    // Eğer yükseklik minimum'dan küçükse, boyutu ayarla
-    if (height < minHeight) {
-      height = minHeight;
-      width = minHeight * a.w / a.h;
+  Size _sizeForAspect(AspectSpec a, {Size? screenSize}) {
+    // Varsayılan boyutlar
+    double maxWidth = baseWidth;
+    double maxHeight = baseWidth;
+
+    if (screenSize != null) {
+      // FloatingActionButton ve diğer UI elementleri için yer bırak
+      double availableWidth = screenSize.width - 100; // Padding ve FAB için
+      double availableHeight =
+          screenSize.height - 150; // AppBar, padding ve FAB için
+
+      // Ekran alanının büyük kısmını kullan ama sınırlar koy
+      maxWidth = availableWidth.clamp(250, 500.0);
+      maxHeight = availableHeight.clamp(200, 700.0);
     }
+
+    // Oranın tipine göre boyutlama stratejisi
+    double aspectRatio = a.w / a.h;
+    double width, height;
+
+    if (aspectRatio > 2) {
+      // Çok geniş oranlar (19:9, 16:1 vs.)
+      height = minHeight.clamp(220, maxHeight * 0.4);
+      width = (height * aspectRatio).clamp(maxWidth * 0.8, maxWidth);
+      if (width > maxWidth) {
+        width = maxWidth;
+        height = width / aspectRatio;
+      }
+    } else if (aspectRatio < 0.5) {
+      // Çok uzun oranlar (9:16, 1:6 vs.)
+      width = maxWidth * 0.6;
+      height = width / aspectRatio;
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * aspectRatio;
+      }
+    } else {
+      // Normal oranlar (1:1, 3:4, 4:3 vs.) - ekranı daha iyi kullan
+      if (aspectRatio >= 1) {
+        // Yatay veya kare
+        width = maxWidth * 0.85;
+        height = width / aspectRatio;
+        if (height > maxHeight * 0.8) {
+          height = maxHeight * 0.8;
+          width = height * aspectRatio;
+        }
+      } else {
+        // Dikey
+        height = maxHeight * 0.8;
+        width = height * aspectRatio;
+        if (width > maxWidth * 0.85) {
+          width = maxWidth * 0.85;
+          height = width / aspectRatio;
+        }
+      }
+    }
+
+    // Minimum boyut kontrolü
+    if (width < 200) width = 200;
+    if (height < 150) height = 150;
 
     return Size(width, height);
   }
 
-  void _applyAspect(AspectSpec newAspect) {
+  void _applyAspect(AspectSpec newAspect, {Size? screenSize}) {
     final oldSize = templateSize;
-    final newSize = _sizeForAspect(newAspect);
+    final newSize = _sizeForAspect(newAspect, screenSize: screenSize);
     final sx = newSize.width / oldSize.width;
     final sy = newSize.height / oldSize.height;
     setState(() {
@@ -136,7 +189,8 @@ class _CollageScreenState extends State<CollageScreen> {
     final h = int.tryParse(hCtrl.text);
     if (w == null || h == null || w <= 0 || h <= 0) return;
     final custom = AspectSpec(w, h, '$w:$h');
-    _applyAspect(custom);
+    final screenSize = MediaQuery.of(context).size;
+    _applyAspect(custom, screenSize: screenSize);
   }
 
   @override
@@ -162,7 +216,10 @@ class _CollageScreenState extends State<CollageScreen> {
               ),
               items: items,
               onChanged: (v) {
-                if (v != null) _applyAspect(v);
+                if (v != null) {
+                  final screenSize = MediaQuery.of(context).size;
+                  _applyAspect(v, screenSize: screenSize);
+                }
               },
             ),
           ),
@@ -176,28 +233,53 @@ class _CollageScreenState extends State<CollageScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          return SingleChildScrollView(
-            scrollDirection: Axis.vertical,
+          // İlk kez ekran boyutuna göre template boyutunu ayarla
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final screenSize = Size(
+              constraints.maxWidth,
+              constraints.maxHeight,
+            );
+            final newSize = _sizeForAspect(
+              selectedAspect,
+              screenSize: screenSize,
+            );
+            if (templateSize != newSize) {
+              setState(() {
+                templateSize = newSize;
+              });
+            }
+          });
+
+          return InteractiveViewer(
+            transformationController: _transformationController,
+            minScale: 0.3,
+            maxScale: 5.0,
+            panEnabled: true,
+            scaleEnabled: true,
+            boundaryMargin: const EdgeInsets.all(100),
             child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Container(
-                width: (templateSize.width + 40) > constraints.maxWidth
-                    ? templateSize.width + 40
-                    : constraints.maxWidth,
-                height: (templateSize.height + 40) > constraints.maxHeight
-                    ? templateSize.height + 40
-                    : constraints.maxHeight,
-                padding: const EdgeInsets.all(20),
-                child: Center(
-                  child: Container(
-                    width: templateSize.width,
-                    height: templateSize.height,
-                    color: Colors.grey[200],
-                    child: Stack(
-                      children: [
-                        for (var box in photoBoxes) _buildPhotoBox(box),
-                        if (selectedBox != null) _buildOverlay(selectedBox!),
-                      ],
+              scrollDirection: Axis.vertical,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Container(
+                  width: (templateSize.width + 100) > constraints.maxWidth
+                      ? templateSize.width + 100
+                      : constraints.maxWidth,
+                  height: (templateSize.height + 120) > constraints.maxHeight
+                      ? templateSize.height + 120
+                      : constraints.maxHeight,
+                  padding: const EdgeInsets.all(50), // Padding'i artırdık
+                  child: Center(
+                    child: Container(
+                      width: templateSize.width,
+                      height: templateSize.height,
+                      color: Colors.grey[200],
+                      child: Stack(
+                        children: [
+                          for (var box in photoBoxes) _buildPhotoBox(box),
+                          if (selectedBox != null) _buildOverlay(selectedBox!),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -225,6 +307,10 @@ class _CollageScreenState extends State<CollageScreen> {
     );
   }
 
+  double _getCurrentScale() {
+    return _transformationController.value.getMaxScaleOnAxis();
+  }
+
   Widget _buildPhotoBox(PhotoBox box) {
     return Positioned(
       left: box.position.dx,
@@ -237,12 +323,13 @@ class _CollageScreenState extends State<CollageScreen> {
         },
         onPanUpdate: (details) {
           if (selectedBox != box) return;
+          final scale = _getCurrentScale();
           setState(() {
-            double newX = (box.position.dx + details.delta.dx).clamp(
+            double newX = (box.position.dx + details.delta.dx / scale).clamp(
               0.0,
               templateSize.width - box.size.width,
             );
-            double newY = (box.position.dy + details.delta.dy).clamp(
+            double newY = (box.position.dy + details.delta.dy / scale).clamp(
               0.0,
               templateSize.height - box.size.height,
             );
@@ -286,6 +373,9 @@ class _CollageScreenState extends State<CollageScreen> {
           ),
         ),
         _buildHandle(box, Alignment.topLeft, handleSize, (dx, dy) {
+          final scale = _getCurrentScale();
+          dx /= scale;
+          dy /= scale;
           double newX = (box.position.dx + dx).clamp(
             0.0,
             box.position.dx + box.size.width - 50,
@@ -304,6 +394,9 @@ class _CollageScreenState extends State<CollageScreen> {
           }
         }),
         _buildHandle(box, Alignment.topRight, handleSize, (dx, dy) {
+          final scale = _getCurrentScale();
+          dx /= scale;
+          dy /= scale;
           double newWidth = (box.size.width + dx).clamp(
             50.0,
             templateSize.width - box.position.dx,
@@ -321,6 +414,9 @@ class _CollageScreenState extends State<CollageScreen> {
           }
         }),
         _buildHandle(box, Alignment.bottomLeft, handleSize, (dx, dy) {
+          final scale = _getCurrentScale();
+          dx /= scale;
+          dy /= scale;
           double newX = (box.position.dx + dx).clamp(
             0.0,
             box.position.dx + box.size.width - 50,
@@ -336,6 +432,9 @@ class _CollageScreenState extends State<CollageScreen> {
           });
         }),
         _buildHandle(box, Alignment.bottomRight, handleSize, (dx, dy) {
+          final scale = _getCurrentScale();
+          dx /= scale;
+          dy /= scale;
           double newWidth = (box.size.width + dx).clamp(
             50.0,
             templateSize.width - box.position.dx,
