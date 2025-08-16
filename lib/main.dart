@@ -8,9 +8,9 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Custom Collage App',
-      home: const CollageScreen(),
+      home: CollageScreen(),
     );
   }
 }
@@ -48,6 +48,7 @@ class _CollageScreenState extends State<CollageScreen> {
 
   late AspectSpec selectedAspect = presets.firstWhere((a) => a.label == '9:16');
   late Size templateSize = _sizeForAspect(selectedAspect);
+  final TransformationController _transform = TransformationController();
 
   List<PhotoBox> photoBoxes = [];
   PhotoBox? selectedBox;
@@ -85,14 +86,14 @@ class _CollageScreenState extends State<CollageScreen> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Özel Oran (Genişlik:Yükseklik)'),
+          title: const Text('Custom Aspect (Width:Height)'),
           content: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: wCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Genişlik'),
+                  decoration: const InputDecoration(labelText: 'Width'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -100,7 +101,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 child: TextField(
                   controller: hCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Yükseklik'),
+                  decoration: const InputDecoration(labelText: 'Height'),
                 ),
               ),
             ],
@@ -108,11 +109,11 @@ class _CollageScreenState extends State<CollageScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('İptal'),
+              child: const Text('Cancel'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Uygula'),
+              child: const Text('Apply'),
             ),
           ],
         );
@@ -124,6 +125,15 @@ class _CollageScreenState extends State<CollageScreen> {
     if (w == null || h == null || w <= 0 || h <= 0) return;
     final custom = AspectSpec(w, h, '$w:$h');
     _applyAspect(custom);
+  }
+
+  double _computeFitScale(double availW, double availH, Size canvas) {
+    const padding = 24.0;
+    final w = (availW - padding).clamp(50, double.infinity);
+    final h = (availH - padding).clamp(50, double.infinity);
+    final sx = w / canvas.width;
+    final sy = h / canvas.height;
+    return sx < sy ? sx : sy;
   }
 
   @override
@@ -154,41 +164,72 @@ class _CollageScreenState extends State<CollageScreen> {
             ),
           ),
           IconButton(
-            tooltip: 'Özel oran',
             onPressed: _openCustomAspectDialog,
             icon: const Icon(Icons.tune),
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: Center(
-        child: Container(
-          width: templateSize.width,
-          height: templateSize.height,
-          color: Colors.grey[200],
-          child: Stack(
-            children: [
-              for (var box in photoBoxes) _buildPhotoBox(box),
-              if (selectedBox != null) _buildOverlay(selectedBox!),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Size boxSize = const Size(100, 100);
-          Offset pos = findNonOverlappingPosition(
-            photoBoxes,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final fitScale = _computeFitScale(
+            constraints.maxWidth,
+            constraints.maxHeight,
             templateSize,
-            boxSize,
           );
-          setState(() {
-            var newBox = PhotoBox(position: pos, size: boxSize);
-            photoBoxes.add(newBox);
-            selectedBox = newBox;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final m = Matrix4.identity()..scale(fitScale, fitScale);
+            if (_transform.value.storage.toString() != m.storage.toString())
+              _transform.value = m;
           });
+          return Stack(
+            children: [
+              Center(
+                child: ClipRect(
+                  child: InteractiveViewer(
+                    transformationController: _transform,
+                    minScale: fitScale,
+                    maxScale: fitScale * 8,
+                    boundaryMargin: const EdgeInsets.all(1000),
+                    child: SizedBox(
+                      width: templateSize.width,
+                      height: templateSize.height,
+                      child: Stack(
+                        children: [
+                          Container(color: Colors.grey[200]),
+                          for (var box in photoBoxes) _buildPhotoBox(box),
+                          if (selectedBox != null) _buildOverlay(selectedBox!),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 16,
+                bottom: 16,
+                child: SafeArea(
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      Size boxSize = const Size(100, 100);
+                      Offset pos = findNonOverlappingPosition(
+                        photoBoxes,
+                        templateSize,
+                        boxSize,
+                      );
+                      setState(() {
+                        var newBox = PhotoBox(position: pos, size: boxSize);
+                        photoBoxes.add(newBox);
+                        selectedBox = newBox;
+                      });
+                    },
+                    child: const Icon(Icons.add),
+                  ),
+                ),
+              ),
+            ],
+          );
         },
-        child: const Icon(Icons.add),
       ),
     );
   }
