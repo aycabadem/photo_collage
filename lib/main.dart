@@ -6,7 +6,6 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,22 +15,152 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class AspectSpec {
+  final int w;
+  final int h;
+  final String label;
+  const AspectSpec(this.w, this.h, this.label);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AspectSpec && w == other.w && h == other.h);
+  @override
+  int get hashCode => Object.hash(w, h);
+}
+
 class CollageScreen extends StatefulWidget {
   const CollageScreen({super.key});
-
   @override
   State<CollageScreen> createState() => _CollageScreenState();
 }
 
 class _CollageScreenState extends State<CollageScreen> {
-  Size templateSize = const Size(300, 533); // 9:16
+  final double baseWidth = 300;
+  final List<AspectSpec> presets = const [
+    AspectSpec(5, 4, '5:4'),
+    AspectSpec(4, 5, '4:5'),
+    AspectSpec(4, 3, '4:3'),
+    AspectSpec(3, 4, '3:4'),
+    AspectSpec(9, 16, '9:16'),
+    AspectSpec(16, 9, '16:9'),
+    AspectSpec(1, 1, '1:1'),
+  ];
+
+  late AspectSpec selectedAspect = presets.firstWhere((a) => a.label == '9:16');
+  late Size templateSize = _sizeForAspect(selectedAspect);
+
   List<PhotoBox> photoBoxes = [];
   PhotoBox? selectedBox;
 
+  Size _sizeForAspect(AspectSpec a) => Size(baseWidth, baseWidth * a.h / a.w);
+
+  void _applyAspect(AspectSpec newAspect) {
+    final oldSize = templateSize;
+    final newSize = _sizeForAspect(newAspect);
+    final sx = newSize.width / oldSize.width;
+    final sy = newSize.height / oldSize.height;
+    setState(() {
+      selectedAspect = newAspect;
+      templateSize = newSize;
+      for (final box in photoBoxes) {
+        box.position = Offset(box.position.dx * sx, box.position.dy * sy);
+        box.size = Size(box.size.width * sx, box.size.height * sy);
+        final clampedX = box.position.dx.clamp(
+          0.0,
+          templateSize.width - box.size.width,
+        );
+        final clampedY = box.position.dy.clamp(
+          0.0,
+          templateSize.height - box.size.height,
+        );
+        box.position = Offset(clampedX, clampedY);
+      }
+    });
+  }
+
+  Future<void> _openCustomAspectDialog() async {
+    final wCtrl = TextEditingController(text: selectedAspect.w.toString());
+    final hCtrl = TextEditingController(text: selectedAspect.h.toString());
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Özel Oran (Genişlik:Yükseklik)'),
+          content: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: wCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Genişlik'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: hCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Yükseklik'),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('İptal'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Uygula'),
+            ),
+          ],
+        );
+      },
+    );
+    if (ok != true) return;
+    final w = int.tryParse(wCtrl.text);
+    final h = int.tryParse(hCtrl.text);
+    if (w == null || h == null || w <= 0 || h <= 0) return;
+    final custom = AspectSpec(w, h, '$w:$h');
+    _applyAspect(custom);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final items = [
+      ...presets.map((a) => DropdownMenuItem(value: a, child: Text(a.label))),
+      if (!presets.contains(selectedAspect))
+        DropdownMenuItem(
+          value: selectedAspect,
+          child: Text(selectedAspect.label),
+        ),
+    ];
     return Scaffold(
-      appBar: AppBar(title: const Text("Custom Collage")),
+      appBar: AppBar(
+        title: const Text("Custom Collage"),
+        actions: [
+          DropdownButtonHideUnderline(
+            child: DropdownButton<AspectSpec>(
+              value: selectedAspect,
+              icon: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Icon(Icons.aspect_ratio),
+              ),
+              items: items,
+              onChanged: (v) {
+                if (v != null) _applyAspect(v);
+              },
+            ),
+          ),
+          IconButton(
+            tooltip: 'Özel oran',
+            onPressed: _openCustomAspectDialog,
+            icon: const Icon(Icons.tune),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: Center(
         child: Container(
           width: templateSize.width,
@@ -39,9 +168,7 @@ class _CollageScreenState extends State<CollageScreen> {
           color: Colors.grey[200],
           child: Stack(
             children: [
-              // Tüm kutular
               for (var box in photoBoxes) _buildPhotoBox(box),
-              // Overlay: delete + resize handle
               if (selectedBox != null) _buildOverlay(selectedBox!),
             ],
           ),
@@ -102,10 +229,8 @@ class _CollageScreenState extends State<CollageScreen> {
 
   Widget _buildOverlay(PhotoBox box) {
     double handleSize = 12.0;
-
     return Stack(
       children: [
-        // Delete button
         Positioned(
           top: box.position.dy - 16,
           left: box.position.dx + box.size.width - 16,
@@ -128,8 +253,6 @@ class _CollageScreenState extends State<CollageScreen> {
             ),
           ),
         ),
-
-        // Resize handles
         _buildHandle(box, Alignment.topLeft, handleSize, (dx, dy) {
           double newX = (box.position.dx + dx).clamp(
             0.0,
@@ -205,14 +328,12 @@ class _CollageScreenState extends State<CollageScreen> {
   ) {
     double left = box.position.dx;
     double top = box.position.dy;
-
     if (alignment == Alignment.topRight) left += box.size.width - size;
     if (alignment == Alignment.bottomLeft) top += box.size.height - size;
     if (alignment == Alignment.bottomRight) {
       left += box.size.width - size;
       top += box.size.height - size;
     }
-
     return Positioned(
       left: left,
       top: top,
@@ -259,6 +380,5 @@ class _CollageScreenState extends State<CollageScreen> {
 class PhotoBox {
   Offset position;
   Size size;
-
   PhotoBox({required this.position, required this.size});
 }
