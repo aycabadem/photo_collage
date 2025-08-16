@@ -8,9 +8,9 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Custom Collage App',
-      home: CollageScreen(),
+      home: const CollageScreen(),
     );
   }
 }
@@ -36,6 +36,7 @@ class CollageScreen extends StatefulWidget {
 
 class _CollageScreenState extends State<CollageScreen> {
   final double baseWidth = 300;
+  final double minHeight = 200; // Minimum yükseklik
   final List<AspectSpec> presets = const [
     AspectSpec(5, 4, '5:4'),
     AspectSpec(4, 5, '4:5'),
@@ -48,12 +49,23 @@ class _CollageScreenState extends State<CollageScreen> {
 
   late AspectSpec selectedAspect = presets.firstWhere((a) => a.label == '9:16');
   late Size templateSize = _sizeForAspect(selectedAspect);
-  final TransformationController _transform = TransformationController();
 
   List<PhotoBox> photoBoxes = [];
   PhotoBox? selectedBox;
 
-  Size _sizeForAspect(AspectSpec a) => Size(baseWidth, baseWidth * a.h / a.w);
+  Size _sizeForAspect(AspectSpec a) {
+    // Önce normal boyutu hesapla
+    double width = baseWidth;
+    double height = baseWidth * a.h / a.w;
+
+    // Eğer yükseklik minimum'dan küçükse, boyutu ayarla
+    if (height < minHeight) {
+      height = minHeight;
+      width = minHeight * a.w / a.h;
+    }
+
+    return Size(width, height);
+  }
 
   void _applyAspect(AspectSpec newAspect) {
     final oldSize = templateSize;
@@ -86,14 +98,14 @@ class _CollageScreenState extends State<CollageScreen> {
       context: context,
       builder: (ctx) {
         return AlertDialog(
-          title: const Text('Custom Aspect (Width:Height)'),
+          title: const Text('Özel Oran (Genişlik:Yükseklik)'),
           content: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: wCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Width'),
+                  decoration: const InputDecoration(labelText: 'Genişlik'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -101,7 +113,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 child: TextField(
                   controller: hCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Height'),
+                  decoration: const InputDecoration(labelText: 'Yükseklik'),
                 ),
               ),
             ],
@@ -109,11 +121,11 @@ class _CollageScreenState extends State<CollageScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: const Text('İptal'),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Apply'),
+              child: const Text('Uygula'),
             ),
           ],
         );
@@ -125,15 +137,6 @@ class _CollageScreenState extends State<CollageScreen> {
     if (w == null || h == null || w <= 0 || h <= 0) return;
     final custom = AspectSpec(w, h, '$w:$h');
     _applyAspect(custom);
-  }
-
-  double _computeFitScale(double availW, double availH, Size canvas) {
-    const padding = 24.0;
-    final w = (availW - padding).clamp(50, double.infinity);
-    final h = (availH - padding).clamp(50, double.infinity);
-    final sx = w / canvas.width;
-    final sy = h / canvas.height;
-    return sx < sy ? sx : sy;
   }
 
   @override
@@ -164,6 +167,7 @@ class _CollageScreenState extends State<CollageScreen> {
             ),
           ),
           IconButton(
+            tooltip: 'Özel oran',
             onPressed: _openCustomAspectDialog,
             icon: const Icon(Icons.tune),
           ),
@@ -172,64 +176,51 @@ class _CollageScreenState extends State<CollageScreen> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final fitScale = _computeFitScale(
-            constraints.maxWidth,
-            constraints.maxHeight,
-            templateSize,
-          );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            final m = Matrix4.identity()..scale(fitScale, fitScale);
-            if (_transform.value.storage.toString() != m.storage.toString())
-              _transform.value = m;
-          });
-          return Stack(
-            children: [
-              Center(
-                child: ClipRect(
-                  child: InteractiveViewer(
-                    transformationController: _transform,
-                    minScale: fitScale,
-                    maxScale: fitScale * 8,
-                    boundaryMargin: const EdgeInsets.all(1000),
-                    child: SizedBox(
-                      width: templateSize.width,
-                      height: templateSize.height,
-                      child: Stack(
-                        children: [
-                          Container(color: Colors.grey[200]),
-                          for (var box in photoBoxes) _buildPhotoBox(box),
-                          if (selectedBox != null) _buildOverlay(selectedBox!),
-                        ],
-                      ),
+          return SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Container(
+                width: (templateSize.width + 40) > constraints.maxWidth
+                    ? templateSize.width + 40
+                    : constraints.maxWidth,
+                height: (templateSize.height + 40) > constraints.maxHeight
+                    ? templateSize.height + 40
+                    : constraints.maxHeight,
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: Container(
+                    width: templateSize.width,
+                    height: templateSize.height,
+                    color: Colors.grey[200],
+                    child: Stack(
+                      children: [
+                        for (var box in photoBoxes) _buildPhotoBox(box),
+                        if (selectedBox != null) _buildOverlay(selectedBox!),
+                      ],
                     ),
                   ),
                 ),
               ),
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: SafeArea(
-                  child: FloatingActionButton(
-                    onPressed: () {
-                      Size boxSize = const Size(100, 100);
-                      Offset pos = findNonOverlappingPosition(
-                        photoBoxes,
-                        templateSize,
-                        boxSize,
-                      );
-                      setState(() {
-                        var newBox = PhotoBox(position: pos, size: boxSize);
-                        photoBoxes.add(newBox);
-                        selectedBox = newBox;
-                      });
-                    },
-                    child: const Icon(Icons.add),
-                  ),
-                ),
-              ),
-            ],
+            ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Size boxSize = const Size(100, 100);
+          Offset pos = findNonOverlappingPosition(
+            photoBoxes,
+            templateSize,
+            boxSize,
+          );
+          setState(() {
+            var newBox = PhotoBox(position: pos, size: boxSize);
+            photoBoxes.add(newBox);
+            selectedBox = newBox;
+          });
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
