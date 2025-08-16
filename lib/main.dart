@@ -271,12 +271,17 @@ class _CollageScreenState extends State<CollageScreen> {
                   padding: const EdgeInsets.all(50), // Padding'i artırdık
                   child: Center(
                     child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
                       onTap: () {
                         // Boş alana tıklayınca seçimi iptal et
                         setState(() {
                           selectedBox = null;
                         });
                       },
+                      // Pan'i devre dışı bırak, sadece tap'e izin ver
+                      onPanStart: (_) {},
+                      onPanUpdate: (_) {},
+                      onPanEnd: (_) {},
                       child: Container(
                         width: templateSize.width,
                         height: templateSize.height,
