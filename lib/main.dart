@@ -131,11 +131,13 @@ class _CollageScreenState extends State<CollageScreen> {
       for (final box in photoBoxes) {
         box.position = Offset(box.position.dx * sx, box.position.dy * sy);
         box.size = Size(box.size.width * sx, box.size.height * sy);
-        final clampedX = box.position.dx.clamp(
+        final clampedX = _safeClamp(
+          box.position.dx,
           0.0,
           templateSize.width - box.size.width,
         );
-        final clampedY = box.position.dy.clamp(
+        final clampedY = _safeClamp(
+          box.position.dy,
           0.0,
           templateSize.height - box.size.height,
         );
@@ -253,47 +255,31 @@ class _CollageScreenState extends State<CollageScreen> {
           return InteractiveViewer(
             transformationController: _transformationController,
             minScale: 0.3,
-            maxScale: 5.0,
-            panEnabled: true,
-            scaleEnabled: true,
-            boundaryMargin: const EdgeInsets.all(100),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Container(
-                  width: (templateSize.width + 100) > constraints.maxWidth
-                      ? templateSize.width + 100
-                      : constraints.maxWidth,
-                  height: (templateSize.height + 120) > constraints.maxHeight
-                      ? templateSize.height + 120
-                      : constraints.maxHeight,
-                  padding: const EdgeInsets.all(50), // Padding'i artırdık
-                  child: Center(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onTap: () {
-                        // Boş alana tıklayınca seçimi iptal et
-                        setState(() {
-                          selectedBox = null;
-                        });
-                      },
-                      // Pan'i devre dışı bırak, sadece tap'e izin ver
-                      onPanStart: (_) {},
-                      onPanUpdate: (_) {},
-                      onPanEnd: (_) {},
-                      child: Container(
-                        width: templateSize.width,
-                        height: templateSize.height,
-                        color: Colors.grey[200],
-                        child: Stack(
-                          children: [
-                            for (var box in photoBoxes) _buildPhotoBox(box),
-                            if (selectedBox != null)
-                              _buildOverlay(selectedBox!),
-                          ],
-                        ),
-                      ),
+            maxScale: 3.0,
+            panEnabled: false, // Pan tamamen kapalı - background sabit
+            scaleEnabled: true, // Sadece zoom aktif
+            boundaryMargin: EdgeInsets.zero,
+            child: SizedBox(
+              width: constraints.maxWidth,
+              height: constraints.maxHeight,
+              child: Center(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    // Boş alana tıklayınca seçimi iptal et
+                    setState(() {
+                      selectedBox = null;
+                    });
+                  },
+                  child: Container(
+                    width: templateSize.width,
+                    height: templateSize.height,
+                    color: Colors.grey[200],
+                    child: Stack(
+                      children: [
+                        for (var box in photoBoxes) _buildPhotoBox(box),
+                        if (selectedBox != null) _buildOverlay(selectedBox!),
+                      ],
                     ),
                   ),
                 ),
@@ -325,6 +311,12 @@ class _CollageScreenState extends State<CollageScreen> {
     return _transformationController.value.getMaxScaleOnAxis();
   }
 
+  // Güvenli clamp fonksiyonu - min > max durumunu önler
+  double _safeClamp(double value, double min, double max) {
+    if (min > max) return min; // Invalid case - return min
+    return value.clamp(min, max);
+  }
+
   Widget _buildPhotoBox(PhotoBox box) {
     return Positioned(
       left: box.position.dx,
@@ -339,11 +331,13 @@ class _CollageScreenState extends State<CollageScreen> {
           if (selectedBox != box) return;
           final scale = _getCurrentScale();
           setState(() {
-            double newX = (box.position.dx + details.delta.dx / scale).clamp(
+            double newX = _safeClamp(
+              box.position.dx + details.delta.dx / scale,
               0.0,
               templateSize.width - box.size.width,
             );
-            double newY = (box.position.dy + details.delta.dy / scale).clamp(
+            double newY = _safeClamp(
+              box.position.dy + details.delta.dy / scale,
               0.0,
               templateSize.height - box.size.height,
             );
@@ -353,57 +347,20 @@ class _CollageScreenState extends State<CollageScreen> {
         child: Container(
           width: box.size.width,
           height: box.size.height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.blue.shade400, Colors.blue.shade600],
-            ),
-
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-            border: selectedBox == box
-                ? Border.all(color: Colors.white, width: 3)
-                : null,
-          ),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.image_outlined,
-                  color: Colors.white.withOpacity(0.8),
-                  size: (box.size.width / 4).clamp(20, 40),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "Fotoğraf",
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: (box.size.width / 10).clamp(10, 16),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          color: Colors.blueAccent,
+          child: const Center(child: Text("Photo")),
         ),
       ),
     );
   }
 
   Widget _buildOverlay(PhotoBox box) {
-    double handleSize = 16.0;
+    double handleSize = 12.0;
     return Stack(
       children: [
         Positioned(
-          top: box.position.dy + 8,
-          left: box.position.dx + box.size.width - 32,
+          top: box.position.dy - 16,
+          left: box.position.dx + box.size.width - 16,
           child: GestureDetector(
             onTap: () {
               setState(() {
@@ -415,21 +372,11 @@ class _CollageScreenState extends State<CollageScreen> {
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(4),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
+                color: Colors.red,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white),
               ),
-              child: Icon(
-                Icons.delete_outline,
-                size: 14,
-                color: Colors.white.withOpacity(0.9),
-              ),
+              child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
         ),
@@ -535,25 +482,8 @@ class _CollageScreenState extends State<CollageScreen> {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.blue.shade300, Colors.blue.shade500],
-            ),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.open_in_full,
-            size: size * 0.6,
             color: Colors.white,
+            border: Border.all(color: Colors.black),
           ),
         ),
       ),
