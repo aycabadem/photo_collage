@@ -271,44 +271,44 @@ class _CollageScreenState extends State<CollageScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          // İlk kez ekran boyutuna göre template boyutunu ayarla
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            final screenSize = Size(
-              constraints.maxWidth,
-              constraints.maxHeight,
-            );
-            final newSize = _sizeForAspect(
-              selectedAspect,
-              screenSize: screenSize,
-            );
-            if (templateSize != newSize) {
-              setState(() {
-                templateSize = newSize;
-              });
-            }
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          // Herhangi bir yere tıklayınca seçimi iptal et
+          setState(() {
+            selectedBox = null;
           });
+        },
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // İlk kez ekran boyutuna göre template boyutunu ayarla
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final screenSize = Size(
+                constraints.maxWidth,
+                constraints.maxHeight,
+              );
+              final newSize = _sizeForAspect(
+                selectedAspect,
+                screenSize: screenSize,
+              );
+              if (templateSize != newSize) {
+                setState(() {
+                  templateSize = newSize;
+                });
+              }
+            });
 
-          return InteractiveViewer(
-            transformationController: _transformationController,
-            minScale: 0.3,
-            maxScale: 3.0,
-            panEnabled: false, // Pan tamamen kapalı - background sabit
-            scaleEnabled: true, // Sadece zoom aktif
-            boundaryMargin: EdgeInsets.zero,
-            child: SizedBox(
-              width: constraints.maxWidth,
-              height: constraints.maxHeight,
-              child: Center(
-                child: GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () {
-                    // Boş alana tıklayınca seçimi iptal et
-                    setState(() {
-                      selectedBox = null;
-                    });
-                  },
+            return InteractiveViewer(
+              transformationController: _transformationController,
+              minScale: 0.3,
+              maxScale: 3.0,
+              panEnabled: false, // Pan tamamen kapalı - background sabit
+              scaleEnabled: true, // Sadece zoom aktif
+              boundaryMargin: EdgeInsets.zero,
+              child: SizedBox(
+                width: constraints.maxWidth,
+                height: constraints.maxHeight,
+                child: Center(
                   child: Container(
                     width: templateSize.width,
                     height: templateSize.height,
@@ -324,9 +324,9 @@ class _CollageScreenState extends State<CollageScreen> {
                   ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -337,7 +337,7 @@ class _CollageScreenState extends State<CollageScreen> {
             maxHeight: 800,
             imageQuality: 85,
           );
-          
+
           if (pickedFile != null) {
             // Yeni fotoğraf kutusu oluştur
             Size boxSize = const Size(150, 150);
@@ -346,10 +346,10 @@ class _CollageScreenState extends State<CollageScreen> {
               templateSize,
               boxSize,
             );
-            
+
             setState(() {
               var newBox = PhotoBox(
-                position: pos, 
+                position: pos,
                 size: boxSize,
                 imageFile: File(pickedFile.path),
                 imagePath: pickedFile.path,
@@ -414,7 +414,6 @@ class _CollageScreenState extends State<CollageScreen> {
           width: box.size.width,
           height: box.size.height,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -426,68 +425,65 @@ class _CollageScreenState extends State<CollageScreen> {
                 ? Border.all(color: Colors.yellow, width: 2)
                 : null,
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Stack(
-              children: [
-                // Fotoğraf veya placeholder
-                box.imageFile != null
-                    ? Image.file(
-                        box.imageFile!,
-                        fit: BoxFit.cover,
-                        width: box.size.width,
-                        height: box.size.height,
-                      )
-                    : Container(
-                        color: Colors.blue[300],
-                        child: const Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            color: Colors.white,
-                            size: 40,
-                          ),
+          child: Stack(
+            children: [
+              // Fotoğraf veya placeholder
+              box.imageFile != null
+                  ? Image.file(
+                      box.imageFile!,
+                      fit: BoxFit.cover,
+                      width: box.size.width,
+                      height: box.size.height,
+                    )
+                  : Container(
+                      color: Colors.blue[300],
+                      child: const Center(
+                        child: Icon(
+                          Icons.image_outlined,
+                          color: Colors.white,
+                          size: 40,
                         ),
                       ),
-                
-                // Delete butonu (seçili kutularda)
-                if (selectedBox == box)
-                  Positioned(
-                    top: 4,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            photoBoxes.remove(box);
-                            selectedBox = null;
-                          });
-                        },
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.8),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 3,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.delete_outline,
-                            size: 14,
-                            color: Colors.white,
-                          ),
+                    ),
+
+              // Delete butonu (seçili kutularda)
+              if (selectedBox == box)
+                Positioned(
+                  top: 4,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          photoBoxes.remove(box);
+                          selectedBox = null;
+                        });
+                      },
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          size: 14,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),
@@ -748,9 +744,9 @@ class PhotoBox {
   Size size;
   File? imageFile; // Fotoğraf dosyası
   String? imagePath; // Fotoğraf yolu
-  
+
   PhotoBox({
-    required this.position, 
+    required this.position,
     required this.size,
     this.imageFile,
     this.imagePath,
