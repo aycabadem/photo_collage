@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 void main() {
   runApp(const MyApp());
@@ -55,6 +58,8 @@ class _CollageScreenState extends State<CollageScreen> {
 
   final TransformationController _transformationController =
       TransformationController();
+
+  final ImagePicker _imagePicker = ImagePicker(); // Fotoğraf seçici
 
   Size _sizeForAspect(AspectSpec a, {Size? screenSize}) {
     // Varsayılan boyutlar
@@ -324,20 +329,37 @@ class _CollageScreenState extends State<CollageScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Size boxSize = const Size(100, 100);
-          Offset pos = findNonOverlappingPosition(
-            photoBoxes,
-            templateSize,
-            boxSize,
+        onPressed: () async {
+          // Fotoğraf seç
+          final XFile? pickedFile = await _imagePicker.pickImage(
+            source: ImageSource.gallery,
+            maxWidth: 800,
+            maxHeight: 800,
+            imageQuality: 85,
           );
-          setState(() {
-            var newBox = PhotoBox(position: pos, size: boxSize);
-            photoBoxes.add(newBox);
-            selectedBox = newBox;
-          });
+          
+          if (pickedFile != null) {
+            // Yeni fotoğraf kutusu oluştur
+            Size boxSize = const Size(150, 150);
+            Offset pos = findNonOverlappingPosition(
+              photoBoxes,
+              templateSize,
+              boxSize,
+            );
+            
+            setState(() {
+              var newBox = PhotoBox(
+                position: pos, 
+                size: boxSize,
+                imageFile: File(pickedFile.path),
+                imagePath: pickedFile.path,
+              );
+              photoBoxes.add(newBox);
+              selectedBox = newBox;
+            });
+          }
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.photo_library),
       ),
     );
   }
@@ -392,12 +414,7 @@ class _CollageScreenState extends State<CollageScreen> {
           width: box.size.width,
           height: box.size.height,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.blue[400]!, Colors.blue[600]!],
-            ),
-
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -409,68 +426,68 @@ class _CollageScreenState extends State<CollageScreen> {
                 ? Border.all(color: Colors.yellow, width: 2)
                 : null,
           ),
-          child: Stack(
-            children: [
-              // Fotoğraf ikonu
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.image_outlined,
-                      color: Colors.white,
-                      size: box.size.width * 0.3,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "Fotoğraf",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: box.size.width * 0.12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Delete butonu (kutunun üst orta kısmında)
-              if (selectedBox == box)
-                Positioned(
-                  top: 4,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          photoBoxes.remove(box);
-                          selectedBox = null;
-                        });
-                      },
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: Stack(
+              children: [
+                // Fotoğraf veya placeholder
+                box.imageFile != null
+                    ? Image.file(
+                        box.imageFile!,
+                        fit: BoxFit.cover,
+                        width: box.size.width,
+                        height: box.size.height,
+                      )
+                    : Container(
+                        color: Colors.blue[300],
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: Colors.white,
+                            size: 40,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.delete_outline,
-                          size: 14,
-                          color: Colors.white,
+                      ),
+                
+                // Delete butonu (seçili kutularda)
+                if (selectedBox == box)
+                  Positioned(
+                    top: 4,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            photoBoxes.remove(box);
+                            selectedBox = null;
+                          });
+                        },
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.3),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -729,5 +746,13 @@ class _CollageScreenState extends State<CollageScreen> {
 class PhotoBox {
   Offset position;
   Size size;
-  PhotoBox({required this.position, required this.size});
+  File? imageFile; // Fotoğraf dosyası
+  String? imagePath; // Fotoğraf yolu
+  
+  PhotoBox({
+    required this.position, 
+    required this.size,
+    this.imageFile,
+    this.imagePath,
+  });
 }
