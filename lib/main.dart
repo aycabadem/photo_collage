@@ -67,9 +67,9 @@ class _CollageScreenState extends State<CollageScreen> {
       double availableHeight =
           screenSize.height - 150; // AppBar, padding ve FAB için
 
-      // Ekran alanının büyük kısmını kullan ama sınırlar koy
-      maxWidth = availableWidth.clamp(250, 500.0);
-      maxHeight = availableHeight.clamp(200, 700.0);
+      // Daha sıkı sınırlar - overflow'u önle
+      maxWidth = availableWidth.clamp(300, 450.0); // 350 → 450 (daha büyük)
+      maxHeight = availableHeight.clamp(250, 500.0); // 400 → 500 (daha büyük)
     }
 
     // Oranın tipine göre boyutlama stratejisi
@@ -78,36 +78,42 @@ class _CollageScreenState extends State<CollageScreen> {
 
     if (aspectRatio > 2) {
       // Çok geniş oranlar (19:9, 16:1 vs.)
-      height = minHeight.clamp(220, maxHeight * 0.4);
-      width = (height * aspectRatio).clamp(maxWidth * 0.8, maxWidth);
-      if (width > maxWidth) {
-        width = maxWidth;
+      height = minHeight.clamp(220, maxHeight * 0.4); // 0.3 → 0.4 (daha büyük)
+      width = (height * aspectRatio).clamp(
+        maxWidth * 0.8, // 0.7 → 0.8
+        maxWidth * 0.95, // 0.9 → 0.95
+      );
+      if (width > maxWidth * 0.95) {
+        width = maxWidth * 0.95;
         height = width / aspectRatio;
       }
     } else if (aspectRatio < 0.5) {
       // Çok uzun oranlar (9:16, 1:6 vs.)
-      width = maxWidth * 0.6;
+      width = maxWidth * 0.7; // 0.5 → 0.7 (daha büyük)
       height = width / aspectRatio;
-      if (height > maxHeight) {
-        height = maxHeight;
+      if (height > maxHeight * 0.95) {
+        // 0.9 → 0.95
+        height = maxHeight * 0.95;
         width = height * aspectRatio;
       }
     } else {
       // Normal oranlar (1:1, 3:4, 4:3 vs.) - ekranı daha iyi kullan
       if (aspectRatio >= 1) {
         // Yatay veya kare
-        width = maxWidth * 0.85;
+        width = maxWidth * 0.9; // 0.8 → 0.9 (daha büyük)
         height = width / aspectRatio;
         if (height > maxHeight * 0.8) {
+          // 0.7 → 0.8
           height = maxHeight * 0.8;
           width = height * aspectRatio;
         }
       } else {
         // Dikey
-        height = maxHeight * 0.8;
+        height = maxHeight * 0.8; // 0.7 → 0.8 (daha büyük)
         width = height * aspectRatio;
-        if (width > maxWidth * 0.85) {
-          width = maxWidth * 0.85;
+        if (width > maxWidth * 0.9) {
+          // 0.8 → 0.9
+          width = maxWidth * 0.9;
           height = width / aspectRatio;
         }
       }
@@ -117,31 +123,58 @@ class _CollageScreenState extends State<CollageScreen> {
     if (width < 200) width = 200;
     if (height < 150) height = 150;
 
+    // Maksimum boyut kontrolü - overflow'u önle
+    if (width > maxWidth * 0.95) width = maxWidth * 0.95;
+    if (height > maxHeight * 0.95) height = maxHeight * 0.95;
+
     return Size(width, height);
   }
 
   void _applyAspect(AspectSpec newAspect, {Size? screenSize}) {
     final oldSize = templateSize;
     final newSize = _sizeForAspect(newAspect, screenSize: screenSize);
-    final sx = newSize.width / oldSize.width;
-    final sy = newSize.height / oldSize.height;
+
     setState(() {
       selectedAspect = newAspect;
       templateSize = newSize;
+
+      // Kutuları yeni template boyutuna göre yeniden boyutlandır ve konumlandır
       for (final box in photoBoxes) {
-        box.position = Offset(box.position.dx * sx, box.position.dy * sy);
-        box.size = Size(box.size.width * sx, box.size.height * sy);
-        final clampedX = _safeClamp(
-          box.position.dx,
-          0.0,
-          templateSize.width - box.size.width,
-        );
-        final clampedY = _safeClamp(
-          box.position.dy,
-          0.0,
-          templateSize.height - box.size.height,
-        );
-        box.position = Offset(clampedX, clampedY);
+        // Kutuyu yeni template boyutuna sığdır
+        double newWidth = box.size.width;
+        double newHeight = box.size.height;
+
+        // Eğer kutu template'den büyükse küçült
+        if (newWidth > newSize.width - 40) {
+          newWidth = newSize.width - 40;
+        }
+        if (newHeight > newSize.height - 40) {
+          newHeight = newSize.height - 40;
+        }
+
+        // Minimum boyut kontrolü
+        if (newWidth < 50) newWidth = 50;
+        if (newHeight < 50) newHeight = 50;
+
+        // Boyutu güncelle
+        box.size = Size(newWidth, newHeight);
+
+        // Pozisyonu yeni template boyutuna göre ayarla
+        double newX = box.position.dx;
+        double newY = box.position.dy;
+
+        // Eğer kutu template dışındaysa içeri al
+        if (newX < 0) newX = 0;
+        if (newY < 0) newY = 0;
+        if (newX + newWidth > newSize.width) {
+          newX = newSize.width - newWidth;
+        }
+        if (newY + newHeight > newSize.height) {
+          newY = newSize.height - newHeight;
+        }
+
+        // Pozisyonu güncelle
+        box.position = Offset(newX, newY);
       }
     });
   }
@@ -264,7 +297,7 @@ class _CollageScreenState extends State<CollageScreen> {
               height: constraints.maxHeight,
               child: Center(
                 child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
+                  behavior: HitTestBehavior.opaque,
                   onTap: () {
                     // Boş alana tıklayınca seçimi iptal et
                     setState(() {
@@ -276,6 +309,8 @@ class _CollageScreenState extends State<CollageScreen> {
                     height: templateSize.height,
                     color: Colors.grey[200],
                     child: Stack(
+                      clipBehavior:
+                          Clip.hardEdge, // Overflow'u kesin olarak önle
                       children: [
                         for (var box in photoBoxes) _buildPhotoBox(box),
                         if (selectedBox != null) _buildOverlay(selectedBox!),
@@ -318,6 +353,15 @@ class _CollageScreenState extends State<CollageScreen> {
   }
 
   Widget _buildPhotoBox(PhotoBox box) {
+    // Basit kontrol: kutu template içinde mi?
+    if (box.position.dx < 0 ||
+        box.position.dy < 0 ||
+        box.position.dx + box.size.width > templateSize.width ||
+        box.position.dy + box.size.height > templateSize.height) {
+      return const SizedBox.shrink(); // Template dışındaki kutuları gizle
+    }
+
+    // Template içindeki kutuları göster
     return Positioned(
       left: box.position.dx,
       top: box.position.dy,
@@ -347,53 +391,120 @@ class _CollageScreenState extends State<CollageScreen> {
         child: Container(
           width: box.size.width,
           height: box.size.height,
-          color: Colors.blueAccent,
-          child: const Center(child: Text("Photo")),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.blue[400]!, Colors.blue[600]!],
+            ),
+
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+            border: selectedBox == box
+                ? Border.all(color: Colors.yellow, width: 2)
+                : null,
+          ),
+          child: Stack(
+            children: [
+              // Fotoğraf ikonu
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image_outlined,
+                      color: Colors.white,
+                      size: box.size.width * 0.3,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Fotoğraf",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: box.size.width * 0.12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Delete butonu (kutunun üst orta kısmında)
+              if (selectedBox == box)
+                Positioned(
+                  top: 4,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          photoBoxes.remove(box);
+                          selectedBox = null;
+                        });
+                      },
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildOverlay(PhotoBox box) {
-    double handleSize = 12.0;
+    double handleSize = 16.0;
     return Stack(
       children: [
-        Positioned(
-          top: box.position.dy - 16,
-          left: box.position.dx + box.size.width - 16,
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                photoBoxes.remove(box);
-                selectedBox = null;
-              });
-            },
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white),
-              ),
-              child: const Icon(Icons.close, size: 16, color: Colors.white),
-            ),
-          ),
-        ),
         _buildHandle(box, Alignment.topLeft, handleSize, (dx, dy) {
           final scale = _getCurrentScale();
           dx /= scale;
           dy /= scale;
-          double newX = (box.position.dx + dx).clamp(
+          double newX = _safeClamp(
+            box.position.dx + dx,
             0.0,
             box.position.dx + box.size.width - 50,
           );
-          double newY = (box.position.dy + dy).clamp(
+          double newY = _safeClamp(
+            box.position.dy + dy,
             0.0,
             box.position.dy + box.size.height - 50,
           );
-          double newWidth = box.size.width - dx;
-          double newHeight = box.size.height - dy;
+          double newWidth = _safeClamp(
+            box.size.width - dx,
+            50.0,
+            box.size.width,
+          );
+          double newHeight = _safeClamp(
+            box.size.height - dy,
+            50.0,
+            box.size.height,
+          );
           if (newWidth >= 50 && newHeight >= 50) {
             setState(() {
               box.position = Offset(newX, newY);
@@ -405,15 +516,21 @@ class _CollageScreenState extends State<CollageScreen> {
           final scale = _getCurrentScale();
           dx /= scale;
           dy /= scale;
-          double newWidth = (box.size.width + dx).clamp(
+          double newWidth = _safeClamp(
+            box.size.width + dx,
             50.0,
             templateSize.width - box.position.dx,
           );
-          double newY = (box.position.dy + dy).clamp(
+          double newY = _safeClamp(
+            box.position.dy + dy,
             0.0,
             box.position.dy + box.size.height - 50,
           );
-          double newHeight = box.size.height - dy;
+          double newHeight = _safeClamp(
+            box.size.height - dy,
+            50.0,
+            box.size.height,
+          );
           if (newHeight >= 50) {
             setState(() {
               box.size = Size(newWidth, newHeight);
@@ -425,12 +542,18 @@ class _CollageScreenState extends State<CollageScreen> {
           final scale = _getCurrentScale();
           dx /= scale;
           dy /= scale;
-          double newX = (box.position.dx + dx).clamp(
+          double newX = _safeClamp(
+            box.position.dx + dx,
             0.0,
             box.position.dx + box.size.width - 50,
           );
-          double newWidth = box.size.width - dx;
-          double newHeight = (box.size.height + dy).clamp(
+          double newWidth = _safeClamp(
+            box.size.width - dx,
+            50.0,
+            box.size.width,
+          );
+          double newHeight = _safeClamp(
+            box.size.height + dy,
             50.0,
             templateSize.height - box.position.dy,
           );
@@ -443,11 +566,13 @@ class _CollageScreenState extends State<CollageScreen> {
           final scale = _getCurrentScale();
           dx /= scale;
           dy /= scale;
-          double newWidth = (box.size.width + dx).clamp(
+          double newWidth = _safeClamp(
+            box.size.width + dx,
             50.0,
             templateSize.width - box.position.dx,
           );
-          double newHeight = (box.size.height + dy).clamp(
+          double newHeight = _safeClamp(
+            box.size.height + dy,
             50.0,
             templateSize.height - box.position.dy,
           );
@@ -482,9 +607,22 @@ class _CollageScreenState extends State<CollageScreen> {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.black),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Colors.blue[300]!, Colors.blue[500]!],
+            ),
+
+            border: Border.all(color: Colors.white, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
+          child: const Icon(Icons.open_in_full, color: Colors.white, size: 10),
         ),
       ),
     );
@@ -495,9 +633,35 @@ class _CollageScreenState extends State<CollageScreen> {
     Size templateSize,
     Size newSize,
   ) {
-    double step = 10;
-    for (double y = 0; y <= templateSize.height - newSize.height; y += step) {
-      for (double x = 0; x <= templateSize.width - newSize.width; x += step) {
+    // Template sınırları kontrolü
+    if (newSize.width > templateSize.width ||
+        newSize.height > templateSize.height) {
+      // Eğer kutu template'den büyükse, template'in ortasına yerleştir
+      return Offset(
+        (templateSize.width - newSize.width) / 2,
+        (templateSize.height - newSize.height) / 2,
+      );
+    }
+
+    // Eğer hiç kutu yoksa, sol üst köşeye yerleştir
+    if (existing.isEmpty) {
+      return const Offset(20, 20);
+    }
+
+    double margin = 20; // Kenar boşluğu
+    double spacing = 30; // Kutular arası boşluk
+
+    // Grid tabanlı arama - daha küçük adımlarla
+    for (
+      double y = margin;
+      y <= templateSize.height - newSize.height - margin;
+      y += spacing
+    ) {
+      for (
+        double x = margin;
+        x <= templateSize.width - newSize.width - margin;
+        x += spacing
+      ) {
         Rect newRect = Rect.fromLTWH(x, y, newSize.width, newSize.height);
         bool overlaps = existing.any(
           (box) => newRect.overlaps(
@@ -512,7 +676,53 @@ class _CollageScreenState extends State<CollageScreen> {
         if (!overlaps) return Offset(x, y);
       }
     }
-    return const Offset(0, 0);
+
+    // Grid'de yer bulunamazsa, mevcut kutuların yanına yerleştir
+    for (final box in existing) {
+      // Sağ tarafa yerleştir
+      double x = box.position.dx + box.size.width + spacing;
+      double y = box.position.dy;
+
+      if (x + newSize.width <= templateSize.width - margin) {
+        Rect newRect = Rect.fromLTWH(x, y, newSize.width, newSize.height);
+        bool overlaps = existing.any(
+          (otherBox) => newRect.overlaps(
+            Rect.fromLTWH(
+              otherBox.position.dx,
+              otherBox.position.dy,
+              otherBox.size.width,
+              otherBox.size.height,
+            ),
+          ),
+        );
+        if (!overlaps) return Offset(x, y);
+      }
+
+      // Alt tarafa yerleştir
+      x = box.position.dx;
+      y = box.position.dy + box.size.height + spacing;
+
+      if (y + newSize.height <= templateSize.height - margin) {
+        Rect newRect = Rect.fromLTWH(x, y, newSize.width, newSize.height);
+        bool overlaps = existing.any(
+          (otherBox) => newRect.overlaps(
+            Rect.fromLTWH(
+              otherBox.position.dx,
+              otherBox.position.dy,
+              otherBox.size.width,
+              otherBox.size.height,
+            ),
+          ),
+        );
+        if (!overlaps) return Offset(x, y);
+      }
+    }
+
+    // Hala yer bulunamazsa, template'in ortasına yerleştir
+    return Offset(
+      (templateSize.width - newSize.width) / 2,
+      (templateSize.height - newSize.height) / 2,
+    );
   }
 }
 
