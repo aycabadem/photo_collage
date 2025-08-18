@@ -86,12 +86,30 @@ class _CollageScreenState extends State<CollageScreen> {
         ],
       ),
       body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () {
-          // Deselect when tapping anywhere
-          setState(() {
-            selectedBox = null;
-          });
+        behavior: HitTestBehavior
+            .translucent, // Allow touches to pass through to InteractiveViewer
+        onTapDown: (details) {
+          // Only deselect if tapping on empty background area
+          // Check if we're not tapping on a photo box
+          bool tappedOnBox = false;
+          for (final box in photoBoxes) {
+            final boxRect = Rect.fromLTWH(
+              box.position.dx,
+              box.position.dy,
+              box.size.width,
+              box.size.height,
+            );
+            if (boxRect.contains(details.localPosition)) {
+              tappedOnBox = true;
+              break;
+            }
+          }
+
+          if (!tappedOnBox) {
+            setState(() {
+              selectedBox = null;
+            });
+          }
         },
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -116,8 +134,8 @@ class _CollageScreenState extends State<CollageScreen> {
               transformationController: _transformationController,
               minScale: 0.3,
               maxScale: 3.0,
-              panEnabled: false, // Pan completely disabled - background fixed
-              scaleEnabled: true, // Only zoom active
+              panEnabled: true, // Allow panning after zoom
+              scaleEnabled: true, // Zoom active
               boundaryMargin: EdgeInsets.zero,
               child: SizedBox(
                 width: constraints.maxWidth,
