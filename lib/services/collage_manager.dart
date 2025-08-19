@@ -45,13 +45,13 @@ class CollageManager extends ChangeNotifier {
     double maxHeight = baseWidth;
 
     if (screenSize != null) {
-      // Optimize spacing - less margin for better screen usage
-      double availableWidth = screenSize.width - 60; // Reduced from 100
-      double availableHeight = screenSize.height - 120; // Reduced from 150
+      // Optimize spacing - minimal margin for maximum screen usage
+      double availableWidth = screenSize.width - 40; // Reduced from 60
+      double availableHeight = screenSize.height - 80; // Reduced from 120
 
       // More generous limits for better visual appeal
-      maxWidth = availableWidth.clamp(320, 480.0); // Increased from 300-450
-      maxHeight = availableHeight.clamp(280, 550.0); // Increased from 250-500
+      maxWidth = availableWidth.clamp(350, 520.0); // Increased from 320-480
+      maxHeight = availableHeight.clamp(300, 600.0); // Increased from 280-550
     }
 
     // Size strategy based on aspect ratio type
@@ -60,62 +60,62 @@ class CollageManager extends ChangeNotifier {
 
     if (aspectRatio > 2) {
       // Very wide ratios (10:1, 16:1 etc.)
-      width = maxWidth * 0.98; // Increased from 0.95
+      width = maxWidth * 0.99; // Increased from 0.98
       height = width / aspectRatio;
 
       if (height < 120) {
         // Increased from 100
         height = 120;
         width = height * aspectRatio;
-        if (width > maxWidth * 0.98) {
-          width = maxWidth * 0.98;
+        if (width > maxWidth * 0.99) {
+          width = maxWidth * 0.99;
           height = width / aspectRatio;
         }
       }
     } else if (aspectRatio < 0.5) {
       // Very tall ratios (9:16, 1:6 etc.)
-      width = maxWidth * 0.8; // Increased from 0.7
+      width = maxWidth * 0.85; // Increased from 0.8
       height = width / aspectRatio;
-      if (height > maxHeight * 0.98) {
-        // Increased from 0.95
-        height = maxHeight * 0.98;
+      if (height > maxHeight * 0.99) {
+        // Increased from 0.98
+        height = maxHeight * 0.99;
         width = height * aspectRatio;
       }
     } else if (aspectRatio >= 0.8 && aspectRatio <= 1.25) {
       // Medium ratios (4:5, 5:4, 1:1, 3:4, 4:3)
       if (aspectRatio >= 1) {
-        width = maxWidth * 0.92; // Increased from 0.85
+        width = maxWidth * 0.96; // Increased from 0.92
         height = width / aspectRatio;
-        if (height > maxHeight * 0.85) {
-          // Increased from 0.75
-          height = maxHeight * 0.85;
+        if (height > maxHeight * 0.92) {
+          // Increased from 0.85
+          height = maxHeight * 0.92;
           width = height * aspectRatio;
         }
       } else {
-        height = maxHeight * 0.85; // Increased from 0.75
+        height = maxHeight * 0.92; // Increased from 0.85
         width = height * aspectRatio;
-        if (width > maxWidth * 0.92) {
-          // Increased from 0.85
-          width = maxWidth * 0.92;
+        if (width > maxWidth * 0.96) {
+          // Increased from 0.92
+          width = maxWidth * 0.96;
           height = width / aspectRatio;
         }
       }
     } else {
       // Other ratios
       if (aspectRatio >= 1) {
-        width = maxWidth * 0.95; // Increased from 0.9
+        width = maxWidth * 0.98; // Increased from 0.95
         height = width / aspectRatio;
-        if (height > maxHeight * 0.9) {
-          // Increased from 0.8
-          height = maxHeight * 0.9;
+        if (height > maxHeight * 0.95) {
+          // Increased from 0.9
+          height = maxHeight * 0.95;
           width = height * aspectRatio;
         }
       } else {
-        height = maxHeight * 0.9; // Increased from 0.8
+        height = maxHeight * 0.95; // Increased from 0.9
         width = height * aspectRatio;
-        if (width > maxWidth * 0.95) {
-          // Increased from 0.9
-          width = maxWidth * 0.95;
+        if (width > maxWidth * 0.98) {
+          // Increased from 0.95
+          width = maxWidth * 0.98;
           height = width / aspectRatio;
         }
       }
@@ -126,9 +126,9 @@ class CollageManager extends ChangeNotifier {
     if (height < 180) height = 180; // Increased from 150
 
     // Maximum size control - more generous
-    if (width > maxWidth * 0.98) width = maxWidth * 0.98; // Increased from 0.95
-    if (height > maxHeight * 0.98)
-      height = maxHeight * 0.98; // Increased from 0.95
+    if (width > maxWidth * 0.99) width = maxWidth * 0.99; // Increased from 0.98
+    if (height > maxHeight * 0.99)
+      height = maxHeight * 0.99; // Increased from 0.98
 
     return Size(width, height);
   }
