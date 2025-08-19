@@ -42,14 +42,25 @@ class PhotoBoxWidget extends StatelessWidget {
           decoration: BoxDecoration(
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+                spreadRadius: 1,
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.9),
+                blurRadius: 1,
+                offset: const Offset(0, 1),
+                spreadRadius: 0,
               ),
             ],
             border: isSelected
-                ? Border.all(color: Colors.yellow, width: 2)
-                : null,
+                ? Border.all(
+                    color: Colors.amber[600]!, // More vibrant selection color
+                    width: 3,
+                    style: BorderStyle.solid,
+                  )
+                : Border.all(color: Colors.grey[300]!, width: 1),
           ),
           child: Stack(
             children: [

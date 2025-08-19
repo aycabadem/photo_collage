@@ -30,6 +30,15 @@ class AspectRatioSelector extends StatelessWidget {
         // Aspect ratio dropdown
         DropdownButton<AspectSpec>(
           value: selectedAspect,
+          underline: Container(), // Remove default underline
+          icon: Icon(
+            Icons.arrow_drop_down,
+            color: Theme.of(context).primaryColor,
+          ),
+          style: TextStyle(
+            color: Theme.of(context).primaryColor,
+            fontWeight: FontWeight.w600,
+          ),
           items: [
             // Preset ratios
             ...presets.map(
@@ -51,12 +60,16 @@ class AspectRatioSelector extends StatelessWidget {
             }
           },
         ),
+        Container(width: 1, height: 24, color: Colors.grey[300]),
         IconButton(
           tooltip: 'Custom ratio',
           onPressed: onCustomRatioPressed,
-          icon: const Icon(Icons.tune),
+          icon: Icon(Icons.tune, color: Theme.of(context).primaryColor),
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            foregroundColor: Theme.of(context).primaryColor,
+          ),
         ),
-        const SizedBox(width: 8),
       ],
     );
   }

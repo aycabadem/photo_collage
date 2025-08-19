@@ -26,8 +26,23 @@ class _CollageScreenState extends State<CollageScreen> {
         builder: (context, collageManager, child) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Photo Collage'),
-              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.photo_library,
+                    color: Theme.of(context).primaryColor,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Photo Collage',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.white,
+              elevation: 2,
+              shadowColor: Colors.black.withOpacity(0.1),
               actions: [
                 AspectRatioSelector(
                   selectedAspect: collageManager.selectedAspect,
@@ -39,6 +54,7 @@ class _CollageScreenState extends State<CollageScreen> {
                   onCustomRatioPressed: () =>
                       _openCustomAspectDialog(context, collageManager),
                 ),
+                const SizedBox(width: 16),
               ],
             ),
             body: LayoutBuilder(
@@ -92,9 +108,25 @@ class _CollageScreenState extends State<CollageScreen> {
                 );
               },
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () => collageManager.addPhotoBox(),
-              child: const Icon(Icons.photo_library),
+            floatingActionButton: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: FloatingActionButton(
+                onPressed: () => collageManager.addPhotoBox(),
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                child: const Icon(Icons.add_a_photo, size: 28),
+              ),
             ),
           );
         },

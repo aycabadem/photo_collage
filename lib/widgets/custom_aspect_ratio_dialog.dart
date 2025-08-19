@@ -45,23 +45,56 @@ class _CustomAspectRatioDialogState extends State<CustomAspectRatioDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Custom Ratio (Width:Height)'),
-      content: Row(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
         children: [
-          Expanded(
-            child: TextField(
-              controller: _widthController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Width'),
-            ),
+          Icon(
+            Icons.aspect_ratio,
+            color: Theme.of(context).primaryColor,
+            size: 24,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _heightController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Height'),
-            ),
+          const SizedBox(width: 8),
+          const Text('Custom Aspect Ratio'),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Enter width and height values:',
+            style: TextStyle(color: Colors.grey, fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _widthController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Width',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.width_normal),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _heightController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Height',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.height),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

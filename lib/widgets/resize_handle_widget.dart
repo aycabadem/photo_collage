@@ -48,18 +48,30 @@ class ResizeHandleWidget extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Colors.blue[300]!, Colors.blue[500]!],
+              colors: [Colors.blue[400]!, Colors.blue[600]!],
             ),
-            border: Border.all(color: Colors.white, width: 1.5),
+            borderRadius: BorderRadius.circular(size / 2), // Perfect circle
+            border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
-                blurRadius: 3,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+                spreadRadius: 1,
+              ),
+              BoxShadow(
+                color: Colors.white.withOpacity(0.8),
+                blurRadius: 1,
                 offset: const Offset(0, 1),
+                spreadRadius: 0,
               ),
             ],
           ),
-          child: const Icon(Icons.open_in_full, color: Colors.white, size: 10),
+          child: Icon(
+            Icons.open_in_full,
+            color: Colors.white,
+            size: size * 0.6, // Proportional icon size
+          ),
         ),
       ),
     );

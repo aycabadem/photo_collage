@@ -68,7 +68,24 @@ class CollageCanvas extends StatelessWidget {
       child: Container(
         width: templateSize.width,
         height: templateSize.height,
-        color: Colors.grey[200],
+        decoration: BoxDecoration(
+          color: Colors.grey[100], // Lighter, more modern color
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+              spreadRadius: 2,
+            ),
+            BoxShadow(
+              color: Colors.white.withOpacity(0.8),
+              blurRadius: 1,
+              offset: const Offset(0, 1),
+              spreadRadius: 0,
+            ),
+          ],
+          border: Border.all(color: Colors.grey[300]!, width: 1),
+        ),
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
