@@ -68,40 +68,50 @@ class _CollageScreenState extends State<CollageScreen> {
                   collageManager.initializeTemplateSize(screenSize);
                 });
 
-                return InteractiveViewer(
-                  transformationController: _transformationController,
-                  minScale: 0.3,
-                  maxScale: 3.0,
-                  panEnabled: true,
-                  scaleEnabled: true,
-                  boundaryMargin: EdgeInsets.zero,
-                  child: SizedBox(
-                    width: constraints.maxWidth,
-                    height: constraints.maxHeight,
-                    child: Center(
-                      child: CollageCanvas(
-                        templateSize: collageManager.templateSize,
-                        photoBoxes: collageManager.photoBoxes,
-                        selectedBox: collageManager.selectedBox,
-                        onBoxSelected: (box) => collageManager.selectBox(box),
-                        onBoxDragged: (box, details) {
-                          // Handle box dragging with scale
-                          final scale = _getCurrentScale();
-                          collageManager.moveBox(
-                            box,
-                            Offset(
-                              details.delta.dx / scale,
-                              details.delta.dy / scale,
-                            ),
-                          );
-                        },
-                        onBoxDeleted: (box) => collageManager.deleteBox(box),
-                        onResizeHandleDragged: (box, dx, dy) {
-                          // Handle resize with scale
-                          final scale = _getCurrentScale();
-                          collageManager.resizeBox(box, dx / scale, dy / scale);
-                        },
-                        onBackgroundTap: () => collageManager.selectBox(null),
+                return GestureDetector(
+                  onTap: () {
+                    // Deselect when tapping outside the InteractiveViewer
+                    collageManager.selectBox(null);
+                  },
+                  child: InteractiveViewer(
+                    transformationController: _transformationController,
+                    minScale: 0.3,
+                    maxScale: 3.0,
+                    panEnabled: true, // Always allow panning
+                    scaleEnabled: true, // Zoom active
+                    boundaryMargin: EdgeInsets.zero,
+                    child: SizedBox(
+                      width: constraints.maxWidth,
+                      height: constraints.maxHeight,
+                      child: Center(
+                        child: CollageCanvas(
+                          templateSize: collageManager.templateSize,
+                          photoBoxes: collageManager.photoBoxes,
+                          selectedBox: collageManager.selectedBox,
+                          onBoxSelected: (box) => collageManager.selectBox(box),
+                          onBoxDragged: (box, details) {
+                            // Handle box dragging with scale
+                            final scale = _getCurrentScale();
+                            collageManager.moveBox(
+                              box,
+                              Offset(
+                                details.delta.dx / scale,
+                                details.delta.dy / scale,
+                              ),
+                            );
+                          },
+                          onBoxDeleted: (box) => collageManager.deleteBox(box),
+                          onResizeHandleDragged: (box, dx, dy) {
+                            // Handle resize with scale
+                            final scale = _getCurrentScale();
+                            collageManager.resizeBox(
+                              box,
+                              dx / scale,
+                              dy / scale,
+                            );
+                          },
+                          onBackgroundTap: () => collageManager.selectBox(null),
+                        ),
                       ),
                     ),
                   ),

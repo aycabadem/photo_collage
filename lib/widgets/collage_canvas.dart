@@ -45,25 +45,10 @@ class CollageCanvas extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
-      onTapDown: (details) {
-        // Only deselect if tapping on empty background area
-        bool tappedOnBox = false;
-        for (final box in photoBoxes) {
-          final boxRect = Rect.fromLTWH(
-            box.position.dx,
-            box.position.dy,
-            box.size.width,
-            box.size.height,
-          );
-          if (boxRect.contains(details.localPosition)) {
-            tappedOnBox = true;
-            break;
-          }
-        }
-
-        if (!tappedOnBox) {
-          onBackgroundTap();
-        }
+      onTap: () {
+        // Deselect when tapping on empty background area
+        // Only deselect if no photo box is tapped
+        onBackgroundTap();
       },
       child: Container(
         width: templateSize.width,

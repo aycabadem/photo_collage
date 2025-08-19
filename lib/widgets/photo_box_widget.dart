@@ -34,8 +34,11 @@ class PhotoBoxWidget extends StatelessWidget {
       left: box.position.dx,
       top: box.position.dy,
       child: GestureDetector(
-        onTap: onTap,
-        onPanUpdate: onPanUpdate,
+        onDoubleTap: onTap, // Double tap to select
+        onPanUpdate: isSelected
+            ? onPanUpdate
+            : null, // Only allow dragging when selected
+        behavior: HitTestBehavior.opaque, // Prevent background taps
         child: Container(
           width: box.size.width,
           height: box.size.height,
