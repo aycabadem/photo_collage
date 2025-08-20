@@ -1,6 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/photo_box.dart';
 import '../models/aspect_spec.dart';
 import '../utils/collage_utils.dart';
@@ -271,6 +276,101 @@ class CollageManager extends ChangeNotifier {
     if (_templateSize != newSize) {
       _templateSize = newSize;
       notifyListeners();
+    }
+  }
+
+  /// Save the current collage as an image
+  Future<bool> saveCollage() async {
+    try {
+      // Create a high-quality image with the selected aspect ratio
+      final double aspectRatio = _selectedAspect.ratio;
+      final int targetWidth = 1200; // High quality base width
+      final int targetHeight = (targetWidth / aspectRatio).round();
+
+      // Create a custom painter for the collage
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+
+      // Set background color
+      final paint = Paint()..color = const Color(0xFFF5F5F5); // Light grey
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, targetWidth.toDouble(), targetHeight.toDouble()),
+        paint,
+      );
+
+      // Draw photo boxes with proper scaling
+      final double scaleX = targetWidth / _templateSize.width;
+      final double scaleY = targetHeight / _templateSize.height;
+
+      for (final box in _photoBoxes) {
+        if (box.imageFile != null && box.imageFile!.existsSync()) {
+          try {
+            final image = await _loadImage(box.imageFile!);
+            if (image != null) {
+              final scaledPosition = Offset(
+                box.position.dx * scaleX,
+                box.position.dy * scaleY,
+              );
+              final scaledSize = Size(
+                box.size.width * scaleX,
+                box.size.height * scaleY,
+              );
+
+              // Draw the image with proper scaling and positioning
+              final srcRect = Rect.fromLTWH(
+                0,
+                0,
+                image.width.toDouble(),
+                image.height.toDouble(),
+              );
+              final dstRect = Rect.fromLTWH(
+                scaledPosition.dx,
+                scaledPosition.dy,
+                scaledSize.width,
+                scaledSize.height,
+              );
+
+              canvas.drawImageRect(image, srcRect, dstRect, Paint());
+            }
+          } catch (e) {
+            print('Error loading image: $e');
+          }
+        }
+      }
+
+      // Convert to image
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(targetWidth, targetHeight);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData != null) {
+        // Save to gallery
+        final result = await ImageGallerySaver.saveImage(
+          byteData.buffer.asUint8List(),
+          quality: 100,
+          name: 'collage_${DateTime.now().millisecondsSinceEpoch}',
+        );
+
+        return result['isSuccess'] == true;
+      }
+
+      return false;
+    } catch (e) {
+      print('Error saving collage: $e');
+      return false;
+    }
+  }
+
+  /// Load image from file
+  Future<ui.Image?> _loadImage(File file) async {
+    try {
+      final bytes = await file.readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    } catch (e) {
+      print('Error loading image: $e');
+      return null;
     }
   }
 }

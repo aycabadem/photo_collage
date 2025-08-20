@@ -55,6 +55,17 @@ class _CollageScreenState extends State<CollageScreen> {
                       _openCustomAspectDialog(context, collageManager),
                 ),
                 const SizedBox(width: 16),
+                // Save Collage button
+                IconButton(
+                  onPressed: () => _saveCollage(context, collageManager),
+                  icon: const Icon(Icons.save),
+                  tooltip: 'Save Collage',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 16),
               ],
             ),
             body: LayoutBuilder(
@@ -165,5 +176,57 @@ class _CollageScreenState extends State<CollageScreen> {
         },
       ),
     );
+  }
+
+  /// Save the current collage
+  Future<void> _saveCollage(
+    BuildContext context,
+    CollageManager manager,
+  ) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final success = await manager.saveCollage();
+
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      if (success) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Collage saved successfully to gallery!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save collage. Please try again.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Hide loading indicator
+      Navigator.of(context).pop();
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 }
