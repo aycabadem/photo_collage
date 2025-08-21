@@ -54,13 +54,13 @@ class ResizeHandleWidget extends StatelessWidget {
             border: Border.all(color: Colors.white, width: 2),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
                 spreadRadius: 1,
               ),
               BoxShadow(
-                color: Colors.white.withOpacity(0.8),
+                color: Colors.white.withValues(alpha: 0.8),
                 blurRadius: 1,
                 offset: const Offset(0, 1),
                 spreadRadius: 0,

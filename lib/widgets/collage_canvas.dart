@@ -63,13 +63,13 @@ class CollageCanvas extends StatelessWidget {
           color: Colors.grey[100], // Lighter, more modern color
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 4),
               spreadRadius: 2,
             ),
             BoxShadow(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withValues(alpha: 0.8),
               blurRadius: 1,
               offset: const Offset(0, 1),
               spreadRadius: 0,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import '../models/photo_box.dart';
 
 /// Widget for displaying a single photo box in the collage
@@ -45,13 +44,13 @@ class PhotoBoxWidget extends StatelessWidget {
           decoration: BoxDecoration(
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
                 spreadRadius: 1,
               ),
               BoxShadow(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 blurRadius: 1,
                 offset: const Offset(0, 1),
                 spreadRadius: 0,
@@ -99,11 +98,11 @@ class PhotoBoxWidget extends StatelessWidget {
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.8),
+                          color: Colors.black.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               blurRadius: 3,
                               offset: const Offset(0, 1),
                             ),

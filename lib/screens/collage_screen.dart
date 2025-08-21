@@ -41,7 +41,7 @@ class _CollageScreenState extends State<CollageScreen> {
               ),
               backgroundColor: Colors.white,
               elevation: 2,
-              shadowColor: Colors.black.withOpacity(0.1),
+              shadowColor: Colors.black.withValues(alpha: 0.1),
               actions: [
                 AspectRatioSelector(
                   selectedAspect: collageManager.selectedAspect,
@@ -139,7 +139,9 @@ class _CollageScreenState extends State<CollageScreen> {
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).primaryColor.withOpacity(0.3),
+                    color: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                     spreadRadius: 2,
@@ -199,39 +201,43 @@ class _CollageScreenState extends State<CollageScreen> {
       final success = await manager.saveCollage();
 
       // Hide loading indicator
-      Navigator.of(context).pop();
+      if (context.mounted) {
+        Navigator.of(context).pop();
 
-      if (success) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Collage saved successfully to gallery!'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      } else {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save collage. Please try again.'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ),
-        );
+        if (success) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Collage saved successfully to gallery!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to save collage. Please try again.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
       // Hide loading indicator
-      Navigator.of(context).pop();
+      if (context.mounted) {
+        Navigator.of(context).pop();
 
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 }

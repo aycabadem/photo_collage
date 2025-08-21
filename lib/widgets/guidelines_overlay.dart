@@ -61,7 +61,7 @@ class GuidelinesPainter extends CustomPainter {
       }
 
       final paint = Paint()
-        ..color = lineColor.withOpacity(0.8)
+        ..color = lineColor.withValues(alpha: 0.8)
         ..strokeWidth = strokeWidth
         ..style = PaintingStyle.stroke;
 

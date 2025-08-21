@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import '../models/photo_box.dart';
@@ -29,7 +28,7 @@ class CollageManager extends ChangeNotifier {
   // State variables
   AspectSpec _selectedAspect = _presets.firstWhere((a) => a.label == '9:16');
   Size _templateSize = Size(baseWidth, baseWidth);
-  List<PhotoBox> _photoBoxes = [];
+  final List<PhotoBox> _photoBoxes = [];
   PhotoBox? _selectedBox;
 
   // Getters
@@ -130,9 +129,12 @@ class CollageManager extends ChangeNotifier {
     if (height < 180) height = 180; // Increased from 150
 
     // Maximum size control - more generous
-    if (width > maxWidth * 0.99) width = maxWidth * 0.99; // Increased from 0.98
-    if (height > maxHeight * 0.99)
+    if (width > maxWidth * 0.99) {
+      width = maxWidth * 0.99; // Increased from 0.98
+    }
+    if (height > maxHeight * 0.99) {
       height = maxHeight * 0.99; // Increased from 0.98
+    }
 
     return Size(width, height);
   }
@@ -409,7 +411,7 @@ class CollageManager extends ChangeNotifier {
               canvas.drawImageRect(image, srcRect, dstRect, Paint());
             }
           } catch (e) {
-            print('Error loading image: $e');
+            // Error loading image - skip this image
           }
         }
       }
@@ -432,7 +434,7 @@ class CollageManager extends ChangeNotifier {
 
       return false;
     } catch (e) {
-      print('Error saving collage: $e');
+      // Error saving collage - return false
       return false;
     }
   }
@@ -445,7 +447,7 @@ class CollageManager extends ChangeNotifier {
       final frame = await codec.getNextFrame();
       return frame.image;
     } catch (e) {
-      print('Error loading image: $e');
+      // Error loading image - return null
       return null;
     }
   }
@@ -670,7 +672,7 @@ class CollageManager extends ChangeNotifier {
 
       return guidelines;
     } catch (e) {
-      print('Error getting guidelines: $e');
+      // Error getting guidelines - return empty list
       return [];
     }
   }
