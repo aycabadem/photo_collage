@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/photo_box.dart';
+import '../models/alignment_guideline.dart';
 import '../widgets/photo_box_widget.dart';
 import '../widgets/resize_handle_widget.dart';
+import '../widgets/guidelines_overlay.dart';
 
 /// Widget for the main collage canvas with photo boxes and interaction
 class CollageCanvas extends StatelessWidget {
@@ -29,6 +31,9 @@ class CollageCanvas extends StatelessWidget {
   /// Callback when tapping outside boxes (deselection)
   final VoidCallback onBackgroundTap;
 
+  /// List of alignment guidelines to display
+  final List<AlignmentGuideline> guidelines;
+
   const CollageCanvas({
     super.key,
     required this.templateSize,
@@ -39,6 +44,7 @@ class CollageCanvas extends StatelessWidget {
     required this.onBoxDeleted,
     required this.onResizeHandleDragged,
     required this.onBackgroundTap,
+    this.guidelines = const [],
   });
 
   @override
@@ -74,11 +80,18 @@ class CollageCanvas extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.hardEdge,
           children: [
-            // Photo boxes
+            // Photo boxes (bottom layer)
             for (var box in photoBoxes) _buildPhotoBox(box),
 
             // Overlay for selected box (resize handles)
             if (selectedBox != null) _buildOverlay(selectedBox!),
+
+            // Guidelines overlay (top layer, but IgnorePointer)
+            if (guidelines.isNotEmpty)
+              GuidelinesOverlay(
+                guidelines: guidelines,
+                templateSize: templateSize,
+              ),
           ],
         ),
       ),

@@ -4,7 +4,6 @@ import '../services/collage_manager.dart';
 import '../widgets/aspect_ratio_selector.dart';
 import '../widgets/collage_canvas.dart';
 import '../widgets/custom_aspect_ratio_dialog.dart';
-import '../models/aspect_spec.dart';
 
 /// Main screen for the photo collage application
 class CollageScreen extends StatefulWidget {
@@ -123,6 +122,11 @@ class _CollageScreenState extends State<CollageScreen> {
                             );
                           },
                           onBackgroundTap: () => collageManager.selectBox(null),
+                          guidelines: collageManager.selectedBox != null
+                              ? collageManager.getAlignmentGuidelines(
+                                  collageManager.selectedBox!,
+                                )
+                              : [],
                         ),
                       ),
                     ),

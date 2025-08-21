@@ -1,13 +1,12 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:path_provider/path_provider.dart';
 import '../models/photo_box.dart';
 import '../models/aspect_spec.dart';
+import '../models/alignment_guideline.dart';
 import '../utils/collage_utils.dart';
 
 /// Service class for managing collage operations and state
@@ -448,6 +447,231 @@ class CollageManager extends ChangeNotifier {
     } catch (e) {
       print('Error loading image: $e');
       return null;
+    }
+  }
+
+  /// Get alignment guidelines for the selected photo box
+  List<AlignmentGuideline> getAlignmentGuidelines(PhotoBox selectedBox) {
+    try {
+      final List<AlignmentGuideline> guidelines = [];
+
+      // Show background center guidelines for ALL photos when they are actually centered
+      final centerX = _templateSize.width / 2;
+      final centerY = _templateSize.height / 2;
+
+      // Check if photo is actually centered (within 3 pixels)
+      final photoCenterX = selectedBox.position.dx + selectedBox.size.width / 2;
+      final photoCenterY =
+          selectedBox.position.dy + selectedBox.size.height / 2;
+
+      if ((photoCenterX - centerX).abs() < 3) {
+        guidelines.add(
+          AlignmentGuideline(
+            position: centerX,
+            isHorizontal: false,
+            type: 'background-center',
+            label: 'Background Center',
+          ),
+        );
+      }
+
+      if ((photoCenterY - centerY).abs() < 3) {
+        guidelines.add(
+          AlignmentGuideline(
+            position: centerY,
+            isHorizontal: true,
+            type: 'background-center',
+            label: 'Background Center',
+          ),
+        );
+      }
+
+      // Only show other guidelines when there are other photo boxes
+      if (_photoBoxes.length <= 1) {
+        return guidelines;
+      }
+
+      // Check alignment with other photo boxes
+      for (final otherBox in _photoBoxes) {
+        if (otherBox == selectedBox) continue;
+
+        // Edge alignment (left, right, top, bottom) - Only show when very close
+        // Left edge alignment
+        if ((selectedBox.position.dx - otherBox.position.dx).abs() < 2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx,
+              isHorizontal: false,
+              type: 'edge',
+              label: 'Left Edge',
+            ),
+          );
+        }
+
+        // Right edge alignment
+        if ((selectedBox.position.dx +
+                    selectedBox.size.width -
+                    otherBox.position.dx -
+                    otherBox.size.width)
+                .abs() <
+            2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx + otherBox.size.width,
+              isHorizontal: false,
+              type: 'edge',
+              label: 'Right Edge',
+            ),
+          );
+        }
+
+        // Left edge to right edge alignment
+        if ((selectedBox.position.dx -
+                    (otherBox.position.dx + otherBox.size.width))
+                .abs() <
+            2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx + otherBox.size.width,
+              isHorizontal: false,
+              type: 'edge',
+              label: 'Left to Right Edge',
+            ),
+          );
+        }
+
+        // Right edge to left edge alignment
+        if (((selectedBox.position.dx + selectedBox.size.width) -
+                    otherBox.position.dx)
+                .abs() <
+            2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx,
+              isHorizontal: false,
+              type: 'edge',
+              label: 'Right to Left Edge',
+            ),
+          );
+        }
+
+        // Top edge alignment
+        if ((selectedBox.position.dy - otherBox.position.dy).abs() < 2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy,
+              isHorizontal: true,
+              type: 'edge',
+              label: 'Top Edge',
+            ),
+          );
+        }
+
+        // Bottom edge alignment
+        if ((selectedBox.position.dy +
+                    selectedBox.size.height -
+                    otherBox.position.dy -
+                    otherBox.size.height)
+                .abs() <
+            2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy + otherBox.size.height,
+              isHorizontal: true,
+              type: 'edge',
+              label: 'Bottom Edge',
+            ),
+          );
+        }
+
+        // Top edge to bottom edge alignment
+        if ((selectedBox.position.dy -
+                    (otherBox.position.dy + otherBox.size.height))
+                .abs() <
+            2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy + otherBox.size.height,
+              isHorizontal: true,
+              type: 'edge',
+              label: 'Top to Bottom Edge',
+            ),
+          );
+        }
+
+        // Bottom edge to top edge alignment
+        if (((selectedBox.position.dy + selectedBox.size.height) -
+                    otherBox.position.dy)
+                .abs() <
+            2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy,
+              isHorizontal: true,
+              type: 'edge',
+              label: 'Bottom to Top Edge',
+            ),
+          );
+        }
+
+        // Center alignment - Only show when very close
+        final selectedCenterX =
+            selectedBox.position.dx + selectedBox.size.width / 2;
+        final otherCenterX = otherBox.position.dx + otherBox.size.width / 2;
+        final selectedCenterY =
+            selectedBox.position.dy + selectedBox.size.height / 2;
+        final otherCenterY = otherBox.position.dy + otherBox.size.height / 2;
+
+        if ((selectedCenterX - otherCenterX).abs() < 2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherCenterX,
+              isHorizontal: false,
+              type: 'center',
+              label: 'Center',
+            ),
+          );
+        }
+
+        if ((selectedCenterY - otherCenterY).abs() < 2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherCenterY,
+              isHorizontal: true,
+              type: 'center',
+              label: 'Center',
+            ),
+          );
+        }
+
+        // Size alignment (width and height) - Show when very close
+        if ((selectedBox.size.width - otherBox.size.width).abs() < 2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx + otherBox.size.width / 2,
+              isHorizontal: false,
+              type: 'size',
+              label: 'Same Width',
+            ),
+          );
+        }
+
+        if ((selectedBox.size.height - otherBox.size.height).abs() < 2) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy + otherBox.size.height / 2,
+              isHorizontal: true,
+              type: 'size',
+              label: 'Same Height',
+            ),
+          );
+        }
+      }
+
+      return guidelines;
+    } catch (e) {
+      print('Error getting guidelines: $e');
+      return [];
     }
   }
 }
