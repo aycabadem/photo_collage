@@ -24,7 +24,7 @@ class CollageCanvas extends StatelessWidget {
   final ValueChanged<PhotoBox> onBoxDeleted;
 
   /// Callback when resize handles are dragged
-  final Function(PhotoBox, double, double) onResizeHandleDragged;
+  final Function(PhotoBox, double, double, Alignment) onResizeHandleDragged;
 
   /// Callback when tapping outside boxes (deselection)
   final VoidCallback onBackgroundTap;
@@ -114,7 +114,8 @@ class CollageCanvas extends StatelessWidget {
           box: box,
           alignment: Alignment.topLeft,
           size: handleSize,
-          onDrag: (dx, dy) => onResizeHandleDragged(box, dx, dy),
+          onDrag: (dx, dy) =>
+              onResizeHandleDragged(box, dx, dy, Alignment.topLeft),
         ),
 
         // Top-right resize handle
@@ -122,7 +123,8 @@ class CollageCanvas extends StatelessWidget {
           box: box,
           alignment: Alignment.topRight,
           size: handleSize,
-          onDrag: (dx, dy) => onResizeHandleDragged(box, dx, dy),
+          onDrag: (dx, dy) =>
+              onResizeHandleDragged(box, dx, dy, Alignment.topRight),
         ),
 
         // Bottom-left resize handle
@@ -130,7 +132,8 @@ class CollageCanvas extends StatelessWidget {
           box: box,
           alignment: Alignment.bottomLeft,
           size: handleSize,
-          onDrag: (dx, dy) => onResizeHandleDragged(box, dx, dy),
+          onDrag: (dx, dy) =>
+              onResizeHandleDragged(box, dx, dy, Alignment.bottomLeft),
         ),
 
         // Bottom-right resize handle
@@ -138,7 +141,8 @@ class CollageCanvas extends StatelessWidget {
           box: box,
           alignment: Alignment.bottomRight,
           size: handleSize,
-          onDrag: (dx, dy) => onResizeHandleDragged(box, dx, dy),
+          onDrag: (dx, dy) =>
+              onResizeHandleDragged(box, dx, dy, Alignment.bottomRight),
         ),
       ],
     );

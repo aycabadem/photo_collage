@@ -253,6 +253,7 @@ class CollageManager extends ChangeNotifier {
 
   /// Resize a photo box
   void resizeBox(PhotoBox box, double deltaWidth, double deltaHeight) {
+    // Calculate new dimensions
     double newWidth = CollageUtils.safeClamp(
       box.size.width + deltaWidth,
       50.0,
@@ -265,7 +266,83 @@ class CollageManager extends ChangeNotifier {
     );
 
     if (newWidth >= 50 && newHeight >= 50) {
+      // Update size
       box.size = Size(newWidth, newHeight);
+      notifyListeners();
+    }
+  }
+
+  /// Resize a photo box from a specific handle
+  void resizeBoxFromHandle(
+    PhotoBox box,
+    Alignment handleAlignment,
+    double deltaWidth,
+    double deltaHeight,
+  ) {
+    double newWidth = box.size.width;
+    double newHeight = box.size.height;
+    double newX = box.position.dx;
+    double newY = box.position.dy;
+
+    // Apply changes based on handle position
+    if (handleAlignment == Alignment.topLeft) {
+      // Top-left: adjust width and height, move position
+      newWidth = CollageUtils.safeClamp(
+        box.size.width - deltaWidth,
+        50.0,
+        box.position.dx + box.size.width,
+      );
+      newHeight = CollageUtils.safeClamp(
+        box.size.height - deltaHeight,
+        50.0,
+        box.position.dy + box.size.height,
+      );
+      newX = box.position.dx + (box.size.width - newWidth);
+      newY = box.position.dy + (box.size.height - newHeight);
+    } else if (handleAlignment == Alignment.topRight) {
+      // Top-right: adjust width and height, move Y position
+      newWidth = CollageUtils.safeClamp(
+        box.size.width + deltaWidth,
+        50.0,
+        _templateSize.width - box.position.dx,
+      );
+      newHeight = CollageUtils.safeClamp(
+        box.size.height - deltaHeight,
+        50.0,
+        box.position.dy + box.size.height,
+      );
+      newY = box.position.dy + (box.size.height - newHeight);
+    } else if (handleAlignment == Alignment.bottomLeft) {
+      // Bottom-left: adjust width and height, move X position
+      newWidth = CollageUtils.safeClamp(
+        box.size.width - deltaWidth,
+        50.0,
+        box.position.dx + box.size.width,
+      );
+      newHeight = CollageUtils.safeClamp(
+        box.size.height + deltaHeight,
+        50.0,
+        _templateSize.height - box.position.dy,
+      );
+      newX = box.position.dx + (box.size.width - newWidth);
+    } else if (handleAlignment == Alignment.bottomRight) {
+      // Bottom-right: adjust width and height, keep position
+      newWidth = CollageUtils.safeClamp(
+        box.size.width + deltaWidth,
+        50.0,
+        _templateSize.width - box.position.dx,
+      );
+      newHeight = CollageUtils.safeClamp(
+        box.size.height + deltaHeight,
+        50.0,
+        _templateSize.height - box.position.dy,
+      );
+    }
+
+    // Apply changes if valid
+    if (newWidth >= 50 && newHeight >= 50) {
+      box.size = Size(newWidth, newHeight);
+      box.position = Offset(newX, newY);
       notifyListeners();
     }
   }

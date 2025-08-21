@@ -112,11 +112,12 @@ class _CollageScreenState extends State<CollageScreen> {
                             );
                           },
                           onBoxDeleted: (box) => collageManager.deleteBox(box),
-                          onResizeHandleDragged: (box, dx, dy) {
+                          onResizeHandleDragged: (box, dx, dy, alignment) {
                             // Handle resize with scale
                             final scale = _getCurrentScale();
-                            collageManager.resizeBox(
+                            collageManager.resizeBoxFromHandle(
                               box,
+                              alignment,
                               dx / scale,
                               dy / scale,
                             );
