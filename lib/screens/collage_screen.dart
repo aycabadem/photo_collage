@@ -4,6 +4,7 @@ import '../services/collage_manager.dart';
 import '../widgets/aspect_ratio_selector.dart';
 import '../widgets/collage_canvas.dart';
 import '../widgets/custom_aspect_ratio_dialog.dart';
+import '../widgets/floating_color_bar.dart';
 
 /// Main screen for the photo collage application
 class CollageScreen extends StatefulWidget {
@@ -127,6 +128,7 @@ class _CollageScreenState extends State<CollageScreen> {
                                   collageManager.selectedBox!,
                                 )
                               : [],
+                          backgroundColor: collageManager.backgroundColor,
                         ),
                       ),
                     ),
@@ -134,27 +136,40 @@ class _CollageScreenState extends State<CollageScreen> {
                 );
               },
             ),
-            floatingActionButton: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(
-                      context,
-                    ).primaryColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                    spreadRadius: 2,
+            floatingActionButton: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Floating color bar
+                FloatingColorBar(
+                  currentColor: collageManager.backgroundColor,
+                  onColorChanged: (color) =>
+                      collageManager.changeBackgroundColor(color),
+                ),
+                const SizedBox(width: 16),
+                // Photo add button
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: FloatingActionButton(
-                onPressed: () => collageManager.addPhotoBox(),
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                child: const Icon(Icons.add_a_photo, size: 28),
-              ),
+                  child: FloatingActionButton(
+                    onPressed: () => collageManager.addPhotoBox(),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    child: const Icon(Icons.add_a_photo, size: 28),
+                  ),
+                ),
+              ],
             ),
           );
         },

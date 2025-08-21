@@ -30,6 +30,7 @@ class CollageManager extends ChangeNotifier {
   Size _templateSize = Size(baseWidth, baseWidth);
   final List<PhotoBox> _photoBoxes = [];
   PhotoBox? _selectedBox;
+  Color _backgroundColor = const Color(0xFFF5F5F5); // Default light grey
 
   // Getters
   AspectSpec get selectedAspect => _selectedAspect;
@@ -37,6 +38,7 @@ class CollageManager extends ChangeNotifier {
   List<PhotoBox> get photoBoxes => List.unmodifiable(_photoBoxes);
   PhotoBox? get selectedBox => _selectedBox;
   List<AspectSpec> get presets => List.unmodifiable(_presets);
+  Color get backgroundColor => _backgroundColor;
 
   // Image picker
   final ImagePicker _imagePicker = ImagePicker();
@@ -193,6 +195,12 @@ class CollageManager extends ChangeNotifier {
   /// Select a photo box
   void selectBox(PhotoBox? box) {
     _selectedBox = box;
+    notifyListeners();
+  }
+
+  /// Change background color
+  void changeBackgroundColor(Color newColor) {
+    _backgroundColor = newColor;
     notifyListeners();
   }
 

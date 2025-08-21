@@ -34,6 +34,9 @@ class CollageCanvas extends StatelessWidget {
   /// List of alignment guidelines to display
   final List<AlignmentGuideline> guidelines;
 
+  /// Background color for the canvas
+  final Color backgroundColor;
+
   const CollageCanvas({
     super.key,
     required this.templateSize,
@@ -45,6 +48,7 @@ class CollageCanvas extends StatelessWidget {
     required this.onResizeHandleDragged,
     required this.onBackgroundTap,
     this.guidelines = const [],
+    required this.backgroundColor,
   });
 
   @override
@@ -60,7 +64,7 @@ class CollageCanvas extends StatelessWidget {
         width: templateSize.width,
         height: templateSize.height,
         decoration: BoxDecoration(
-          color: Colors.grey[100], // Lighter, more modern color
+          color: backgroundColor, // Use dynamic background color
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
