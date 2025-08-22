@@ -41,7 +41,7 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
       child: Container(
         width: MediaQuery.of(context).size.width,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
         ),
         decoration: BoxDecoration(
           color: Colors.grey[100],
@@ -59,10 +59,10 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
           ],
         ),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           children: [
             _buildHeader(),
-            Flexible(child: _buildColorGrid()),
+            Expanded(child: _buildColorGrid()),
             _buildOpacitySlider(),
             _buildSavedColors(),
             const SizedBox(height: 12),
@@ -89,7 +89,7 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
         ),
         // Header content
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Row(
             children: [
               Icon(
@@ -127,7 +127,7 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
     final colors = _generateColorGrid();
 
     return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 12,
         childAspectRatio: 1.0,
@@ -170,7 +170,7 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
 
   Widget _buildOpacitySlider() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
