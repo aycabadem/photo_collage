@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class iOSColorPickerModal extends StatefulWidget {
+class IOSColorPickerModal extends StatefulWidget {
   final Color currentColor;
   final double currentOpacity;
   final Function(Color color, double opacity) onColorChanged;
 
-  const iOSColorPickerModal({
+  const IOSColorPickerModal({
     super.key,
     required this.currentColor,
     required this.currentOpacity,
@@ -13,26 +13,18 @@ class iOSColorPickerModal extends StatefulWidget {
   });
 
   @override
-  State<iOSColorPickerModal> createState() => _iOSColorPickerModalState();
+  State<IOSColorPickerModal> createState() => _IOSColorPickerModalState();
 }
 
-class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
+class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   late Color _selectedColor;
   late double _selectedOpacity;
-  late List<Color> _savedColors;
 
   @override
   void initState() {
     super.initState();
     _selectedColor = widget.currentColor;
     _selectedOpacity = widget.currentOpacity;
-    _savedColors = [
-      Colors.black,
-      Colors.blue,
-      Colors.green,
-      Colors.yellow,
-      Colors.red,
-    ];
   }
 
   @override
@@ -263,78 +255,6 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSavedColors() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          // Current selected color (large)
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: _selectedColor.withValues(alpha: _selectedOpacity),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Saved colors row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Saved colors
-              ...(_savedColors.map(
-                (color) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedColor = color;
-                      });
-                    },
-                    child: Container(
-                      width: 35,
-                      height: 35,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                    ),
-                  ),
-                ),
-              )),
-              // Add color button
-              Padding(
-                padding: const EdgeInsets.only(left: 6),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (!_savedColors.contains(_selectedColor)) {
-                        _savedColors.add(_selectedColor);
-                      }
-                    });
-                  },
-                  child: Container(
-                    width: 35,
-                    height: 35,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[300],
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey[400]!),
-                    ),
-                    child: Icon(Icons.add, color: Colors.grey[600], size: 18),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),

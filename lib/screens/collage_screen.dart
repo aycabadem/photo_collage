@@ -4,7 +4,7 @@ import '../services/collage_manager.dart';
 import '../widgets/aspect_ratio_selector.dart';
 import '../widgets/collage_canvas.dart';
 import '../widgets/custom_aspect_ratio_dialog.dart';
-import '../widgets/color_picker_button.dart';
+
 import '../widgets/ios_color_picker_modal.dart';
 
 /// Main screen for the photo collage application
@@ -286,7 +286,7 @@ class _CollageScreenState extends State<CollageScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => iOSColorPickerModal(
+      builder: (context) => IOSColorPickerModal(
         currentColor: collageManager.backgroundColor,
         currentOpacity: collageManager.backgroundOpacity,
         onColorChanged: (color, opacity) {
