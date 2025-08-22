@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/photo_box.dart';
+import '../services/collage_manager.dart';
+import '../widgets/smart_border_overlay.dart';
 
 /// Widget for displaying a single photo box in the collage
 class PhotoBoxWidget extends StatelessWidget {
@@ -18,6 +20,14 @@ class PhotoBoxWidget extends StatelessWidget {
   /// Callback when the delete button is tapped
   final VoidCallback onDelete;
 
+  /// Global border settings from CollageManager
+  final double globalBorderWidth;
+  final Color globalBorderColor;
+  final bool hasGlobalBorder;
+  
+  /// Other photo boxes for smart border detection
+  final List<PhotoBox> otherBoxes;
+
   const PhotoBoxWidget({
     super.key,
     required this.box,
@@ -25,6 +35,10 @@ class PhotoBoxWidget extends StatelessWidget {
     required this.onTap,
     required this.onPanUpdate,
     required this.onDelete,
+    required this.globalBorderWidth,
+    required this.globalBorderColor,
+    required this.hasGlobalBorder,
+    required this.otherBoxes,
   });
 
   @override
@@ -42,7 +56,7 @@ class PhotoBoxWidget extends StatelessWidget {
           width: box.size.width,
           height: box.size.height,
           decoration: BoxDecoration(
-            // No borders or shadows for seamless photo placement
+            // No border here - we'll draw it manually for smart rendering
           ),
           child: Stack(
             children: [
@@ -64,6 +78,15 @@ class PhotoBoxWidget extends StatelessWidget {
                         ),
                       ),
                     ),
+
+              // Smart border overlay
+              if (hasGlobalBorder && globalBorderWidth > 0)
+                SmartBorderOverlay(
+                  box: box,
+                  borderWidth: globalBorderWidth,
+                  borderColor: globalBorderColor,
+                  otherBoxes: otherBoxes,
+                ),
 
               // Delete button (only for selected boxes)
               if (isSelected)

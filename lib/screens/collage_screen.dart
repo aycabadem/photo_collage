@@ -6,6 +6,7 @@ import '../widgets/collage_canvas.dart';
 import '../widgets/custom_aspect_ratio_dialog.dart';
 
 import '../widgets/ios_color_picker_modal.dart';
+import '../widgets/border_panel_modal.dart';
 
 /// Main screen for the photo collage application
 class CollageScreen extends StatefulWidget {
@@ -161,10 +162,11 @@ class _CollageScreenState extends State<CollageScreen> {
                         onPressed: () {},
                         isActive: false,
                       ),
-                      // Future button 3
+                      // Border button
                       _buildBottomBarButton(
-                        icon: Icons.help_outline,
-                        onPressed: () {},
+                        icon: Icons.border_all,
+                        onPressed: () =>
+                            _showBorderPanel(context, collageManager),
                         isActive: false,
                       ),
                       // Color picker button
@@ -282,6 +284,23 @@ class _CollageScreenState extends State<CollageScreen> {
         onColorChanged: (color, opacity) {
           collageManager.changeBackgroundColor(color);
           collageManager.changeBackgroundOpacity(opacity);
+        },
+      ),
+    );
+  }
+
+  // Show border panel modal
+  void _showBorderPanel(BuildContext context, CollageManager collageManager) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => BorderPanelModal(
+        currentBorderWidth: collageManager.globalBorderWidth,
+        currentBorderColor: collageManager.globalBorderColor,
+        onBorderChanged: (width, color) {
+          collageManager.changeGlobalBorderWidth(width);
+          collageManager.changeGlobalBorderColor(color);
         },
       ),
     );

@@ -111,6 +111,10 @@ class CollageCanvas extends StatelessWidget {
       onTap: () => onBoxSelected(box),
       onPanUpdate: (details) => onBoxDragged(box, details),
       onDelete: () => onBoxDeleted(box),
+      globalBorderWidth: collageManager.globalBorderWidth,
+      globalBorderColor: collageManager.globalBorderColor,
+      hasGlobalBorder: collageManager.hasGlobalBorder,
+      otherBoxes: photoBoxes.where((b) => b != box).toList(),
     );
   }
 

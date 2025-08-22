@@ -35,6 +35,11 @@ class CollageManager extends ChangeNotifier {
   Color _backgroundColor = Colors.white;
   double _backgroundOpacity = 1.0;
 
+  // Global border settings
+  double _globalBorderWidth = 0.0;
+  Color _globalBorderColor = Colors.black;
+  bool _hasGlobalBorder = false;
+
   // Getters
   AspectSpec get selectedAspect => _selectedAspect;
   Size get templateSize => _templateSize;
@@ -46,6 +51,11 @@ class CollageManager extends ChangeNotifier {
   Color get backgroundColor => _backgroundColor;
   double get backgroundOpacity => _backgroundOpacity;
 
+  // Global border getters
+  double get globalBorderWidth => _globalBorderWidth;
+  Color get globalBorderColor => _globalBorderColor;
+  bool get hasGlobalBorder => _hasGlobalBorder;
+
   // Background color and opacity setters
   void changeBackgroundColor(Color color) {
     _backgroundColor = color;
@@ -54,6 +64,18 @@ class CollageManager extends ChangeNotifier {
 
   void changeBackgroundOpacity(double opacity) {
     _backgroundOpacity = opacity.clamp(0.0, 1.0);
+    notifyListeners();
+  }
+
+  // Global border setters
+  void changeGlobalBorderWidth(double width) {
+    _globalBorderWidth = width.clamp(0.0, 10.0);
+    _hasGlobalBorder = _globalBorderWidth > 0.0;
+    notifyListeners();
+  }
+
+  void changeGlobalBorderColor(Color color) {
+    _globalBorderColor = color;
     notifyListeners();
   }
 
