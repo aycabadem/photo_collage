@@ -140,7 +140,7 @@ class _CollageScreenState extends State<CollageScreen> {
             bottomNavigationBar: Consumer<CollageManager>(
               builder: (context, collageManager, child) {
                 return Container(
-                  height: 80,
+                  height: 90, // Orta seviye alan
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.95),
                     borderRadius: const BorderRadius.only(
