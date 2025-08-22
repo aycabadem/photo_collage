@@ -9,7 +9,7 @@ class ColorPickerButton extends StatelessWidget {
     super.key,
     required this.currentColor,
     required this.onPressed,
-    this.size = 56.0,
+    this.size = 48.0, // Daha küçük ve şık
   });
 
   @override
@@ -23,10 +23,10 @@ class ColorPickerButton extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-              spreadRadius: 2,
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+              spreadRadius: 1,
             ),
           ],
         ),
@@ -77,8 +77,9 @@ class ColorPickerButtonPainter extends CustomPainter {
     // Inner circle border
     final borderPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..color = Colors.white;
+      ..strokeWidth =
+          1.5 // Daha ince border
+      ..color = Colors.white.withValues(alpha: 0.9); // Hafif şeffaf
 
     canvas.drawCircle(center, innerRadius, borderPaint);
   }

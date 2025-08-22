@@ -64,7 +64,7 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
             _buildHeader(),
             Expanded(child: _buildColorGrid()),
             _buildOpacitySlider(),
-            _buildSavedColors(),
+            _buildSelectedColorPreview(),
             const SizedBox(height: 12),
             _buildApplyButton(),
             SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 16),
@@ -95,7 +95,7 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
               Icon(
                 Icons.colorize,
                 color: Theme.of(context).primaryColor,
-                size: 24,
+                size: 20, // Daha küçük ve şık
               ),
               const Expanded(
                 child: Text(
@@ -107,13 +107,13 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
               GestureDetector(
                 onTap: () => Navigator.of(context).pop(),
                 child: Container(
-                  width: 32,
-                  height: 32,
+                  width: 28, // Daha küçük
+                  height: 28, // Daha küçük
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.close, size: 18),
+                  child: const Icon(Icons.close, size: 16), // Daha küçük icon
                 ),
               ),
             ],
@@ -228,6 +228,41 @@ class _iOSColorPickerModalState extends State<iOSColorPickerModal> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedColorPreview() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          Text(
+            'SELECTED COLOR',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: 80,
+            height: 50,
+            decoration: BoxDecoration(
+              color: _selectedColor.withValues(alpha: _selectedOpacity),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
           ),
         ],
       ),
