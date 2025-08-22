@@ -636,7 +636,7 @@ class CollageManager extends ChangeNotifier {
         );
       }
 
-      if ((photoCenterY - centerY).abs() <= 0) {
+      if ((photoCenterY - centerY).abs() <= 5) {
         guidelines.add(
           AlignmentGuideline(
             position: centerY,
@@ -801,29 +801,6 @@ class CollageManager extends ChangeNotifier {
               isHorizontal: true,
               type: 'center',
               label: 'Center',
-            ),
-          );
-        }
-
-        // Size alignment (width and height) - Show when exactly same size
-        if ((selectedBox.size.width - otherBox.size.width).abs() <= 5) {
-          guidelines.add(
-            AlignmentGuideline(
-              position: otherBox.position.dx + otherBox.size.width / 2,
-              isHorizontal: false,
-              type: 'size',
-              label: 'Same Width',
-            ),
-          );
-        }
-
-        if ((selectedBox.size.height - otherBox.size.height).abs() <= 5) {
-          guidelines.add(
-            AlignmentGuideline(
-              position: otherBox.position.dy + otherBox.size.height / 2,
-              isHorizontal: true,
-              type: 'size',
-              label: 'Same Height',
             ),
           );
         }
