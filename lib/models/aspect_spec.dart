@@ -1,10 +1,10 @@
 /// Model class representing aspect ratio specifications
 class AspectSpec {
   /// Width component of the aspect ratio
-  final int w;
+  final double w;
 
   /// Height component of the aspect ratio
-  final int h;
+  final double h;
 
   /// Display label for the aspect ratio
   final String label;

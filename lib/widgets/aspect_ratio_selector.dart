@@ -47,11 +47,13 @@ class AspectRatioSelector extends StatelessWidget {
             ),
             // Custom ratio (only if not in presets and different from current)
             if (!presets.any(
-              (p) => p.w == selectedAspect.w && p.h == selectedAspect.h,
+              (p) =>
+                  (p.w - selectedAspect.w).abs() < 0.001 &&
+                  (p.h - selectedAspect.h).abs() < 0.001,
             ))
               DropdownMenuItem<AspectSpec>(
                 value: selectedAspect,
-                child: Text('${selectedAspect.label} (Custom)'),
+                child: Text(selectedAspect.label),
               ),
           ],
           onChanged: (v) {

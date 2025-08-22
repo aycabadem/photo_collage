@@ -12,13 +12,13 @@ import '../utils/collage_utils.dart';
 class CollageManager extends ChangeNotifier {
   // Aspect ratio presets
   static const List<AspectSpec> _presets = [
-    AspectSpec(w: 1, h: 1, label: '1:1'),
-    AspectSpec(w: 3, h: 4, label: '3:4'),
-    AspectSpec(w: 4, h: 3, label: '4:3'),
-    AspectSpec(w: 4, h: 5, label: '4:5'),
-    AspectSpec(w: 5, h: 4, label: '5:4'),
-    AspectSpec(w: 9, h: 16, label: '9:16'),
-    AspectSpec(w: 16, h: 9, label: '16:9'),
+    AspectSpec(w: 1.0, h: 1.0, label: '1:1'),
+    AspectSpec(w: 3.0, h: 4.0, label: '3:4'),
+    AspectSpec(w: 4.0, h: 3.0, label: '4:3'),
+    AspectSpec(w: 4.0, h: 5.0, label: '4:5'),
+    AspectSpec(w: 5.0, h: 4.0, label: '5:4'),
+    AspectSpec(w: 9.0, h: 16.0, label: '9:16'),
+    AspectSpec(w: 16.0, h: 9.0, label: '16:9'),
   ];
 
   // Template size configuration

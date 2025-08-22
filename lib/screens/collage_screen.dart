@@ -27,19 +27,9 @@ class _CollageScreenState extends State<CollageScreen> {
         builder: (context, collageManager, child) {
           return Scaffold(
             appBar: AppBar(
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.photo_library,
-                    color: Theme.of(context).primaryColor,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    'Photo Collage',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
-                  ),
-                ],
+              title: const Text(
+                'Photo Collage',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
               ),
               backgroundColor: Colors.white,
               elevation: 2,
@@ -55,7 +45,7 @@ class _CollageScreenState extends State<CollageScreen> {
                   onCustomRatioPressed: () =>
                       _openCustomAspectDialog(context, collageManager),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 8),
                 // Save Collage button
                 IconButton(
                   onPressed: () => _saveCollage(context, collageManager),
@@ -66,7 +56,7 @@ class _CollageScreenState extends State<CollageScreen> {
                     foregroundColor: Colors.white,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 8),
               ],
             ),
             body: LayoutBuilder(

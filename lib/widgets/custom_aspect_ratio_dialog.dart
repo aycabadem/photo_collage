@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/aspect_spec.dart';
+import 'package:flutter/services.dart'; // Added for FilteringTextInputFormatter
 
 /// Dialog for entering custom aspect ratio values
 class CustomAspectRatioDialog extends StatefulWidget {
@@ -61,7 +62,7 @@ class _CustomAspectRatioDialogState extends State<CustomAspectRatioDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            'Enter width and height values:',
+            'Enter width and height values between 1.0-9.99:',
             style: TextStyle(color: Colors.grey, fontSize: 14),
           ),
           const SizedBox(height: 16),
@@ -70,13 +71,15 @@ class _CustomAspectRatioDialogState extends State<CustomAspectRatioDialog> {
               Expanded(
                 child: TextField(
                   controller: _widthController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Width',
+                    hintText: '1.2', // Updated hint
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    prefixIcon: const Icon(Icons.width_normal),
                   ),
                 ),
               ),
@@ -84,13 +87,15 @@ class _CustomAspectRatioDialogState extends State<CustomAspectRatioDialog> {
               Expanded(
                 child: TextField(
                   controller: _heightController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Height',
+                    hintText: '2.3', // Updated hint
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    prefixIcon: const Icon(Icons.height),
                   ),
                 ),
               ),
@@ -105,17 +110,30 @@ class _CustomAspectRatioDialogState extends State<CustomAspectRatioDialog> {
         ),
         FilledButton(
           onPressed: () {
-            final w = int.tryParse(_widthController.text);
-            final h = int.tryParse(_heightController.text);
-            if (w != null && h != null && w > 0 && h > 0) {
-              final customAspect = AspectSpec(w: w, h: h, label: '$w:$h');
+            final w = double.tryParse(_widthController.text);
+            final h = double.tryParse(_heightController.text);
+
+            // Validate range (1-9.99) only
+            if (w != null &&
+                h != null &&
+                w >= 1.0 &&
+                w < 10.0 &&
+                h >= 1.0 &&
+                h < 10.0) {
+              // Create AspectSpec directly with original decimal values
+              final customAspect = AspectSpec(
+                w: w,
+                h: h,
+                label: '$w:$h', // Direct label with original values
+              );
               widget.onRatioApplied(customAspect);
               Navigator.pop(context, true);
             } else {
-              // Show error for invalid input
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Please enter valid positive numbers'),
+                  content: Text(
+                    'Please enter valid numbers between 1.0 and 9.99 (decimals allowed like 1.2, 4.12, 9.9)',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
