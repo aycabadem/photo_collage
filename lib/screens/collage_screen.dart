@@ -137,42 +137,61 @@ class _CollageScreenState extends State<CollageScreen> {
                 );
               },
             ),
-            floatingActionButton: Consumer<CollageManager>(
+            bottomNavigationBar: Consumer<CollageManager>(
               builder: (context, collageManager, child) {
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Color picker button
-                    ColorPickerButton(
-                      currentColor: collageManager.backgroundColor,
-                      onPressed: () =>
-                          _showColorPicker(context, collageManager),
+                return Container(
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
-                    const SizedBox(width: 16),
-                    // Photo add button
-                    Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).primaryColor.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                            spreadRadius: 2,
-                          ),
-                        ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, -2),
+                        spreadRadius: 0,
                       ),
-                      child: FloatingActionButton(
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Future button 1
+                      _buildBottomBarButton(
+                        icon: Icons.settings,
+                        onPressed: () {},
+                        isActive: false,
+                      ),
+                      // Future button 2
+                      _buildBottomBarButton(
+                        icon: Icons.info_outline,
+                        onPressed: () {},
+                        isActive: false,
+                      ),
+                      // Future button 3
+                      _buildBottomBarButton(
+                        icon: Icons.help_outline,
+                        onPressed: () {},
+                        isActive: false,
+                      ),
+                      // Color picker button
+                      _buildBottomBarButton(
+                        icon: Icons.format_paint, // Boya kovası icon'u
+                        onPressed: () =>
+                            _showColorPicker(context, collageManager),
+                        isActive: false,
+                      ),
+                      // Photo add button
+                      _buildBottomBarButton(
+                        icon: Icons.camera_alt, // Sadece kamera icon'u
                         onPressed: () => collageManager.addPhotoBox(),
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        child: const Icon(Icons.add_a_photo, size: 28),
+                        isActive: false, // Diğerleri ile aynı renk
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
@@ -274,6 +293,27 @@ class _CollageScreenState extends State<CollageScreen> {
           collageManager.changeBackgroundColor(color);
           collageManager.changeBackgroundOpacity(opacity);
         },
+      ),
+    );
+  }
+
+  // Build bottom bar button
+  Widget _buildBottomBarButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    required bool isActive,
+    Widget? child,
+  }) {
+    if (child != null) {
+      return child;
+    }
+
+    return GestureDetector(
+      onTap: onPressed,
+      child: Icon(
+        icon,
+        color: isActive ? Theme.of(context).primaryColor : Colors.grey[600],
+        size: 28, // Sadece icon, hiç arka plan yok
       ),
     );
   }
