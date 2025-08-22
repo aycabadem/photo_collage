@@ -58,25 +58,33 @@ class SmartBorderPainter extends CustomPainter {
 
     // Draw borders only where needed
     if (hasLeftBorder) {
-      canvas.drawLine(Offset(0, 0), Offset(0, size.height), paint);
+      canvas.drawLine(
+        Offset(borderWidth / 2, 0),
+        Offset(borderWidth / 2, size.height),
+        paint,
+      );
     }
 
     if (hasRightBorder) {
       canvas.drawLine(
-        Offset(size.width, 0),
-        Offset(size.width, size.height),
+        Offset(size.width - borderWidth / 2, 0),
+        Offset(size.width - borderWidth / 2, size.height),
         paint,
       );
     }
 
     if (hasTopBorder) {
-      canvas.drawLine(Offset(0, 0), Offset(size.width, 0), paint);
+      canvas.drawLine(
+        Offset(0, borderWidth / 2),
+        Offset(size.width, borderWidth / 2),
+        paint,
+      );
     }
 
     if (hasBottomBorder) {
       canvas.drawLine(
-        Offset(0, size.height),
-        Offset(size.width, size.height),
+        Offset(0, size.height - borderWidth / 2),
+        Offset(size.width, size.height - borderWidth / 2),
         paint,
       );
     }

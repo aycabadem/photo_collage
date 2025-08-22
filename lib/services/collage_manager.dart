@@ -590,6 +590,24 @@ class CollageManager extends ChangeNotifier {
               );
 
               canvas.drawImageRect(image, srcRect, dstRect, Paint());
+
+              // Draw borders if enabled
+              if (_hasGlobalBorder && _globalBorderWidth > 0) {
+                print(
+                  'Drawing borders for box: width=${_globalBorderWidth}, color=${_globalBorderColor}',
+                );
+                _drawSimpleBorders(
+                  canvas,
+                  scaledPosition,
+                  scaledSize,
+                  scaleX,
+                  scaleY,
+                );
+              } else {
+                print(
+                  'Borders disabled: hasGlobalBorder=$_hasGlobalBorder, width=${_globalBorderWidth}',
+                );
+              }
             }
           } catch (e) {
             // Error loading image - skip this image
@@ -631,6 +649,247 @@ class CollageManager extends ChangeNotifier {
       // Error loading image - return null
       return null;
     }
+  }
+
+  /// Draw simple borders for save collage (all edges)
+  void _drawSimpleBorders(
+    Canvas canvas,
+    Offset position,
+    Size size,
+    double scaleX,
+    double scaleY,
+  ) {
+    print(
+      '_drawSimpleBorders called: position=$position, size=$size, scaleX=$scaleX, scaleY=$scaleY',
+    );
+
+    final paint = Paint()
+      ..color = _globalBorderColor
+      ..strokeWidth =
+          _globalBorderWidth *
+          scaleX // Scale border width
+      ..style = PaintingStyle.stroke;
+
+    // Draw borders on ALL edges (simple approach)
+    // Left border
+    canvas.drawLine(
+      Offset(position.dx, position.dy),
+      Offset(position.dx, position.dy + size.height),
+      paint,
+    );
+
+    // Right border
+    canvas.drawLine(
+      Offset(position.dx + size.width, position.dy),
+      Offset(position.dx + size.width, position.dy + size.height),
+      paint,
+    );
+
+    // Top border
+    canvas.drawLine(
+      Offset(position.dx, position.dy),
+      Offset(position.dx + size.width, position.dy),
+      paint,
+    );
+
+    // Bottom border
+    canvas.drawLine(
+      Offset(position.dx, position.dy + size.height),
+      Offset(position.dx + size.width, position.dy + size.height),
+      paint,
+    );
+  }
+
+  /// Check if left edge should have border for save
+  bool _shouldDrawLeftBorderForSave(
+    Offset position,
+    Size size,
+    double scaleX,
+    double scaleY,
+  ) {
+    print('Checking left border for position=$position, size=$size');
+    for (final otherBox in _photoBoxes) {
+      final otherScaledPosition = Offset(
+        otherBox.position.dx * scaleX,
+        otherBox.position.dy * scaleY,
+      );
+      final otherScaledSize = Size(
+        otherBox.size.width * scaleX,
+        otherBox.size.height * scaleY,
+      );
+
+      // Check if there's a box to the left that touches this one
+      final distance =
+          (otherScaledPosition.dx + otherScaledSize.width - position.dx).abs();
+      final tolerance = _globalBorderWidth * scaleX;
+
+      print(
+        'Other box: position=$otherScaledPosition, size=$otherScaledSize, distance=$distance, tolerance=$tolerance',
+      );
+
+      if (distance <= tolerance &&
+          _boxesOverlapVerticallyForSave(
+            position,
+            size,
+            otherScaledPosition,
+            otherScaledSize,
+          )) {
+        print('Left border hidden: distance=$distance, tolerance=$tolerance');
+        return false; // Don't draw left border
+      }
+    }
+    print('Left border will be drawn');
+    return true; // Draw left border
+  }
+
+  /// Check if right edge should have border for save
+  bool _shouldDrawRightBorderForSave(
+    Offset position,
+    Size size,
+    double scaleX,
+    double scaleY,
+  ) {
+    for (final otherBox in _photoBoxes) {
+      final otherScaledPosition = Offset(
+        otherBox.position.dx * scaleX,
+        otherBox.position.dy * scaleY,
+      );
+      final otherScaledSize = Size(
+        otherBox.size.width * scaleX,
+        otherBox.size.height * scaleY,
+      );
+
+      // Check if there's a box to the right that touches this one
+      final distance = (otherScaledPosition.dx - (position.dx + size.width))
+          .abs();
+      final tolerance = _globalBorderWidth * scaleX;
+
+      if (distance <= tolerance &&
+          _boxesOverlapVerticallyForSave(
+            position,
+            size,
+            otherScaledPosition,
+            otherScaledSize,
+          )) {
+        print('Right border hidden: distance=$distance, tolerance=$tolerance');
+        return false; // Don't draw right border
+      }
+    }
+    return true; // Draw right border
+  }
+
+  /// Check if top edge should have border for save
+  bool _shouldDrawTopBorderForSave(
+    Offset position,
+    Size size,
+    double scaleX,
+    double scaleY,
+  ) {
+    print('Checking top border for position=$position, size=$size');
+    for (final otherBox in _photoBoxes) {
+      final otherScaledPosition = Offset(
+        otherBox.position.dx * scaleX,
+        otherBox.position.dy * scaleY,
+      );
+      final otherScaledSize = Size(
+        otherBox.size.width * scaleX,
+        otherBox.size.height * scaleY,
+      );
+
+      // Check if there's a box above that touches this one
+      final distance =
+          (otherScaledPosition.dy + otherScaledSize.height - position.dy).abs();
+      final tolerance = _globalBorderWidth * scaleY;
+
+      print(
+        'Other box: position=$otherScaledPosition, size=$otherScaledSize, distance=$distance, tolerance=$tolerance',
+      );
+
+      if (distance <= tolerance &&
+          _boxesOverlapHorizontallyForSave(
+            position,
+            size,
+            otherScaledPosition,
+            otherScaledSize,
+          )) {
+        print('Top border hidden: distance=$distance, tolerance=$tolerance');
+        return false; // Don't draw top border
+      }
+    }
+    print('Top border will be drawn');
+    return true; // Draw top border
+  }
+
+  /// Check if bottom edge should have border for save
+  bool _shouldDrawBottomBorderForSave(
+    Offset position,
+    Size size,
+    double scaleX,
+    double scaleY,
+  ) {
+    print('Checking bottom border for position=$position, size=$size');
+    for (final otherBox in _photoBoxes) {
+      final otherScaledPosition = Offset(
+        otherBox.position.dx * scaleX,
+        otherBox.position.dy * scaleY,
+      );
+      final otherScaledSize = Size(
+        otherBox.size.width * scaleX,
+        otherBox.size.height * scaleY,
+      );
+
+      // Check if there's a box below that touches this one
+      final distance = (otherScaledPosition.dy - (position.dy + size.height))
+          .abs();
+      final tolerance = _globalBorderWidth * scaleY;
+
+      print(
+        'Other box: position=$otherScaledPosition, size=$otherScaledSize, distance=$distance, tolerance=$tolerance',
+      );
+
+      if (distance <= tolerance &&
+          _boxesOverlapHorizontallyForSave(
+            position,
+            size,
+            otherScaledPosition,
+            otherScaledSize,
+          )) {
+        print('Bottom border hidden: distance=$distance, tolerance=$tolerance');
+        return false; // Don't draw bottom border
+      }
+    }
+    print('Bottom border will be drawn');
+    return true; // Draw bottom border
+  }
+
+  /// Check if two boxes overlap vertically for save
+  bool _boxesOverlapVerticallyForSave(
+    Offset position,
+    Size size,
+    Offset otherPosition,
+    Size otherSize,
+  ) {
+    final thisTop = position.dy;
+    final thisBottom = position.dy + size.height;
+    final otherTop = otherPosition.dy;
+    final otherBottom = otherPosition.dy + otherSize.height;
+
+    return !(thisBottom <= otherTop || thisTop >= otherBottom);
+  }
+
+  /// Check if two boxes overlap horizontally for save
+  bool _boxesOverlapHorizontallyForSave(
+    Offset position,
+    Size size,
+    Offset otherPosition,
+    Size otherSize,
+  ) {
+    final thisLeft = position.dx;
+    final thisRight = position.dx + size.width;
+    final otherLeft = otherPosition.dx;
+    final otherRight = otherPosition.dx + otherSize.width;
+
+    return !(thisRight <= otherLeft || thisLeft >= otherRight);
   }
 
   /// Get alignment guidelines for the selected photo box
