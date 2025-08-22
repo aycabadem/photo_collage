@@ -4,6 +4,7 @@ import '../models/alignment_guideline.dart';
 import '../widgets/photo_box_widget.dart';
 import '../widgets/resize_handle_widget.dart';
 import '../widgets/guidelines_overlay.dart';
+import '../services/collage_manager.dart';
 
 /// Widget for the main collage canvas with photo boxes and interaction
 class CollageCanvas extends StatelessWidget {
@@ -34,8 +35,7 @@ class CollageCanvas extends StatelessWidget {
   /// List of alignment guidelines to display
   final List<AlignmentGuideline> guidelines;
 
-  /// Background color for the canvas
-  final Color backgroundColor;
+  final CollageManager collageManager;
 
   const CollageCanvas({
     super.key,
@@ -48,7 +48,7 @@ class CollageCanvas extends StatelessWidget {
     required this.onResizeHandleDragged,
     required this.onBackgroundTap,
     this.guidelines = const [],
-    required this.backgroundColor,
+    required this.collageManager,
   });
 
   @override
@@ -64,22 +64,16 @@ class CollageCanvas extends StatelessWidget {
         width: templateSize.width,
         height: templateSize.height,
         decoration: BoxDecoration(
-          color: backgroundColor, // Use dynamic background color
+          color: collageManager.backgroundColorWithOpacity,
+          borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
               spreadRadius: 2,
             ),
-            BoxShadow(
-              color: Colors.white.withValues(alpha: 0.8),
-              blurRadius: 1,
-              offset: const Offset(0, 1),
-              spreadRadius: 0,
-            ),
           ],
-          border: Border.all(color: Colors.grey[300]!, width: 1),
         ),
         child: Stack(
           clipBehavior: Clip.hardEdge,

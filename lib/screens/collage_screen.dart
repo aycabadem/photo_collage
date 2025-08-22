@@ -4,7 +4,8 @@ import '../services/collage_manager.dart';
 import '../widgets/aspect_ratio_selector.dart';
 import '../widgets/collage_canvas.dart';
 import '../widgets/custom_aspect_ratio_dialog.dart';
-import '../widgets/floating_color_bar.dart';
+import '../widgets/color_picker_button.dart';
+import '../widgets/ios_color_picker_modal.dart';
 
 /// Main screen for the photo collage application
 class CollageScreen extends StatefulWidget {
@@ -128,7 +129,7 @@ class _CollageScreenState extends State<CollageScreen> {
                                   collageManager.selectedBox!,
                                 )
                               : [],
-                          backgroundColor: collageManager.backgroundColor,
+                          collageManager: collageManager,
                         ),
                       ),
                     ),
@@ -136,40 +137,44 @@ class _CollageScreenState extends State<CollageScreen> {
                 );
               },
             ),
-            floatingActionButton: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Floating color bar
-                FloatingColorBar(
-                  currentColor: collageManager.backgroundColor,
-                  onColorChanged: (color) =>
-                      collageManager.changeBackgroundColor(color),
-                ),
-                const SizedBox(width: 16),
-                // Photo add button
-                Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).primaryColor.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                        spreadRadius: 2,
+            floatingActionButton: Consumer<CollageManager>(
+              builder: (context, collageManager, child) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Color picker button
+                    ColorPickerButton(
+                      currentColor: collageManager.backgroundColor,
+                      onPressed: () =>
+                          _showColorPicker(context, collageManager),
+                    ),
+                    const SizedBox(width: 16),
+                    // Photo add button
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(28),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                            spreadRadius: 2,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: FloatingActionButton(
-                    onPressed: () => collageManager.addPhotoBox(),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    child: const Icon(Icons.add_a_photo, size: 28),
-                  ),
-                ),
-              ],
+                      child: FloatingActionButton(
+                        onPressed: () => collageManager.addPhotoBox(),
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        child: const Icon(Icons.add_a_photo, size: 28),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           );
         },
@@ -254,5 +259,22 @@ class _CollageScreenState extends State<CollageScreen> {
         );
       }
     }
+  }
+
+  // Show color picker modal
+  void _showColorPicker(BuildContext context, CollageManager collageManager) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => iOSColorPickerModal(
+        currentColor: collageManager.backgroundColor,
+        currentOpacity: collageManager.backgroundOpacity,
+        onColorChanged: (color, opacity) {
+          collageManager.changeBackgroundColor(color);
+          collageManager.changeBackgroundOpacity(opacity);
+        },
+      ),
+    );
   }
 }
