@@ -286,52 +286,116 @@ class CollageManager extends ChangeNotifier {
     for (final otherBox in _photoBoxes) {
       if (otherBox == movingBox) continue;
 
-      // Left edge snapping
+      // 1. Edge-to-edge snapping (same edges align)
+      // Left edge to left edge
       if ((position.dx - otherBox.position.dx).abs() <= 5) {
         snappedX = otherBox.position.dx;
       }
 
-      // Right edge snapping
+      // Right edge to right edge
       if ((position.dx +
                   movingBox.size.width -
-                  (otherBox.position.dx + otherBox.size.width))
+                  otherBox.position.dx -
+                  otherBox.size.width)
               .abs() <=
           5) {
         snappedX =
             otherBox.position.dx + otherBox.size.width - movingBox.size.width;
       }
 
-      // Top edge snapping
+      // Top edge to top edge
       if ((position.dy - otherBox.position.dy).abs() <= 5) {
         snappedY = otherBox.position.dy;
       }
 
-      // Bottom edge snapping
+      // Bottom edge to bottom edge
       if ((position.dy +
                   movingBox.size.height -
-                  (otherBox.position.dy + otherBox.size.height))
+                  otherBox.position.dy -
+                  otherBox.size.height)
               .abs() <=
           5) {
         snappedY =
             otherBox.position.dy + otherBox.size.height - movingBox.size.height;
       }
 
-      // Center X snapping
+      // 2. Edge-to-edge snapping (adjacent placement)
+      // Left edge to right edge (place moving box to the right)
+      if ((position.dx - (otherBox.position.dx + otherBox.size.width)).abs() <=
+          5) {
+        snappedX = otherBox.position.dx + otherBox.size.width;
+      }
+
+      // Right edge to left edge (place moving box to the left)
+      if ((position.dx + movingBox.size.width - otherBox.position.dx).abs() <=
+          5) {
+        snappedX = otherBox.position.dx - movingBox.size.width;
+      }
+
+      // Top edge to bottom edge (place moving box below)
+      if ((position.dy - (otherBox.position.dy + otherBox.size.height)).abs() <=
+          5) {
+        snappedY = otherBox.position.dy + otherBox.size.height;
+      }
+
+      // Bottom edge to top edge (place moving box above)
+      if ((position.dy + movingBox.size.height - otherBox.position.dy).abs() <=
+          5) {
+        snappedY = otherBox.position.dy - movingBox.size.height;
+      }
+
+      // 3. Center snapping
       final movingCenterX = position.dx + movingBox.size.width / 2;
       final otherCenterX = otherBox.position.dx + otherBox.size.width / 2;
       if ((movingCenterX - otherCenterX).abs() <= 5) {
         snappedX = otherCenterX - movingBox.size.width / 2;
       }
 
-      // Center Y snapping
       final movingCenterY = position.dy + movingBox.size.height / 2;
       final otherCenterY = otherBox.position.dy + otherBox.size.height / 2;
       if ((movingCenterY - otherCenterY).abs() <= 5) {
         snappedY = otherCenterY - movingBox.size.height / 2;
       }
+
+      // 4. Corner-to-corner snapping
+      // Top-left corner to bottom-right corner
+      if ((position.dx - (otherBox.position.dx + otherBox.size.width)).abs() <=
+              5 &&
+          (position.dy - (otherBox.position.dy + otherBox.size.height)).abs() <=
+              5) {
+        snappedX = otherBox.position.dx + otherBox.size.width;
+        snappedY = otherBox.position.dy + otherBox.size.height;
+      }
+
+      // Top-right corner to bottom-left corner
+      if ((position.dx + movingBox.size.width - otherBox.position.dx).abs() <=
+              5 &&
+          (position.dy - (otherBox.position.dy + otherBox.size.height)).abs() <=
+              5) {
+        snappedX = otherBox.position.dx - movingBox.size.width;
+        snappedY = otherBox.position.dy + otherBox.size.height;
+      }
+
+      // Bottom-left corner to top-right corner
+      if ((position.dx - (otherBox.position.dx + otherBox.size.width)).abs() <=
+              5 &&
+          (position.dy + movingBox.size.height - otherBox.position.dy).abs() <=
+              5) {
+        snappedX = otherBox.position.dx + otherBox.size.width;
+        snappedY = otherBox.position.dy - movingBox.size.height;
+      }
+
+      // Bottom-right corner to top-left corner
+      if ((position.dx + movingBox.size.width - otherBox.position.dx).abs() <=
+              5 &&
+          (position.dy + movingBox.size.height - otherBox.position.dy).abs() <=
+              5) {
+        snappedX = otherBox.position.dx - movingBox.size.width;
+        snappedY = otherBox.position.dy - movingBox.size.height;
+      }
     }
 
-    // Background center snapping
+    // 5. Background center snapping
     final centerX = _templateSize.width / 2;
     final centerY = _templateSize.height / 2;
     final movingCenterX = position.dx + movingBox.size.width / 2;
@@ -760,6 +824,115 @@ class CollageManager extends ChangeNotifier {
               isHorizontal: true,
               type: 'size',
               label: 'Same Height',
+            ),
+          );
+        }
+
+        // Corner-to-corner alignment guidelines
+        // Top-left corner to bottom-right corner
+        if ((selectedBox.position.dx -
+                        (otherBox.position.dx + otherBox.size.width))
+                    .abs() <=
+                5 &&
+            (selectedBox.position.dy -
+                        (otherBox.position.dy + otherBox.size.height))
+                    .abs() <=
+                5) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx + otherBox.size.width,
+              isHorizontal: false,
+              type: 'corner',
+              label: 'Corner Alignment',
+            ),
+          );
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy + otherBox.size.height,
+              isHorizontal: true,
+              type: 'corner',
+              label: 'Corner Alignment',
+            ),
+          );
+        }
+
+        // Top-right corner to bottom-left corner
+        if (((selectedBox.position.dx + selectedBox.size.width) -
+                        otherBox.position.dx)
+                    .abs() <=
+                5 &&
+            (selectedBox.position.dy -
+                        (otherBox.position.dy + otherBox.size.height))
+                    .abs() <=
+                5) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx,
+              isHorizontal: false,
+              type: 'corner',
+              label: 'Corner Alignment',
+            ),
+          );
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy + otherBox.size.height,
+              isHorizontal: true,
+              type: 'corner',
+              label: 'Corner Alignment',
+            ),
+          );
+        }
+
+        // Bottom-left corner to top-right corner
+        if ((selectedBox.position.dx -
+                        (otherBox.position.dx + otherBox.size.width))
+                    .abs() <=
+                5 &&
+            ((selectedBox.position.dy + selectedBox.size.height) -
+                        otherBox.position.dy)
+                    .abs() <=
+                5) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx + otherBox.size.width,
+              isHorizontal: false,
+              type: 'corner',
+              label: 'Corner Alignment',
+            ),
+          );
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy,
+              isHorizontal: true,
+              type: 'corner',
+              label: 'Corner Alignment',
+            ),
+          );
+        }
+
+        // Bottom-right corner to top-left corner
+        if (((selectedBox.position.dx + selectedBox.size.width) -
+                        otherBox.position.dx)
+                    .abs() <=
+                5 &&
+            ((selectedBox.position.dy + selectedBox.size.height) -
+                        otherBox.position.dy)
+                    .abs() <=
+                5) {
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dx,
+              isHorizontal: false,
+              type: 'corner',
+              label: 'Corner Alignment',
+            ),
+          );
+          guidelines.add(
+            AlignmentGuideline(
+              position: otherBox.position.dy,
+              isHorizontal: true,
+              type: 'corner',
+              label: 'Corner Alignment',
             ),
           );
         }

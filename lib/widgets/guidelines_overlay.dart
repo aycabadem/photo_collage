@@ -55,6 +55,10 @@ class GuidelinesPainter extends CustomPainter {
           lineColor = Colors.purple;
           strokeWidth = 1.5;
           break;
+        case 'corner':
+          lineColor = Colors.red;
+          strokeWidth = 2.5;
+          break;
         default:
           lineColor = Colors.blue;
           strokeWidth = 2.0;
