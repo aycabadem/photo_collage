@@ -65,7 +65,6 @@ class CollageCanvas extends StatelessWidget {
         height: templateSize.height,
         decoration: BoxDecoration(
           color: collageManager.backgroundColorWithOpacity,
-          borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),

@@ -484,12 +484,12 @@ class CollageManager extends ChangeNotifier {
       final centerX = _templateSize.width / 2;
       final centerY = _templateSize.height / 2;
 
-      // Check if photo is actually centered (within 3 pixels)
+      // Check if photo is actually centered (exact pixel match)
       final photoCenterX = selectedBox.position.dx + selectedBox.size.width / 2;
       final photoCenterY =
           selectedBox.position.dy + selectedBox.size.height / 2;
 
-      if ((photoCenterX - centerX).abs() < 3) {
+      if ((photoCenterX - centerX).abs() == 0) {
         guidelines.add(
           AlignmentGuideline(
             position: centerX,
@@ -500,7 +500,7 @@ class CollageManager extends ChangeNotifier {
         );
       }
 
-      if ((photoCenterY - centerY).abs() < 3) {
+      if ((photoCenterY - centerY).abs() == 0) {
         guidelines.add(
           AlignmentGuideline(
             position: centerY,
@@ -520,9 +520,9 @@ class CollageManager extends ChangeNotifier {
       for (final otherBox in _photoBoxes) {
         if (otherBox == selectedBox) continue;
 
-        // Edge alignment (left, right, top, bottom) - Only show when very close
+        // Edge alignment (left, right, top, bottom) - Only show when exactly aligned
         // Left edge alignment
-        if ((selectedBox.position.dx - otherBox.position.dx).abs() < 2) {
+        if ((selectedBox.position.dx - otherBox.position.dx).abs() == 0) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx,
@@ -539,7 +539,7 @@ class CollageManager extends ChangeNotifier {
                     otherBox.position.dx -
                     otherBox.size.width)
                 .abs() <
-            2) {
+            1) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx + otherBox.size.width,
@@ -554,7 +554,7 @@ class CollageManager extends ChangeNotifier {
         if ((selectedBox.position.dx -
                     (otherBox.position.dx + otherBox.size.width))
                 .abs() <
-            2) {
+            1) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx + otherBox.size.width,
@@ -569,7 +569,7 @@ class CollageManager extends ChangeNotifier {
         if (((selectedBox.position.dx + selectedBox.size.width) -
                     otherBox.position.dx)
                 .abs() <
-            2) {
+            1) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx,
@@ -598,7 +598,7 @@ class CollageManager extends ChangeNotifier {
                     otherBox.position.dy -
                     otherBox.size.height)
                 .abs() <
-            2) {
+            1) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy + otherBox.size.height,
@@ -613,7 +613,7 @@ class CollageManager extends ChangeNotifier {
         if ((selectedBox.position.dy -
                     (otherBox.position.dy + otherBox.size.height))
                 .abs() <
-            2) {
+            1) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy + otherBox.size.height,
@@ -628,7 +628,7 @@ class CollageManager extends ChangeNotifier {
         if (((selectedBox.position.dy + selectedBox.size.height) -
                     otherBox.position.dy)
                 .abs() <
-            2) {
+            1) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy,
@@ -639,7 +639,7 @@ class CollageManager extends ChangeNotifier {
           );
         }
 
-        // Center alignment - Only show when very close
+        // Center alignment - Only show when exactly aligned
         final selectedCenterX =
             selectedBox.position.dx + selectedBox.size.width / 2;
         final otherCenterX = otherBox.position.dx + otherBox.size.width / 2;
@@ -647,7 +647,7 @@ class CollageManager extends ChangeNotifier {
             selectedBox.position.dy + selectedBox.size.height / 2;
         final otherCenterY = otherBox.position.dy + otherBox.size.height / 2;
 
-        if ((selectedCenterX - otherCenterX).abs() < 2) {
+        if ((selectedCenterX - otherCenterX).abs() == 0) {
           guidelines.add(
             AlignmentGuideline(
               position: otherCenterX,
@@ -658,7 +658,7 @@ class CollageManager extends ChangeNotifier {
           );
         }
 
-        if ((selectedCenterY - otherCenterY).abs() < 2) {
+        if ((selectedCenterY - otherCenterY).abs() == 0) {
           guidelines.add(
             AlignmentGuideline(
               position: otherCenterY,
@@ -669,8 +669,8 @@ class CollageManager extends ChangeNotifier {
           );
         }
 
-        // Size alignment (width and height) - Show when very close
-        if ((selectedBox.size.width - otherBox.size.width).abs() < 2) {
+        // Size alignment (width and height) - Show when exactly same size
+        if ((selectedBox.size.width - otherBox.size.width).abs() == 0) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx + otherBox.size.width / 2,
@@ -681,7 +681,7 @@ class CollageManager extends ChangeNotifier {
           );
         }
 
-        if ((selectedBox.size.height - otherBox.size.height).abs() < 2) {
+        if ((selectedBox.size.height - otherBox.size.height).abs() == 0) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy + otherBox.size.height / 2,
