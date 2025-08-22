@@ -271,8 +271,80 @@ class CollageManager extends ChangeNotifier {
       _templateSize.height - box.size.height,
     );
 
-    box.position = Offset(newX, newY);
+    // Apply snapping to other photo boxes
+    final snappedPosition = _applySnapping(Offset(newX, newY), box);
+
+    box.position = snappedPosition;
     notifyListeners();
+  }
+
+  /// Apply snapping to align with other photo boxes
+  Offset _applySnapping(Offset position, PhotoBox movingBox) {
+    double snappedX = position.dx;
+    double snappedY = position.dy;
+
+    for (final otherBox in _photoBoxes) {
+      if (otherBox == movingBox) continue;
+
+      // Left edge snapping
+      if ((position.dx - otherBox.position.dx).abs() <= 5) {
+        snappedX = otherBox.position.dx;
+      }
+
+      // Right edge snapping
+      if ((position.dx +
+                  movingBox.size.width -
+                  (otherBox.position.dx + otherBox.size.width))
+              .abs() <=
+          5) {
+        snappedX =
+            otherBox.position.dx + otherBox.size.width - movingBox.size.width;
+      }
+
+      // Top edge snapping
+      if ((position.dy - otherBox.position.dy).abs() <= 5) {
+        snappedY = otherBox.position.dy;
+      }
+
+      // Bottom edge snapping
+      if ((position.dy +
+                  movingBox.size.height -
+                  (otherBox.position.dy + otherBox.size.height))
+              .abs() <=
+          5) {
+        snappedY =
+            otherBox.position.dy + otherBox.size.height - movingBox.size.height;
+      }
+
+      // Center X snapping
+      final movingCenterX = position.dx + movingBox.size.width / 2;
+      final otherCenterX = otherBox.position.dx + otherBox.size.width / 2;
+      if ((movingCenterX - otherCenterX).abs() <= 5) {
+        snappedX = otherCenterX - movingBox.size.width / 2;
+      }
+
+      // Center Y snapping
+      final movingCenterY = position.dy + movingBox.size.height / 2;
+      final otherCenterY = otherBox.position.dy + otherBox.size.height / 2;
+      if ((movingCenterY - otherCenterY).abs() <= 5) {
+        snappedY = otherCenterY - movingBox.size.height / 2;
+      }
+    }
+
+    // Background center snapping
+    final centerX = _templateSize.width / 2;
+    final centerY = _templateSize.height / 2;
+    final movingCenterX = position.dx + movingBox.size.width / 2;
+    final movingCenterY = position.dy + movingBox.size.height / 2;
+
+    if ((movingCenterX - centerX).abs() <= 5) {
+      snappedX = centerX - movingBox.size.width / 2;
+    }
+    if ((movingCenterY - centerY).abs() <= 5) {
+      snappedY = centerY - movingBox.size.height / 2;
+    }
+
+    return Offset(snappedX, snappedY);
   }
 
   /// Resize a photo box
@@ -489,7 +561,7 @@ class CollageManager extends ChangeNotifier {
       final photoCenterY =
           selectedBox.position.dy + selectedBox.size.height / 2;
 
-      if ((photoCenterX - centerX).abs() == 0) {
+      if ((photoCenterX - centerX).abs() <= 5) {
         guidelines.add(
           AlignmentGuideline(
             position: centerX,
@@ -500,7 +572,7 @@ class CollageManager extends ChangeNotifier {
         );
       }
 
-      if ((photoCenterY - centerY).abs() == 0) {
+      if ((photoCenterY - centerY).abs() <= 0) {
         guidelines.add(
           AlignmentGuideline(
             position: centerY,
@@ -522,7 +594,7 @@ class CollageManager extends ChangeNotifier {
 
         // Edge alignment (left, right, top, bottom) - Only show when exactly aligned
         // Left edge alignment
-        if ((selectedBox.position.dx - otherBox.position.dx).abs() == 0) {
+        if ((selectedBox.position.dx - otherBox.position.dx).abs() <= 5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx,
@@ -538,8 +610,8 @@ class CollageManager extends ChangeNotifier {
                     selectedBox.size.width -
                     otherBox.position.dx -
                     otherBox.size.width)
-                .abs() <
-            1) {
+                .abs() <=
+            5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx + otherBox.size.width,
@@ -553,8 +625,8 @@ class CollageManager extends ChangeNotifier {
         // Left edge to right edge alignment
         if ((selectedBox.position.dx -
                     (otherBox.position.dx + otherBox.size.width))
-                .abs() <
-            1) {
+                .abs() <=
+            5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx + otherBox.size.width,
@@ -568,8 +640,8 @@ class CollageManager extends ChangeNotifier {
         // Right edge to left edge alignment
         if (((selectedBox.position.dx + selectedBox.size.width) -
                     otherBox.position.dx)
-                .abs() <
-            1) {
+                .abs() <=
+            5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx,
@@ -581,7 +653,7 @@ class CollageManager extends ChangeNotifier {
         }
 
         // Top edge alignment
-        if ((selectedBox.position.dy - otherBox.position.dy).abs() < 2) {
+        if ((selectedBox.position.dy - otherBox.position.dy).abs() <= 5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy,
@@ -597,8 +669,8 @@ class CollageManager extends ChangeNotifier {
                     selectedBox.size.height -
                     otherBox.position.dy -
                     otherBox.size.height)
-                .abs() <
-            1) {
+                .abs() <=
+            5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy + otherBox.size.height,
@@ -612,8 +684,8 @@ class CollageManager extends ChangeNotifier {
         // Top edge to bottom edge alignment
         if ((selectedBox.position.dy -
                     (otherBox.position.dy + otherBox.size.height))
-                .abs() <
-            1) {
+                .abs() <=
+            5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy + otherBox.size.height,
@@ -627,8 +699,8 @@ class CollageManager extends ChangeNotifier {
         // Bottom edge to top edge alignment
         if (((selectedBox.position.dy + selectedBox.size.height) -
                     otherBox.position.dy)
-                .abs() <
-            1) {
+                .abs() <=
+            5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy,
@@ -647,7 +719,7 @@ class CollageManager extends ChangeNotifier {
             selectedBox.position.dy + selectedBox.size.height / 2;
         final otherCenterY = otherBox.position.dy + otherBox.size.height / 2;
 
-        if ((selectedCenterX - otherCenterX).abs() == 0) {
+        if ((selectedCenterX - otherCenterX).abs() <= 5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherCenterX,
@@ -658,7 +730,7 @@ class CollageManager extends ChangeNotifier {
           );
         }
 
-        if ((selectedCenterY - otherCenterY).abs() == 0) {
+        if ((selectedCenterY - otherCenterY).abs() <= 5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherCenterY,
@@ -670,7 +742,7 @@ class CollageManager extends ChangeNotifier {
         }
 
         // Size alignment (width and height) - Show when exactly same size
-        if ((selectedBox.size.width - otherBox.size.width).abs() == 0) {
+        if ((selectedBox.size.width - otherBox.size.width).abs() <= 5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dx + otherBox.size.width / 2,
@@ -681,7 +753,7 @@ class CollageManager extends ChangeNotifier {
           );
         }
 
-        if ((selectedBox.size.height - otherBox.size.height).abs() == 0) {
+        if ((selectedBox.size.height - otherBox.size.height).abs() <= 5) {
           guidelines.add(
             AlignmentGuideline(
               position: otherBox.position.dy + otherBox.size.height / 2,
