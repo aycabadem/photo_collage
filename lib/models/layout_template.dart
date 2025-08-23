@@ -18,6 +18,8 @@ class LayoutTemplate {
 
   /// Get scaled layouts for a specific aspect ratio
   List<PhotoLayout> getScaledLayouts(double aspectRatio) {
+    // Layout'lar zaten 0.0-1.0 aralığında tanımlı, direkt kullan
+    // Aspect ratio fark etmez, CollageManager template size'ı ayarlıyor
     return photoLayouts.map((layout) {
       return PhotoLayout(position: layout.position, size: layout.size);
     }).toList();
@@ -272,20 +274,6 @@ class LayoutTemplates {
 
     // 6 PHOTO LAYOUTS - Perfect fit
     LayoutTemplate(
-      id: '6_grid_3x2',
-      name: '3x2 Grid',
-      description: 'Six equal rectangles',
-      photoCount: 6,
-      photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 0.5)),
-        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.34, 0.5)),
-        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.5)),
-        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.33, 0.5)),
-        PhotoLayout(position: Offset(0.33, 0.5), size: Size(0.34, 0.5)),
-        PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.33, 0.5)),
-      ],
-    ),
-    LayoutTemplate(
       id: '6_grid_2x3',
       name: '2x3 Grid',
       description: 'Six equal rectangles vertical',
@@ -297,20 +285,6 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.5, 0.33), size: Size(0.5, 0.34)),
         PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.5, 0.33)),
         PhotoLayout(position: Offset(0.5, 0.67), size: Size(0.5, 0.33)),
-      ],
-    ),
-    LayoutTemplate(
-      id: '6_grid_23',
-      name: '2x3 Grid',
-      description: 'Simple 2x3 grid',
-      photoCount: 6,
-      photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.33)),
-        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.33)),
-        PhotoLayout(position: Offset(0.0, 0.33), size: Size(0.5, 0.33)),
-        PhotoLayout(position: Offset(0.5, 0.33), size: Size(0.5, 0.33)),
-        PhotoLayout(position: Offset(0.0, 0.66), size: Size(0.5, 0.34)),
-        PhotoLayout(position: Offset(0.5, 0.66), size: Size(0.5, 0.34)),
       ],
     ),
 

@@ -111,8 +111,8 @@ class CollageManager extends ChangeNotifier {
       _selectedAspect.w / _selectedAspect.h,
     );
 
-    // Create photo boxes based on layout
-    for (int i = 0; i < scaledLayouts.length; i++) {
+    // Create photo boxes based on layout (use the actual photoLayouts count)
+    for (int i = 0; i < layout.photoLayouts.length; i++) {
       final photoLayout = scaledLayouts[i];
 
       // Calculate actual positions and sizes based on template size

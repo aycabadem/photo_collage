@@ -77,37 +77,13 @@ class PhotoBoxWidget extends StatelessWidget {
                   : Container(
                       color: Colors.blue[300],
                       child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.image_outlined,
-                              color: Colors.white,
-                              size: 40,
-                            ),
-                            const SizedBox(height: 8),
-                            GestureDetector(
-                              onTap: () => _addPhotoToBox(context),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Text(
-                                  'Add Photo',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                        child: GestureDetector(
+                          onTap: () => _addPhotoToBox(context),
+                          child: const Icon(
+                            Icons.add_a_photo,
+                            color: Colors.white,
+                            size: 32,
+                          ),
                         ),
                       ),
                     ),
@@ -156,7 +132,7 @@ class PhotoBoxWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 // Fit options button (only when photo exists)
                 if (box.imageFile != null)
                   Positioned(

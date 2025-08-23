@@ -101,14 +101,6 @@ class CollageCanvas extends StatelessWidget {
 
   /// Build individual photo box widget
   Widget _buildPhotoBox(PhotoBox box) {
-    // Simple check: is box inside template?
-    if (box.position.dx < 0 ||
-        box.position.dy < 0 ||
-        box.position.dx + box.size.width > templateSize.width ||
-        box.position.dy + box.size.height > templateSize.height) {
-      return const SizedBox.shrink(); // Hide boxes outside template
-    }
-
     return PhotoBoxWidget(
       box: box,
       isSelected: selectedBox == box,
