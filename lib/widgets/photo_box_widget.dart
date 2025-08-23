@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/photo_box.dart';
-import '../services/collage_manager.dart';
 import '../widgets/smart_border_overlay.dart';
 
 /// Widget for displaying a single photo box in the collage
@@ -24,7 +23,7 @@ class PhotoBoxWidget extends StatelessWidget {
   final double globalBorderWidth;
   final Color globalBorderColor;
   final bool hasGlobalBorder;
-  
+
   /// Other photo boxes for smart border detection
   final List<PhotoBox> otherBoxes;
 

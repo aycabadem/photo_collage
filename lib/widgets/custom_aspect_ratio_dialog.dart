@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/aspect_spec.dart';
-import 'package:flutter/services.dart'; // Added for FilteringTextInputFormatter
 
 /// Dialog for entering custom aspect ratio values
 class CustomAspectRatioDialog extends StatefulWidget {
