@@ -152,8 +152,61 @@ class CollageManager extends ChangeNotifier {
   /// Update layout when aspect ratio changes
   void _updateLayoutForAspectRatio() {
     if (_currentLayout != null && !_isCustomMode) {
-      // Re-apply layout with new aspect ratio
-      applyLayoutTemplate(_currentLayout);
+      // Preserve existing photos but update positions and sizes
+      final existingPhotos = Map<int, PhotoBox>.fromEntries(
+        _photoBoxes.asMap().entries,
+      );
+      
+      // Clear and recreate boxes with new template size
+      _photoBoxes.clear();
+      
+      // Get scaled layouts for current aspect ratio
+      final scaledLayouts = _currentLayout!.getScaledLayouts(
+        _selectedAspect.w / _selectedAspect.h,
+      );
+      
+      // Create photo boxes based on layout, preserving existing photos
+      for (int i = 0; i < scaledLayouts.length; i++) {
+        final photoLayout = scaledLayouts[i];
+        
+        // Calculate actual positions and sizes based on template size
+        final actualPosition = Offset(
+          photoLayout.position.dx * _templateSize.width,
+          photoLayout.position.dy * _templateSize.height,
+        );
+        
+        final actualSize = Size(
+          photoLayout.size.width * _templateSize.width,
+          photoLayout.size.height * _templateSize.height,
+        );
+        
+        // Check if we have an existing photo for this position
+        PhotoBox photoBox;
+        if (existingPhotos.containsKey(i) && existingPhotos[i]!.imageFile != null) {
+          // Preserve existing photo with new position and size
+          photoBox = PhotoBox(
+            position: actualPosition,
+            size: actualSize,
+            imageFile: existingPhotos[i]!.imageFile,
+            imagePath: existingPhotos[i]!.imagePath,
+            imageFit: existingPhotos[i]!.imageFit,
+          );
+        } else {
+          // Create placeholder photo box
+          photoBox = PhotoBox(
+            position: actualPosition,
+            size: actualSize,
+            imagePath: '', // Empty for placeholder
+          );
+        }
+        
+        _photoBoxes.add(photoBox);
+      }
+      
+      // Clear selection
+      _selectedBox = null;
+      
+      notifyListeners();
     }
   }
 
