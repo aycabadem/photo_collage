@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ios_color_picker_modal.dart';
 
 /// Modal for selecting global border settings
 class BorderPanelModal extends StatefulWidget {
@@ -159,104 +160,19 @@ class _BorderPanelModalState extends State<BorderPanelModal> {
   }
 
   void _showColorPicker(BuildContext context) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Border Color'),
-        content: SizedBox(
-          width: 320,
-          height: 250,
-          child: ColorPicker(
-            pickerColor: _borderColor,
-            onColorChanged: (color) {
-              setState(() {
-                _borderColor = color;
-              });
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('OK'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => IOSColorPickerModal(
+        currentColor: _borderColor,
+        currentOpacity: 1.0,
+        onColorChanged: (color, opacity) {
+          setState(() {
+            _borderColor = color;
+          });
+        },
       ),
-    );
-  }
-}
-
-/// Simple color picker widget
-class ColorPicker extends StatelessWidget {
-  final Color pickerColor;
-  final ValueChanged<Color> onColorChanged;
-
-  const ColorPicker({
-    super.key,
-    required this.pickerColor,
-    required this.onColorChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = [
-      Colors.black,
-      Colors.white,
-      Colors.red,
-      Colors.pink,
-      Colors.purple,
-      Colors.deepPurple,
-      Colors.indigo,
-      Colors.blue,
-      Colors.lightBlue,
-      Colors.cyan,
-      Colors.teal,
-      Colors.green,
-      Colors.lightGreen,
-      Colors.lime,
-      Colors.yellow,
-      Colors.orange,
-      Colors.deepOrange,
-      Colors.brown,
-      Colors.grey,
-      Colors.blueGrey,
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 5,
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-      ),
-      itemCount: colors.length,
-      itemBuilder: (context, index) {
-        final color = colors[index];
-        final isSelected = color == pickerColor;
-
-        return GestureDetector(
-          onTap: () => onColorChanged(color),
-          child: Container(
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isSelected ? Colors.blue : Colors.grey[300]!,
-                width: isSelected ? 3 : 1,
-              ),
-            ),
-            child: isSelected
-                ? const Icon(Icons.check, color: Colors.white, size: 20)
-                : null,
-          ),
-        );
-      },
     );
   }
 }
