@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import '../models/layout_template.dart';
 
-/// Modal for selecting preset layout templates
+/// Modern layout picker modal with simple grid preview
 class LayoutPickerModal extends StatelessWidget {
   final Function(LayoutTemplate?) onLayoutSelected;
 
-  const LayoutPickerModal({
-    super.key,
-    required this.onLayoutSelected,
-  });
+  const LayoutPickerModal({super.key, required this.onLayoutSelected});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -34,35 +31,46 @@ class LayoutPickerModal extends StatelessWidget {
             ),
           ),
 
-          // Title
+          // Header with back button
           Padding(
-            padding: const EdgeInsets.all(20),
-            child: Text(
-              'Choose Layout',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Text(
+                  'Choose Layout',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
           ),
 
-          // Layout grid
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Custom option
-                  _buildCustomOption(context),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Preset layouts
-                  _buildLayoutGrid(context),
-                ],
-              ),
-            ),
+          // Custom option
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildCustomOption(context),
           ),
+
+          const SizedBox(height: 20),
+
+          // Layout grid - direct without categories
+          Expanded(child: _buildLayoutGrid()),
         ],
       ),
     );
@@ -123,79 +131,29 @@ class LayoutPickerModal extends StatelessWidget {
     );
   }
 
-  Widget _buildLayoutGrid(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Preset Layouts',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
+  Widget _buildLayoutGrid() {
+    // Get all layouts
+    List<LayoutTemplate> layouts = LayoutTemplates.templates;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4, // 4 columns like the reference
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.0,
         ),
-        const SizedBox(height: 12),
-        
-        // Group by photo count
-        ..._buildLayoutGroups(context),
-      ],
+        itemCount: layouts.length,
+        itemBuilder: (context, index) {
+          final layout = layouts[index];
+          return _buildModernLayoutTile(layout, context);
+        },
+      ),
     );
   }
 
-  List<Widget> _buildLayoutGroups(BuildContext context) {
-    final groups = <Widget>[];
-    
-    // Group layouts by photo count
-    final photoCounts = LayoutTemplates.templates
-        .map((t) => t.photoCount)
-        .toSet()
-        .toList()
-      ..sort();
-    
-    for (final count in photoCounts) {
-      final layouts = LayoutTemplates.getByPhotoCount(count);
-      groups.add(_buildLayoutGroup(context, count, layouts));
-      groups.add(const SizedBox(height: 20));
-    }
-    
-    return groups;
-  }
-
-  Widget _buildLayoutGroup(BuildContext context, int photoCount, List<LayoutTemplate> layouts) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$photoCount Photos',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey[600],
-          ),
-        ),
-        const SizedBox(height: 8),
-        
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.0,
-          ),
-          itemCount: layouts.length,
-          itemBuilder: (context, index) {
-            final layout = layouts[index];
-            return _buildLayoutThumbnail(context, layout);
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLayoutThumbnail(BuildContext context, LayoutTemplate layout) {
+  Widget _buildModernLayoutTile(LayoutTemplate layout, BuildContext context) {
     return GestureDetector(
       onTap: () {
         onLayoutSelected(layout);
@@ -203,40 +161,16 @@ class LayoutPickerModal extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey[300]!),
+          color: Colors.blue,
         ),
-        child: Column(
+        child: Stack(
           children: [
-            // Thumbnail preview
-            Expanded(
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                child: _buildLayoutPreview(layout),
-              ),
-            ),
-            
-            // Layout name
+            // Layout preview with borders
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(8),
-                  bottomRight: Radius.circular(8),
-                ),
-              ),
-              child: Text(
-                layout.name,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              margin: const EdgeInsets.all(4),
+              child: CustomPaint(
+                size: const Size.square(double.infinity),
+                painter: ModernLayoutPreviewPainter(layout.photoLayouts),
               ),
             ),
           ],
@@ -244,26 +178,26 @@ class LayoutPickerModal extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildLayoutPreview(LayoutTemplate layout) {
-    return CustomPaint(
-      size: const Size(60, 60),
-      painter: LayoutPreviewPainter(layout.photoLayouts),
-    );
-  }
 }
 
-/// Custom painter for drawing layout previews
-class LayoutPreviewPainter extends CustomPainter {
+/// Modern layout preview painter with visible borders
+class ModernLayoutPreviewPainter extends CustomPainter {
   final List<PhotoLayout> photoLayouts;
 
-  LayoutPreviewPainter(this.photoLayouts);
+  ModernLayoutPreviewPainter(this.photoLayouts);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.blue[400]!
+    // Background fill
+    final backgroundPaint = Paint()
+      ..color = Colors.blue
       ..style = PaintingStyle.fill;
+
+    // Border paint
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
 
     for (final photoLayout in photoLayouts) {
       final rect = Rect.fromLTWH(
@@ -272,8 +206,12 @@ class LayoutPreviewPainter extends CustomPainter {
         photoLayout.size.width * size.width,
         photoLayout.size.height * size.height,
       );
-      
-      canvas.drawRect(rect, paint);
+
+      // Draw filled rectangle
+      canvas.drawRect(rect, backgroundPaint);
+
+      // Draw border
+      canvas.drawRect(rect, borderPaint);
     }
   }
 
