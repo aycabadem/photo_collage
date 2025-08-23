@@ -65,14 +65,11 @@ class PhotoBoxWidget extends StatelessWidget {
             children: [
               // Photo or placeholder
               box.imageFile != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Image.file(
-                        box.imageFile!,
-                        fit: box.imageFit, // Box'tan gelen fit seçeneği
-                        width: box.size.width,
-                        height: box.size.height,
-                      ),
+                  ? Image.file(
+                      box.imageFile!,
+                      fit: box.imageFit, // Box'tan gelen fit seçeneği
+                      width: box.size.width,
+                      height: box.size.height,
                     )
                   : Container(
                       color: Colors.blue[300],

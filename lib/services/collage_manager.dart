@@ -9,6 +9,21 @@ import '../models/alignment_guideline.dart';
 import '../models/layout_template.dart';
 import '../utils/collage_utils.dart';
 
+/// Snapshot of custom layout for aspect ratio transitions
+class CustomLayoutSnapshot {
+  final List<PhotoLayout> photoLayouts;
+  final AspectSpec originalAspect;
+  final Map<int, String> photoPathsMap; // Store photo paths by index
+  final Map<int, BoxFit> photoFitsMap; // Store photo fits by index
+
+  CustomLayoutSnapshot({
+    required this.photoLayouts,
+    required this.originalAspect,
+    required this.photoPathsMap,
+    required this.photoFitsMap,
+  });
+}
+
 /// Service class for managing collage operations and state
 class CollageManager extends ChangeNotifier {
   // Aspect ratio presets
@@ -44,6 +59,9 @@ class CollageManager extends ChangeNotifier {
   // Layout template settings
   LayoutTemplate? _currentLayout;
   bool _isCustomMode = true;
+
+  // Custom layout snapshot for aspect ratio transitions
+  CustomLayoutSnapshot? _customLayoutSnapshot;
 
   // Getters
   AspectSpec get selectedAspect => _selectedAspect;
@@ -156,33 +174,34 @@ class CollageManager extends ChangeNotifier {
       final existingPhotos = Map<int, PhotoBox>.fromEntries(
         _photoBoxes.asMap().entries,
       );
-      
+
       // Clear and recreate boxes with new template size
       _photoBoxes.clear();
-      
+
       // Get scaled layouts for current aspect ratio
       final scaledLayouts = _currentLayout!.getScaledLayouts(
         _selectedAspect.w / _selectedAspect.h,
       );
-      
+
       // Create photo boxes based on layout, preserving existing photos
       for (int i = 0; i < scaledLayouts.length; i++) {
         final photoLayout = scaledLayouts[i];
-        
+
         // Calculate actual positions and sizes based on template size
         final actualPosition = Offset(
           photoLayout.position.dx * _templateSize.width,
           photoLayout.position.dy * _templateSize.height,
         );
-        
+
         final actualSize = Size(
           photoLayout.size.width * _templateSize.width,
           photoLayout.size.height * _templateSize.height,
         );
-        
+
         // Check if we have an existing photo for this position
         PhotoBox photoBox;
-        if (existingPhotos.containsKey(i) && existingPhotos[i]!.imageFile != null) {
+        if (existingPhotos.containsKey(i) &&
+            existingPhotos[i]!.imageFile != null) {
           // Preserve existing photo with new position and size
           photoBox = PhotoBox(
             position: actualPosition,
@@ -199,13 +218,13 @@ class CollageManager extends ChangeNotifier {
             imagePath: '', // Empty for placeholder
           );
         }
-        
+
         _photoBoxes.add(photoBox);
       }
-      
+
       // Clear selection
       _selectedBox = null;
-      
+
       notifyListeners();
     }
   }
@@ -326,49 +345,135 @@ class CollageManager extends ChangeNotifier {
     if (_currentLayout != null && !_isCustomMode) {
       _updateLayoutForAspectRatio();
     } else {
-      // Custom mode - resize and reposition existing boxes
-      for (final box in _photoBoxes) {
-        _adjustBoxToTemplate(box);
+      // Custom mode - use layout snapshot approach
+      if (_photoBoxes.isNotEmpty) {
+        // Create snapshot before changing aspect ratio
+        _createCustomLayoutSnapshot();
+        // Apply snapshot to new aspect ratio (like preset layouts)
+        _applyCustomLayoutSnapshot(newAspect);
       }
     }
 
     notifyListeners();
   }
 
-  /// Adjust a photo box to fit within the current template
-  void _adjustBoxToTemplate(PhotoBox box) {
-    double newWidth = box.size.width;
-    double newHeight = box.size.height;
+  /// Create a snapshot of current custom layout
+  void _createCustomLayoutSnapshot() {
+    if (!_isCustomMode || _photoBoxes.isEmpty) return;
 
-    // Shrink box if it's larger than template
-    if (newWidth > _templateSize.width - 40) {
-      newWidth = _templateSize.width - 40;
+    final photoLayouts = <PhotoLayout>[];
+    final photoPathsMap = <int, String>{};
+    final photoFitsMap = <int, BoxFit>{};
+
+    for (int i = 0; i < _photoBoxes.length; i++) {
+      final box = _photoBoxes[i];
+
+      // Normalize position and size (0-1 range)
+      final normalizedX = box.position.dx / _templateSize.width;
+      final normalizedY = box.position.dy / _templateSize.height;
+      final normalizedWidth = box.size.width / _templateSize.width;
+      final normalizedHeight = box.size.height / _templateSize.height;
+
+      // Create PhotoLayout (like preset layouts)
+      photoLayouts.add(
+        PhotoLayout(
+          position: Offset(normalizedX, normalizedY),
+          size: Size(normalizedWidth, normalizedHeight),
+        ),
+      );
+
+      // Store photo data
+      if (box.imageFile != null &&
+          box.imagePath != null &&
+          box.imagePath!.isNotEmpty) {
+        photoPathsMap[i] = box.imagePath!;
+        photoFitsMap[i] = box.imageFit;
+      }
     }
-    if (newHeight > _templateSize.height - 40) {
-      newHeight = _templateSize.height - 40;
+
+    // Save snapshot
+    _customLayoutSnapshot = CustomLayoutSnapshot(
+      photoLayouts: photoLayouts,
+      originalAspect: _selectedAspect,
+      photoPathsMap: photoPathsMap,
+      photoFitsMap: photoFitsMap,
+    );
+  }
+
+  /// Apply custom layout snapshot to new aspect ratio
+  void _applyCustomLayoutSnapshot(AspectSpec newAspect) {
+    if (_customLayoutSnapshot == null) return;
+
+    // Clear current boxes
+    _photoBoxes.clear();
+
+    // Get scaled layouts for new aspect ratio (like preset layouts do)
+    final scaledLayouts = _customLayoutSnapshot!.photoLayouts.map((layout) {
+      return PhotoLayout(
+        position: layout.position, // Already normalized 0-1
+        size: layout.size, // Already normalized 0-1
+      );
+    }).toList();
+
+    // Calculate template coverage to determine stretch factors
+    double maxX = 0, maxY = 0;
+    for (final layout in scaledLayouts) {
+      final rightEdge = layout.position.dx + layout.size.width;
+      final bottomEdge = layout.position.dy + layout.size.height;
+      if (rightEdge > maxX) maxX = rightEdge;
+      if (bottomEdge > maxY) maxY = bottomEdge;
     }
 
-    // Minimum size control
-    if (newWidth < 50) newWidth = 50;
-    if (newHeight < 50) newHeight = 50;
+    // Calculate stretch factors for both dimensions
+    double stretchX = maxX < 0.95 ? 0.95 / maxX : 1.0;
+    double stretchY = maxY < 0.95 ? 0.95 / maxY : 1.0;
 
-    // Update size
-    box.size = Size(newWidth, newHeight);
+    // Use the larger stretch factor to fill template better
+    double stretchFactor = stretchX > stretchY ? stretchX : stretchY;
 
-    // Adjust position
-    double newX = box.position.dx;
-    double newY = box.position.dy;
+    // Create photo boxes with new template size (exactly like preset layouts)
+    for (int i = 0; i < scaledLayouts.length; i++) {
+      final photoLayout = scaledLayouts[i];
 
-    if (newX < 0) newX = 0;
-    if (newY < 0) newY = 0;
-    if (newX + newWidth > _templateSize.width) {
-      newX = _templateSize.width - newWidth;
+      // Calculate actual positions and sizes based on NEW template size with stretch
+      final actualPosition = Offset(
+        photoLayout.position.dx * _templateSize.width * stretchFactor,
+        photoLayout.position.dy * _templateSize.height * stretchFactor,
+      );
+
+      // Apply stretch factor to sizes to fill template better
+      final actualSize = Size(
+        photoLayout.size.width * _templateSize.width * stretchFactor,
+        photoLayout.size.height * _templateSize.height * stretchFactor,
+      );
+
+      // Restore photo if it existed
+      PhotoBox photoBox;
+      if (_customLayoutSnapshot!.photoPathsMap.containsKey(i)) {
+        final imagePath = _customLayoutSnapshot!.photoPathsMap[i]!;
+        final imageFit = _customLayoutSnapshot!.photoFitsMap[i] ?? BoxFit.cover;
+
+        photoBox = PhotoBox(
+          position: actualPosition,
+          size: actualSize,
+          imageFile: File(imagePath),
+          imagePath: imagePath,
+          imageFit: imageFit,
+        );
+      } else {
+        // Create placeholder
+        photoBox = PhotoBox(
+          position: actualPosition,
+          size: actualSize,
+          imagePath: '',
+        );
+      }
+
+      _photoBoxes.add(photoBox);
     }
-    if (newY + newHeight > _templateSize.height) {
-      newY = _templateSize.height - newHeight;
-    }
 
-    box.position = Offset(newX, newY);
+    // Clear selection
+    _selectedBox = null;
   }
 
   /// Select a photo box
