@@ -26,6 +26,9 @@ class CollageCanvas extends StatelessWidget {
   /// Callback when a photo box is deleted
   final ValueChanged<PhotoBox> onBoxDeleted;
 
+  /// Callback when add photo to box is requested
+  final Future<void> Function(PhotoBox) onAddPhotoToBox;
+
   /// Callback when resize handles are dragged
   final Function(PhotoBox, double, double, Alignment) onResizeHandleDragged;
 
@@ -45,6 +48,7 @@ class CollageCanvas extends StatelessWidget {
     required this.onBoxSelected,
     required this.onBoxDragged,
     required this.onBoxDeleted,
+    required this.onAddPhotoToBox,
     required this.onResizeHandleDragged,
     required this.onBackgroundTap,
     this.guidelines = const [],
@@ -111,6 +115,7 @@ class CollageCanvas extends StatelessWidget {
       onTap: () => onBoxSelected(box),
       onPanUpdate: (details) => onBoxDragged(box, details),
       onDelete: () => onBoxDeleted(box),
+      onAddPhoto: () async => await onAddPhotoToBox(box),
       globalBorderWidth: collageManager.globalBorderWidth,
       globalBorderColor: collageManager.globalBorderColor,
       hasGlobalBorder: collageManager.hasGlobalBorder,

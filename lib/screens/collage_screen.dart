@@ -7,6 +7,7 @@ import '../widgets/custom_aspect_ratio_dialog.dart';
 
 import '../widgets/ios_color_picker_modal.dart';
 import '../widgets/border_panel_modal.dart';
+import '../widgets/layout_picker_modal.dart';
 
 /// Main screen for the photo collage application
 class CollageScreen extends StatefulWidget {
@@ -104,6 +105,8 @@ class _CollageScreenState extends State<CollageScreen> {
                             );
                           },
                           onBoxDeleted: (box) => collageManager.deleteBox(box),
+                          onAddPhotoToBox: (box) async =>
+                              await collageManager.addPhotoToBox(box),
                           onResizeHandleDragged: (box, dx, dy, alignment) {
                             // Handle resize with scale
                             final scale = _getCurrentScale();
@@ -150,10 +153,11 @@ class _CollageScreenState extends State<CollageScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // Future button 1
+                      // Layout picker button
                       _buildBottomBarButton(
-                        icon: Icons.settings,
-                        onPressed: () {},
+                        icon: Icons.grid_view,
+                        onPressed: () =>
+                            _showLayoutPicker(context, collageManager),
                         isActive: false,
                       ),
                       // Future button 2
@@ -301,6 +305,20 @@ class _CollageScreenState extends State<CollageScreen> {
         onBorderChanged: (width, color) {
           collageManager.changeGlobalBorderWidth(width);
           collageManager.changeGlobalBorderColor(color);
+        },
+      ),
+    );
+  }
+
+  // Show layout picker modal
+  void _showLayoutPicker(BuildContext context, CollageManager collageManager) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => LayoutPickerModal(
+        onLayoutSelected: (layout) {
+          collageManager.applyLayoutTemplate(layout);
         },
       ),
     );

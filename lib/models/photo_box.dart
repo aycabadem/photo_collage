@@ -15,10 +15,14 @@ class PhotoBox {
   /// Path to the image file
   String? imagePath;
 
+  /// How the image should fit in the box
+  BoxFit imageFit;
+
   PhotoBox({
     required this.position,
     required this.size,
     this.imageFile,
     this.imagePath,
+    this.imageFit = BoxFit.cover,
   });
 }

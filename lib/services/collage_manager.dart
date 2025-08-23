@@ -6,6 +6,7 @@ import 'package:image_gallery_saver/image_gallery_saver.dart';
 import '../models/photo_box.dart';
 import '../models/aspect_spec.dart';
 import '../models/alignment_guideline.dart';
+import '../models/layout_template.dart';
 import '../utils/collage_utils.dart';
 
 /// Service class for managing collage operations and state
@@ -40,6 +41,10 @@ class CollageManager extends ChangeNotifier {
   Color _globalBorderColor = Colors.black;
   bool _hasGlobalBorder = false;
 
+  // Layout template settings
+  LayoutTemplate? _currentLayout;
+  bool _isCustomMode = true;
+
   // Getters
   AspectSpec get selectedAspect => _selectedAspect;
   Size get templateSize => _templateSize;
@@ -55,6 +60,10 @@ class CollageManager extends ChangeNotifier {
   double get globalBorderWidth => _globalBorderWidth;
   Color get globalBorderColor => _globalBorderColor;
   bool get hasGlobalBorder => _hasGlobalBorder;
+
+  // Layout template getters
+  LayoutTemplate? get currentLayout => _currentLayout;
+  bool get isCustomMode => _isCustomMode;
 
   // Background color and opacity setters
   void changeBackgroundColor(Color color) {
@@ -77,6 +86,75 @@ class CollageManager extends ChangeNotifier {
   void changeGlobalBorderColor(Color color) {
     _globalBorderColor = color;
     notifyListeners();
+  }
+
+  // Layout template setters
+  void applyLayoutTemplate(LayoutTemplate? layout) {
+    if (layout == null) {
+      // Custom mode - clear current layout
+      _currentLayout = null;
+      _isCustomMode = true;
+      _photoBoxes.clear();
+      notifyListeners();
+      return;
+    }
+
+    // Apply preset layout
+    _currentLayout = layout;
+    _isCustomMode = false;
+
+    // Clear existing photo boxes
+    _photoBoxes.clear();
+
+    // Get scaled layouts for current aspect ratio
+    final scaledLayouts = layout.getScaledLayouts(
+      _selectedAspect.w / _selectedAspect.h,
+    );
+
+    // Create photo boxes based on layout
+    for (int i = 0; i < scaledLayouts.length; i++) {
+      final photoLayout = scaledLayouts[i];
+
+      // Calculate actual positions and sizes based on template size
+      final actualPosition = Offset(
+        photoLayout.position.dx * _templateSize.width,
+        photoLayout.position.dy * _templateSize.height,
+      );
+
+      final actualSize = Size(
+        photoLayout.size.width * _templateSize.width,
+        photoLayout.size.height * _templateSize.height,
+      );
+
+      // Create placeholder photo box
+      final photoBox = PhotoBox(
+        position: actualPosition,
+        size: actualSize,
+        imagePath: '', // Empty for placeholder
+      );
+
+      _photoBoxes.add(photoBox);
+    }
+
+    // Clear selection
+    _selectedBox = null;
+
+    // Auto-enable border for layout templates
+    if (!_hasGlobalBorder) {
+      _globalBorderWidth = 2.0;
+      _globalBorderColor = Colors.grey[400]!;
+      _hasGlobalBorder = true;
+    }
+
+    notifyListeners();
+  }
+
+  /// Update layout when aspect ratio changes
+  void _updateLayoutForAspectRatio() {
+    if (_currentLayout != null && !_isCustomMode) {
+      // Re-apply layout with new aspect ratio
+      applyLayoutTemplate(_currentLayout);
+    }
   }
 
   // Get background color with opacity
@@ -191,9 +269,14 @@ class CollageManager extends ChangeNotifier {
     _selectedAspect = newAspect;
     _templateSize = _sizeForAspect(newAspect, screenSize: screenSize);
 
-    // Resize and reposition boxes to fit new template size
-    for (final box in _photoBoxes) {
-      _adjustBoxToTemplate(box);
+    // If using preset layout, re-apply it with new aspect ratio
+    if (_currentLayout != null && !_isCustomMode) {
+      _updateLayoutForAspectRatio();
+    } else {
+      // Custom mode - resize and reposition existing boxes
+      for (final box in _photoBoxes) {
+        _adjustBoxToTemplate(box);
+      }
     }
 
     notifyListeners();
@@ -267,6 +350,26 @@ class CollageManager extends ChangeNotifier {
 
       _photoBoxes.add(newBox);
       _selectedBox = newBox;
+      notifyListeners();
+    }
+  }
+
+  /// Add photo to a specific existing box
+  Future<void> addPhotoToBox(PhotoBox targetBox) async {
+    final XFile? pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
+
+    if (pickedFile != null) {
+      // Update the target box with the selected image
+      targetBox.imageFile = File(pickedFile.path);
+      targetBox.imagePath = pickedFile.path;
+
+      // Select this box
+      _selectedBox = targetBox;
       notifyListeners();
     }
   }
