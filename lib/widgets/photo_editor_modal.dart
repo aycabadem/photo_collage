@@ -92,7 +92,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
             ),
 
             // Photo Editor Area - Kutu boyutunda viewport
-            Expanded(
+            Flexible(
               child: Container(
                 margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -118,6 +118,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                           ? Image.file(
                               widget.photoBox.imageFile!,
                               fit: BoxFit.cover, // Viewport'a uygun
+                              alignment: Alignment(0.0, 0.0),
                             )
                           : Container(
                               color: Colors.grey[300],
@@ -161,21 +162,71 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
     });
   }
 
-  void _saveChanges() {
+  Future<void> _saveChanges() async {
     // Get transformation matrix and extract offset/scale
     final matrix = _transformationController.value;
 
-    // Extract translation (pan)
+    // Extract translation (pan) - convert to alignment
     final translation = matrix.getTranslation();
     final newOffset = Offset(translation.x, translation.y);
 
-    // Extract scale (zoom)
+    print('newOffset: $newOffset');
+    print('boxSize: ${widget.photoBox.size}');
+
+    // Calculate alignment from offset coordinates
+    // Convert offset to alignment range (-1.0 to 1.0)
+    // Offset (0,0) should be alignment (-1,-1)
+    // Offset at limits should be alignment (1,1)
+    final boxSize = widget.photoBox.size;
+    final alignmentX = (newOffset.dx / boxSize.width * 2).clamp(-1.0, 1.0);
+    final alignmentY = (newOffset.dy / boxSize.height * 2).clamp(-1.0, 1.0);
+    // final newAlignment = Alignment(alignmentX, alignmentY);
+
+    final photoSizeX = widget.photoBox.size.width;
+    final photoSizeY = widget.photoBox.size.height;
+
+    print('photoSizeX: $photoSizeX');
+    print('photoSizeY: $photoSizeY');
+
+    final absNewOffsetX = newOffset.dx.abs();
+    final absNewOffsetY = newOffset.dy.abs();
+    // Get image dimensions
+    final image = await decodeImageFromList(
+      await widget.photoBox.imageFile!.readAsBytes(),
+    );
+    final imageWidth = image.width.toDouble();
+    final imageHeight = image.height.toDouble();
+    final newAlignment = Alignment(
+      -1 + (absNewOffsetX + boxSize.width) / imageWidth,
+      -1 + (absNewOffsetY + boxSize.height) / imageHeight,
+    );
+
+    double overflowX = imageWidth - boxSize.width;
+    double overflowY = imageHeight - boxSize.height;
+
+    double alignmentXX = overflowX != 0
+        ? (-2 * newOffset.dx / overflowX - 1).clamp(-1.0, 1.0)
+        : 0;
+    double alignmentYY = overflowY != 0
+        ? (-2 * newOffset.dy / overflowY - 1).clamp(-1.0, 1.0)
+        : 0;
+
+    Alignment result = Alignment(alignmentXX, alignmentYY);
+    print(result); // Alignment(-0.5, 0.0)
+
+    print('newAlignment: $newAlignment');
+    print('result: $result');
+
+    print('--------------------------------');
+
+    // Extract scale (zoom) - save this
     final newScale = matrix.getMaxScaleOnAxis();
 
     // Update the photo box with new values
-    widget.photoBox.photoOffset = newOffset;
+    // widget.photoBox.photoOffset = newOffset; // Don't save offset
     widget.photoBox.photoScale = newScale;
     widget.photoBox.cropRect = _cropRect;
+    widget.photoBox.alignment = result; // Save new alignment
 
     // Notify parent that photo box has changed
     if (widget.onPhotoChanged != null) {

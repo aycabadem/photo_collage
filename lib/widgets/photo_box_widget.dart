@@ -83,6 +83,7 @@ class PhotoBoxWidget extends StatelessWidget {
                             fit: BoxFit.cover, // Always cover for pan to work
                             width: box.size.width, // Normal boyut (3x değil)
                             height: box.size.height, // Normal boyut (3x değil)
+                            alignment: box.alignment,
                           ),
                         ),
                       ),

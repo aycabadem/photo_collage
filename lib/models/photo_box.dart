@@ -27,6 +27,9 @@ class PhotoBox {
   /// Crop rectangle (relative to photo, 0-1 range)
   Rect cropRect;
 
+  /// How the photo is aligned within the box
+  Alignment alignment;
+
   PhotoBox({
     required this.position,
     required this.size,
@@ -36,5 +39,6 @@ class PhotoBox {
     this.photoOffset = const Offset(0, 0),
     this.photoScale = 1.0,
     this.cropRect = const Rect.fromLTWH(0, 0, 1, 1),
+    this.alignment = Alignment.center,
   });
 }
