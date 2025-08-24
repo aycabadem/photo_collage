@@ -18,11 +18,23 @@ class PhotoBox {
   /// How the image should fit in the box
   BoxFit imageFit;
 
+  /// Photo offset for panning (relative to box center)
+  Offset photoOffset;
+
+  /// Photo scale for zooming (1.0 = normal size)
+  double photoScale;
+
+  /// Crop rectangle (relative to photo, 0-1 range)
+  Rect cropRect;
+
   PhotoBox({
     required this.position,
     required this.size,
     this.imageFile,
     this.imagePath,
     this.imageFit = BoxFit.cover,
+    this.photoOffset = const Offset(0, 0),
+    this.photoScale = 1.0,
+    this.cropRect = const Rect.fromLTWH(0, 0, 1, 1),
   });
 }

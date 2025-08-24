@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/photo_box.dart';
 import '../widgets/smart_border_overlay.dart';
+import '../widgets/photo_editor_modal.dart';
 
 /// Widget for displaying a single photo box in the collage
 class PhotoBoxWidget extends StatelessWidget {
@@ -22,6 +23,9 @@ class PhotoBoxWidget extends StatelessWidget {
   /// Callback when add photo button is tapped
   final Future<void> Function()? onAddPhoto;
 
+  /// Callback when photo is modified (pan/zoom changes)
+  final VoidCallback? onPhotoModified;
+
   /// Global border settings from CollageManager
   final double globalBorderWidth;
   final Color globalBorderColor;
@@ -38,6 +42,7 @@ class PhotoBoxWidget extends StatelessWidget {
     required this.onPanUpdate,
     required this.onDelete,
     this.onAddPhoto,
+    this.onPhotoModified,
     required this.globalBorderWidth,
     required this.globalBorderColor,
     required this.hasGlobalBorder,
@@ -65,11 +70,22 @@ class PhotoBoxWidget extends StatelessWidget {
             children: [
               // Photo or placeholder
               box.imageFile != null
-                  ? Image.file(
-                      box.imageFile!,
-                      fit: box.imageFit, // Box'tan gelen fit seçeneği
-                      width: box.size.width,
-                      height: box.size.height,
+                  ? ClipRect(
+                      child: Transform.scale(
+                        scale: box.photoScale,
+                        child: Transform.translate(
+                          offset: Offset(
+                            -box.photoOffset.dx, // Negatif offset (pan tersi)
+                            -box.photoOffset.dy, // Negatif offset (pan tersi)
+                          ),
+                          child: Image.file(
+                            box.imageFile!,
+                            fit: BoxFit.cover, // Always cover for pan to work
+                            width: box.size.width, // Normal boyut (3x değil)
+                            height: box.size.height, // Normal boyut (3x değil)
+                          ),
+                        ),
+                      ),
                     )
                   : Container(
                       color: Colors.blue[300],
@@ -130,13 +146,13 @@ class PhotoBoxWidget extends StatelessWidget {
                   ),
                 ),
 
-                // Fit options button (only when photo exists)
+                // Edit button (only when photo exists)
                 if (box.imageFile != null)
                   Positioned(
                     top: 4,
                     right: 4,
                     child: GestureDetector(
-                      onTap: () => _showFitOptions(context),
+                      onTap: () => _showPhotoEditor(context),
                       child: Container(
                         width: 24,
                         height: 24,
@@ -152,7 +168,7 @@ class PhotoBoxWidget extends StatelessWidget {
                           ],
                         ),
                         child: const Icon(
-                          Icons.fit_screen,
+                          Icons.edit,
                           size: 14,
                           color: Colors.white,
                         ),
@@ -174,77 +190,12 @@ class PhotoBoxWidget extends StatelessWidget {
     }
   }
 
-  /// Show fit options popup menu
-  void _showFitOptions(BuildContext context) {
-    showMenu(
+  /// Show photo editor modal
+  void _showPhotoEditor(BuildContext context) {
+    showDialog(
       context: context,
-      position: RelativeRect.fromLTRB(
-        box.position.dx + box.size.width,
-        box.position.dy,
-        box.position.dx + box.size.width + 200,
-        box.position.dy + 200,
-      ),
-      items: [
-        PopupMenuItem(
-          value: BoxFit.cover,
-          child: Row(
-            children: [
-              Icon(Icons.crop_square, size: 16),
-              SizedBox(width: 8),
-              Text('Cover (Tam Doldur)'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: BoxFit.contain,
-          child: Row(
-            children: [
-              Icon(Icons.fit_screen, size: 16),
-              SizedBox(width: 8),
-              Text('Contain (Sığdır)'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: BoxFit.fill,
-          child: Row(
-            children: [
-              Icon(Icons.aspect_ratio, size: 16),
-              SizedBox(width: 8),
-              Text('Fill (Uzat)'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: BoxFit.fitWidth,
-          child: Row(
-            children: [
-              Icon(Icons.width_normal, size: 16),
-              SizedBox(width: 8),
-              Text('Fit Width (Genişliğe Sığdır)'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: BoxFit.fitHeight,
-          child: Row(
-            children: [
-              Icon(Icons.height, size: 16),
-              SizedBox(width: 8),
-              Text('Fit Height (Yüksekliğe Sığdır)'),
-            ],
-          ),
-        ),
-      ],
-    ).then((selectedFit) {
-      if (selectedFit != null) {
-        box.imageFit = selectedFit;
-        // Notify parent to rebuild
-        if (onAddPhoto != null) {
-          // Trigger a rebuild by calling a callback
-          onAddPhoto!();
-        }
-      }
-    });
+      builder: (context) =>
+          PhotoEditorModal(photoBox: box, onPhotoChanged: onPhotoModified),
+    );
   }
 }

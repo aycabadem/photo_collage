@@ -108,6 +108,11 @@ class CollageCanvas extends StatelessWidget {
       onPanUpdate: (details) => onBoxDragged(box, details),
       onDelete: () => onBoxDeleted(box),
       onAddPhoto: () async => await onAddPhotoToBox(box),
+      onPhotoModified: () {
+        // Notify CollageManager that photo has been modified
+        // This will trigger UI updates to show new pan/zoom values
+        collageManager.notifyListeners();
+      },
       globalBorderWidth: collageManager.globalBorderWidth,
       globalBorderColor: collageManager.globalBorderColor,
       hasGlobalBorder: collageManager.hasGlobalBorder,
