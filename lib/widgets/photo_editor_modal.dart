@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:extended_image/extended_image.dart';
 import 'dart:io';
 import 'dart:async';
 import 'dart:ui' as ui;
@@ -20,10 +21,13 @@ class PhotoEditorModal extends StatefulWidget {
 }
 
 class _PhotoEditorModalState extends State<PhotoEditorModal> {
+  GlobalKey<ExtendedImageEditorState> editorKey =
+      GlobalKey<ExtendedImageEditorState>();
   late Offset _initialFocalPoint;
   late Alignment _initialAlignment;
   late double _lastScale;
   Size? _imageSize;
+  final ImageEditorController _editorController = ImageEditorController();
 
   @override
   void initState() {
@@ -42,19 +46,18 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
       setState(() {
         _imageSize = Size(image.width.toDouble(), image.height.toDouble());
         // Debug: Print current alignment when image loads
-        print('🔍 DEBUG - Image loaded with alignment: ${widget.photoBox.alignment}');
-        print('🔍 DEBUG - Image loaded with scale: ${widget.photoBox.photoScale}');
+        print(
+          '🔍 DEBUG - Image loaded with alignment: ${widget.photoBox.alignment}',
+        );
+        print(
+          '🔍 DEBUG - Image loaded with scale: ${widget.photoBox.photoScale}',
+        );
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Debug: Print current state during build
-    print('🔍 DEBUG - Modal BUILD:');
-    print('Current PhotoBox Alignment: ${widget.photoBox.alignment}');
-    print('Current PhotoBox Scale: ${widget.photoBox.photoScale}');
-    
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -116,72 +119,32 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                     width: widget.photoBox.size.width,
                     height: widget.photoBox.size.height,
                     child: ClipRect(
-                      child: GestureDetector(
-                        onScaleStart: (details) {
-                          _lastScale = widget.photoBox.photoScale;
-                          _initialAlignment = widget.photoBox.alignment;
-                          _initialFocalPoint = details.localFocalPoint;
-                        },
-                        onScaleUpdate: (details) {
-                          setState(() {
-                            // Handle scaling - update PhotoBox scale directly
-                            widget.photoBox.photoScale = (_lastScale * details.scale).clamp(0.5, 3.0);
-
-                            // Handle panning - convert to alignment changes
-                            if (_imageSize != null) {
-                              final delta =
-                                  details.localFocalPoint - _initialFocalPoint;
-
-                              // Calculate how much the alignment should change based on pan
-                              final containerWidth = widget.photoBox.size.width;
-                              final containerHeight =
-                                  widget.photoBox.size.height;
-
-                              // Convert pan delta to alignment change (inverted because alignment works opposite to pan)
-                              final alignmentDeltaX =
-                                  -delta.dx / (containerWidth * 0.5);
-                              final alignmentDeltaY =
-                                  -delta.dy / (containerHeight * 0.5);
-
-                              // Update alignment
-                              final newAlignmentX =
-                                  (_initialAlignment.x + alignmentDeltaX).clamp(
-                                    -1.0,
-                                    1.0,
-                                  );
-                              final newAlignmentY =
-                                  (_initialAlignment.y + alignmentDeltaY).clamp(
-                                    -1.0,
-                                    1.0,
-                                  );
-
-                              widget.photoBox.alignment = Alignment(
-                                newAlignmentX,
-                                newAlignmentY,
-                              );
-                            }
-                          });
-                        },
-                        child: widget.photoBox.imageFile != null
-                            ? ClipRect(
-                                child: Transform.scale(
-                                  scale: widget.photoBox.photoScale, // Use PhotoBox scale directly
-                                  child: Image.file(
-                                    widget.photoBox.imageFile!,
-                                    fit: BoxFit.cover,
-                                    width: widget.photoBox.size.width,
-                                    height: widget.photoBox.size.height,
-                                    alignment: widget.photoBox.alignment,
-                                  ),
-                                ),
-                              )
-                            : Container(
-                                color: Colors.grey[300],
-                                child: const Center(
-                                  child: Icon(Icons.image, size: 64),
-                                ),
+                      child: widget.photoBox.imageFile != null
+                          ? ExtendedImage.file(
+                              widget.photoBox.imageFile!,
+                              key: editorKey,
+                              fit: BoxFit.contain,
+                              mode: ExtendedImageMode.editor,
+                              enableLoadState: true,
+                              initEditorConfigHandler: (state) {
+                                return EditorConfig(
+                                  maxScale: 8.0,
+                                  cropRectPadding: const EdgeInsets.all(0),
+                                  hitTestSize: 20.0,
+                                  initCropRectType: InitCropRectType.layoutRect,
+                                  cropAspectRatio:
+                                      widget.photoBox.size.width /
+                                      widget.photoBox.size.height,
+                                  controller: _editorController,
+                                );
+                              },
+                            )
+                          : Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Icon(Icons.image, size: 64),
                               ),
-                      ),
+                            ),
                     ),
                   ),
                 ),
@@ -220,14 +183,53 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
     });
   }
 
-  void _saveChanges() {
-    // Values are already updated in real-time during gestures
-    // Just trigger the callback and close
+  Future<void> _saveChanges() async {
+    // Use the ImageEditorController to get transformation data
+    final editorDetails = _editorController.editActionDetails;
 
-    print('🔍 DEBUG - Saving Changes:');
-    print('Final Scale: ${widget.photoBox.photoScale}');
-    print('Final Alignment: ${widget.photoBox.alignment}');
+    print('🔍 DEBUG - ExtendedImage Save:');
+    print('editorDetails: $editorDetails');
 
+    if (editorDetails != null) {
+      final screenDestRect = editorDetails.screenDestinationRect;
+      final screenCropRect = editorDetails.screenCropRect;
+
+      print('screenDestRect: $screenDestRect');
+      print('screenCropRect: $screenCropRect');
+
+      if (screenDestRect != null && screenCropRect != null) {
+        // Simple approach: convert the relative position to alignment
+        final cropWidth = screenCropRect.width;
+        final cropHeight = screenCropRect.height;
+
+        // Calculate where the image center is relative to crop center
+        final imageCenterX = screenDestRect.center.dx;
+        final imageCenterY = screenDestRect.center.dy;
+        final cropCenterX = screenCropRect.center.dx;
+        final cropCenterY = screenCropRect.center.dy;
+
+        print('Image center: ($imageCenterX, $imageCenterY)');
+        print('Crop center: ($cropCenterX, $cropCenterY)');
+
+        // Convert to alignment (-1 to 1 range) - inverted
+        final alignmentX = -((imageCenterX - cropCenterX) / (cropWidth / 2))
+            .clamp(-1.0, 1.0);
+        final alignmentY = -((imageCenterY - cropCenterY) / (cropHeight / 2))
+            .clamp(-1.0, 1.0);
+
+        print('Simple alignment: ($alignmentX, $alignmentY)');
+
+        widget.photoBox.alignment = Alignment(alignmentX, alignmentY);
+
+        print('Final PhotoBox Alignment: ${widget.photoBox.alignment}');
+      } else {
+        print('🔍 DEBUG - Screen rects are null, keeping current values');
+      }
+    } else {
+      print('🔍 DEBUG - Editor details null, keeping current values');
+    }
+
+    // Notify parent that photo box has changed
     if (widget.onPhotoChanged != null) {
       widget.onPhotoChanged!();
     }

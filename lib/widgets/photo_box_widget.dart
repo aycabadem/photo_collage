@@ -51,15 +51,6 @@ class PhotoBoxWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Debug: Print current photo box values
-    if (box.imageFile != null) {
-      print('🔍 DEBUG - PhotoBoxWidget BUILD:');
-      print('PhotoBox Alignment: ${box.alignment}');
-      print('PhotoBox Size: ${box.size}');
-      print('PhotoBox Scale: ${box.photoScale}');
-      print('PhotoBox Offset: ${box.photoOffset}');
-    }
-
     return Positioned(
       left: box.position.dx,
       top: box.position.dy,
