@@ -51,6 +51,15 @@ class PhotoBoxWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Debug: Print current photo box values
+    if (box.imageFile != null) {
+      print('🔍 DEBUG - PhotoBoxWidget BUILD:');
+      print('PhotoBox Alignment: ${box.alignment}');
+      print('PhotoBox Size: ${box.size}');
+      print('PhotoBox Scale: ${box.photoScale}');
+      print('PhotoBox Offset: ${box.photoOffset}');
+    }
+
     return Positioned(
       left: box.position.dx,
       top: box.position.dy,
@@ -73,18 +82,13 @@ class PhotoBoxWidget extends StatelessWidget {
                   ? ClipRect(
                       child: Transform.scale(
                         scale: box.photoScale,
-                        child: Transform.translate(
-                          offset: Offset(
-                            -box.photoOffset.dx, // Negatif offset (pan tersi)
-                            -box.photoOffset.dy, // Negatif offset (pan tersi)
-                          ),
-                          child: Image.file(
-                            box.imageFile!,
-                            fit: BoxFit.cover, // Always cover for pan to work
-                            width: box.size.width, // Normal boyut (3x değil)
-                            height: box.size.height, // Normal boyut (3x değil)
-                            alignment: box.alignment,
-                          ),
+                        child: Image.file(
+                          box.imageFile!,
+                          fit: BoxFit.cover, // Always cover for pan to work
+                          width: box.size.width, // Normal boyut (3x değil)
+                          height: box.size.height, // Normal boyut (3x değil)
+                          alignment:
+                              box.alignment, // Use alignment for positioning
                         ),
                       ),
                     )
@@ -193,10 +197,52 @@ class PhotoBoxWidget extends StatelessWidget {
 
   /// Show photo editor modal
   void _showPhotoEditor(BuildContext context) {
+    // Update alignment based on current photo display
+    _updatePhotoAlignment();
+
+    // Debug: Print photo state BEFORE opening modal
+    print('🔍 DEBUG - BEFORE Opening Modal:');
+    print('PhotoBox Alignment: ${box.alignment}');
+    print('PhotoBox Size: ${box.size}');
+    print('PhotoBox Scale: ${box.photoScale}');
+    print('PhotoBox Offset: ${box.photoOffset}');
+
     showDialog(
       context: context,
       builder: (context) =>
           PhotoEditorModal(photoBox: box, onPhotoChanged: onPhotoModified),
     );
+  }
+
+  /// Update photo alignment to show the current visible part
+  void _updatePhotoAlignment() {
+    // Calculate alignment based on current photo display
+    // This ensures the modal shows the same part of the photo
+    if (box.imageFile != null) {
+      // Calculate alignment based on current photo position
+      // Since the photo is currently showing the center, set alignment to center
+      // But we need to calculate this based on actual photo content
+
+      // For now, let's try to detect if the photo has been moved
+      // If photoOffset is not zero, calculate alignment from it
+      if (box.photoOffset != Offset.zero) {
+        // Convert photoOffset to alignment
+        final boxSize = box.size;
+        final maxOffsetX = boxSize.width / 2;
+        final maxOffsetY = boxSize.height / 2;
+
+        final alignmentX = (box.photoOffset.dx / maxOffsetX).clamp(-1.0, 1.0);
+        final alignmentY = (box.photoOffset.dy / maxOffsetY).clamp(-1.0, 1.0);
+
+        box.alignment = Alignment(alignmentX, alignmentY);
+        print('🔍 DEBUG - Calculated Alignment from Offset: ${box.alignment}');
+      } else {
+        // If no offset, keep center alignment
+        box.alignment = Alignment.center;
+        print('🔍 DEBUG - Kept Center Alignment');
+      }
+
+      print('🔍 DEBUG - Final PhotoBox Alignment: ${box.alignment}');
+    }
   }
 }

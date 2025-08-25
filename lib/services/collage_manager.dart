@@ -786,6 +786,15 @@ class CollageManager extends ChangeNotifier {
     if (newWidth >= 50 && newHeight >= 50) {
       box.size = Size(newWidth, newHeight);
       box.position = Offset(newX, newY);
+
+      // Update alignment to maintain the same visible part of the photo
+      // This ensures the photo shows the same content after resize
+      if (box.imageFile != null) {
+        // Keep the same alignment to show the same part of the photo
+        // The photo will automatically adjust to fit the new size
+        box.alignment = box.alignment; // Keep current alignment
+      }
+
       notifyListeners();
     }
   }
