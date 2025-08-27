@@ -24,6 +24,7 @@ class SmartBorderOverlay extends StatelessWidget {
         borderWidth: borderWidth,
         borderColor: borderColor,
         otherBoxes: otherBoxes,
+        box: box,
       ),
     );
   }
@@ -34,11 +35,13 @@ class SmartBorderPainter extends CustomPainter {
   final double borderWidth;
   final Color borderColor;
   final List<PhotoBox> otherBoxes;
+  final PhotoBox box; // Add box parameter
 
   SmartBorderPainter({
     required this.borderWidth,
     required this.borderColor,
     required this.otherBoxes,
+    required this.box, // Add box parameter
   });
 
   @override
@@ -95,12 +98,24 @@ class SmartBorderPainter extends CustomPainter {
 
   /// Check if left edge should have border
   bool _shouldDrawLeftBorder(Size size) {
+    // Always draw left border if it's the leftmost edge of the collage
+    if (box.position.dx <= 1) return true;
+
     for (final otherBox in otherBoxes) {
       // Check if there's a box to the left that touches this one
-      if ((otherBox.position.dx + otherBox.size.width - 0).abs() <=
-              borderWidth &&
+      // Left edge of current box should have border if there's a box touching it
+      // But we need to ensure only one border is drawn between two boxes
+      if ((otherBox.position.dx + otherBox.size.width - box.position.dx)
+                  .abs() <=
+              1 &&
           _boxesOverlapVertically(otherBox, size)) {
-        return false; // Don't draw left border
+        // Only draw left border if this box is "leftmost" of the two touching boxes
+        // This ensures only one border is drawn between two adjacent boxes
+        if (box.position.dx < otherBox.position.dx) {
+          return true; // Draw left border
+        } else {
+          return false; // Don't draw left border
+        }
       }
     }
     return true; // Draw left border
@@ -108,11 +123,22 @@ class SmartBorderPainter extends CustomPainter {
 
   /// Check if right edge should have border
   bool _shouldDrawRightBorder(Size size) {
+    // Always draw right border if it's the rightmost edge of the collage
+    // Note: We need to check against template size, but for now assume it's not the rightmost
+
     for (final otherBox in otherBoxes) {
       // Check if there's a box to the right that touches this one
-      if ((otherBox.position.dx - size.width).abs() <= borderWidth &&
+      // Right edge of current box should have border if there's a box touching it
+      // But we need to ensure only one border is drawn between two boxes
+      if ((otherBox.position.dx - (box.position.dx + size.width)).abs() <= 1 &&
           _boxesOverlapVertically(otherBox, size)) {
-        return false; // Don't draw right border
+        // Only draw right border if this box is "leftmost" of the two touching boxes
+        // This ensures only one border is drawn between two adjacent boxes
+        if (box.position.dx < otherBox.position.dx) {
+          return true; // Draw right border
+        } else {
+          return false; // Don't draw right border
+        }
       }
     }
     return true; // Draw right border
@@ -120,12 +146,24 @@ class SmartBorderPainter extends CustomPainter {
 
   /// Check if top edge should have border
   bool _shouldDrawTopBorder(Size size) {
+    // Always draw top border if it's the topmost edge of the collage
+    if (box.position.dy <= 1) return true;
+
     for (final otherBox in otherBoxes) {
       // Check if there's a box above that touches this one
-      if ((otherBox.position.dy + otherBox.size.height - 0).abs() <=
-              borderWidth &&
+      // Top edge of current box should have border if there's a box touching it
+      // But we need to ensure only one border is drawn between two boxes
+      if ((otherBox.position.dy + otherBox.size.height - box.position.dy)
+                  .abs() <=
+              1 &&
           _boxesOverlapHorizontally(otherBox, size)) {
-        return false; // Don't draw top border
+        // Only draw top border if this box is "topmost" of the two touching boxes
+        // This ensures only one border is drawn between two adjacent boxes
+        if (box.position.dy < otherBox.position.dy) {
+          return true; // Draw top border
+        } else {
+          return false; // Don't draw top border
+        }
       }
     }
     return true; // Draw top border
@@ -133,11 +171,22 @@ class SmartBorderPainter extends CustomPainter {
 
   /// Check if bottom edge should have border
   bool _shouldDrawBottomBorder(Size size) {
+    // Always draw bottom border if it's the bottommost edge of the collage
+    // Note: We need to check against template size, but for now assume it's not the bottommost
+
     for (final otherBox in otherBoxes) {
       // Check if there's a box below that touches this one
-      if ((otherBox.position.dy - size.height).abs() <= borderWidth &&
+      // Bottom edge of current box should have border if there's a box touching it
+      // But we need to ensure only one border is drawn between two boxes
+      if ((otherBox.position.dy - (box.position.dy + size.height)).abs() <= 1 &&
           _boxesOverlapHorizontally(otherBox, size)) {
-        return false; // Don't draw bottom border
+        // Only draw bottom border if this box is "topmost" of the two touching boxes
+        // This ensures only one border is drawn between two adjacent boxes
+        if (box.position.dy < otherBox.position.dy) {
+          return true; // Draw bottom border
+        } else {
+          return false; // Don't draw bottom border
+        }
       }
     }
     return true; // Draw bottom border
@@ -145,8 +194,8 @@ class SmartBorderPainter extends CustomPainter {
 
   /// Check if two boxes overlap vertically
   bool _boxesOverlapVertically(PhotoBox otherBox, Size size) {
-    final thisTop = 0.0;
-    final thisBottom = size.height;
+    final thisTop = box.position.dy;
+    final thisBottom = box.position.dy + size.height;
     final otherTop = otherBox.position.dy;
     final otherBottom = otherBox.position.dy + otherBox.size.height;
 
@@ -155,8 +204,8 @@ class SmartBorderPainter extends CustomPainter {
 
   /// Check if two boxes overlap horizontally
   bool _boxesOverlapHorizontally(PhotoBox otherBox, Size size) {
-    final thisLeft = 0.0;
-    final thisRight = size.width;
+    final thisLeft = box.position.dx;
+    final thisRight = box.position.dx + size.width;
     final otherLeft = otherBox.position.dx;
     final otherRight = otherBox.position.dx + otherBox.size.width;
 
