@@ -6,7 +6,7 @@ import '../widgets/collage_canvas.dart';
 import '../widgets/custom_aspect_ratio_dialog.dart';
 
 import '../widgets/ios_color_picker_modal.dart';
-import '../widgets/border_panel_modal.dart';
+import '../widgets/border_panel.dart';
 import '../widgets/layout_picker_modal.dart';
 
 /// Main screen for the photo collage application
@@ -299,13 +299,9 @@ class _CollageScreenState extends State<CollageScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => BorderPanelModal(
-        currentBorderWidth: collageManager.globalBorderWidth,
-        currentBorderColor: collageManager.globalBorderColor,
-        onBorderChanged: (width, color) {
-          collageManager.changeGlobalBorderWidth(width);
-          collageManager.changeGlobalBorderColor(color);
-        },
+      builder: (context) => BorderPanel(
+        collageManager: collageManager,
+        onClose: () => Navigator.of(context).pop(),
       ),
     );
   }

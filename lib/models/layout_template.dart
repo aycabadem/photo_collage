@@ -44,8 +44,14 @@ class LayoutTemplates {
       description: 'Two photos side by side',
       photoCount: 2,
       photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 1.0)),
-        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 1.0)),
+        PhotoLayout(
+          position: Offset(0.0, 0.0),
+          size: Size(0.5, 1.0),
+        ), // Sol: tam yarı
+        PhotoLayout(
+          position: Offset(0.5, 0.0),
+          size: Size(0.5, 1.0),
+        ), // Sağ: tam yarı
       ],
     ),
     LayoutTemplate(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/photo_box.dart';
 import '../widgets/smart_border_overlay.dart';
 import '../widgets/photo_editor_modal.dart';
+import '../services/collage_manager.dart';
 
 /// Widget for displaying a single photo box in the collage
 class PhotoBoxWidget extends StatelessWidget {
@@ -34,6 +35,9 @@ class PhotoBoxWidget extends StatelessWidget {
   /// Other photo boxes for smart border detection
   final List<PhotoBox> otherBoxes;
 
+  /// CollageManager for accessing new border effects
+  final CollageManager collageManager;
+
   const PhotoBoxWidget({
     super.key,
     required this.box,
@@ -47,10 +51,20 @@ class PhotoBoxWidget extends StatelessWidget {
     required this.globalBorderColor,
     required this.hasGlobalBorder,
     required this.otherBoxes,
+    required this.collageManager,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Debug: Print current photo box values
+    if (box.imageFile != null) {
+      print('🔍 DEBUG - PhotoBoxWidget BUILD:');
+      print('PhotoBox Alignment: ${box.alignment}');
+      print('PhotoBox Size: ${box.size}');
+      print('PhotoBox Scale: ${box.photoScale}');
+      print('PhotoBox Offset: ${box.photoOffset}');
+    }
+
     return Positioned(
       left: box.position.dx,
       top: box.position.dy,
@@ -64,115 +78,135 @@ class PhotoBoxWidget extends StatelessWidget {
           width: box.size.width,
           height: box.size.height,
           decoration: BoxDecoration(
-            // No border here - we'll draw it manually for smart rendering
+            // Corner radius - apply to the container
+            borderRadius: BorderRadius.circular(collageManager.cornerRadius),
+            // Shadow effect
+            boxShadow: collageManager.shadowIntensity > 0
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: collageManager.shadowIntensity,
+                      offset: Offset(
+                        collageManager.shadowIntensity * 0.5,
+                        collageManager.shadowIntensity * 0.5,
+                      ),
+                    ),
+                  ]
+                : null,
           ),
-          child: Stack(
-            children: [
-              // Photo or placeholder
-              box.imageFile != null
-                  ? ClipRect(
-                      child: Transform.scale(
-                        scale: box.photoScale,
-                        child: Image.file(
-                          box.imageFile!,
-                          fit: BoxFit.cover, // Always cover for pan to work
-                          width: box.size.width, // Normal boyut (3x değil)
-                          height: box.size.height, // Normal boyut (3x değil)
-                          alignment:
-                              box.alignment, // Use alignment for positioning
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(collageManager.cornerRadius),
+            child: Stack(
+              children: [
+                // Photo or placeholder
+                box.imageFile != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          collageManager.cornerRadius,
+                        ),
+                        child: Transform.scale(
+                          scale: box.photoScale,
+                          child: Image.file(
+                            box.imageFile!,
+                            fit: BoxFit.cover, // Always cover for pan to work
+                            width: box.size.width, // Normal boyut (3x değil)
+                            height: box.size.height, // Normal boyut (3x değil)
+                            alignment:
+                                box.alignment, // Use alignment for positioning
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.blue[300],
+                        child: Center(
+                          child: GestureDetector(
+                            onTap: () => _addPhotoToBox(context),
+                            child: const Icon(
+                              Icons.add_a_photo,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
                         ),
                       ),
-                    )
-                  : Container(
-                      color: Colors.blue[300],
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: () => _addPhotoToBox(context),
+
+                // Smart border overlay (ignore pointer so it doesn't block interactions)
+                if (hasGlobalBorder && globalBorderWidth > 0)
+                  IgnorePointer(
+                    child: SmartBorderOverlay(
+                      box: box,
+                      borderWidth: globalBorderWidth,
+                      borderColor: globalBorderColor,
+                      otherBoxes: otherBoxes,
+                    ),
+                  ),
+
+                // Action buttons (only for selected boxes)
+                if (isSelected) ...[
+                  // Delete button
+                  Positioned(
+                    top: 4,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: onDelete,
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.8),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
                           child: const Icon(
-                            Icons.add_a_photo,
+                            Icons.delete_outline,
+                            size: 14,
                             color: Colors.white,
-                            size: 32,
                           ),
                         ),
                       ),
                     ),
-
-              // Smart border overlay (ignore pointer so it doesn't block interactions)
-              if (hasGlobalBorder && globalBorderWidth > 0)
-                IgnorePointer(
-                  child: SmartBorderOverlay(
-                    box: box,
-                    borderWidth: globalBorderWidth,
-                    borderColor: globalBorderColor,
-                    otherBoxes: otherBoxes,
                   ),
-                ),
 
-              // Action buttons (only for selected boxes)
-              if (isSelected) ...[
-                // Delete button
-                Positioned(
-                  top: 4,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: onDelete,
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.delete_outline,
-                          size: 14,
-                          color: Colors.white,
+                  // Edit button (only when photo exists)
+                  if (box.imageFile != null)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () => _showPhotoEditor(context),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.8),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 3,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.edit,
+                            size: 14,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-
-                // Edit button (only when photo exists)
-                if (box.imageFile != null)
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: GestureDetector(
-                      onTap: () => _showPhotoEditor(context),
-                      child: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.3),
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.edit,
-                          size: 14,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

@@ -57,43 +57,45 @@ class CollageCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        // Deselect when tapping on empty background area
-        // Only deselect if no photo box is tapped
-        onBackgroundTap();
-      },
-      child: Container(
-        width: templateSize.width,
-        height: templateSize.height,
-        decoration: BoxDecoration(
-          color: collageManager.backgroundColorWithOpacity,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Stack(
-          clipBehavior: Clip.hardEdge,
-          children: [
-            // Photo boxes (bottom layer)
-            for (var box in photoBoxes) _buildPhotoBox(box),
-
-            // Overlay for selected box (resize handles)
-            if (selectedBox != null) _buildOverlay(selectedBox!),
-
-            // Guidelines overlay (top layer, but IgnorePointer)
-            if (guidelines.isNotEmpty)
-              GuidelinesOverlay(
-                guidelines: guidelines,
-                templateSize: templateSize,
+    return Center(
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          // Deselect when tapping on empty background area
+          // Only deselect if no photo box is tapped
+          onBackgroundTap();
+        },
+        child: Container(
+          width: templateSize.width,
+          height: templateSize.height,
+          decoration: BoxDecoration(
+            color: collageManager.backgroundColorWithOpacity,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+                spreadRadius: 2,
               ),
-          ],
+            ],
+          ),
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              // Photo boxes (bottom layer)
+              for (var box in photoBoxes) _buildPhotoBox(box),
+
+              // Overlay for selected box (resize handles)
+              if (selectedBox != null) _buildOverlay(selectedBox!),
+
+              // Guidelines overlay (top layer, but IgnorePointer)
+              if (guidelines.isNotEmpty)
+                GuidelinesOverlay(
+                  guidelines: guidelines,
+                  templateSize: templateSize,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -117,6 +119,7 @@ class CollageCanvas extends StatelessWidget {
       globalBorderColor: collageManager.globalBorderColor,
       hasGlobalBorder: collageManager.hasGlobalBorder,
       otherBoxes: photoBoxes.where((b) => b != box).toList(),
+      collageManager: collageManager,
     );
   }
 

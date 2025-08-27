@@ -53,8 +53,14 @@ class CollageManager extends ChangeNotifier {
 
   // Global border settings
   double _globalBorderWidth = 0.0;
-  Color _globalBorderColor = Colors.black;
+  Color _globalBorderColor = Colors.transparent; // Changed to transparent
   bool _hasGlobalBorder = false;
+
+  // New border effect properties
+  double _shadowIntensity = 0.0;
+  double _innerMargin = 0.0;
+  double _outerMargin = 0.0;
+  double _cornerRadius = 0.0;
 
   // Layout template settings
   LayoutTemplate? _currentLayout;
@@ -74,10 +80,16 @@ class CollageManager extends ChangeNotifier {
   Color get backgroundColor => _backgroundColor;
   double get backgroundOpacity => _backgroundOpacity;
 
-  // Global border getters
+  // Border getters
+  bool get hasGlobalBorder => _hasGlobalBorder;
   double get globalBorderWidth => _globalBorderWidth;
   Color get globalBorderColor => _globalBorderColor;
-  bool get hasGlobalBorder => _hasGlobalBorder;
+
+  // New border effect getters
+  double get shadowIntensity => _shadowIntensity;
+  double get innerMargin => _innerMargin;
+  double get outerMargin => _outerMargin;
+  double get cornerRadius => _cornerRadius;
 
   // Layout template getters
   LayoutTemplate? get currentLayout => _currentLayout;
@@ -103,6 +115,30 @@ class CollageManager extends ChangeNotifier {
 
   void changeGlobalBorderColor(Color color) {
     _globalBorderColor = color;
+    notifyListeners();
+  }
+
+  /// Set shadow intensity
+  void setShadowIntensity(double intensity) {
+    _shadowIntensity = intensity;
+    notifyListeners();
+  }
+
+  /// Set inner margin
+  void setInnerMargin(double margin) {
+    _innerMargin = margin;
+    notifyListeners();
+  }
+
+  /// Set outer margin
+  void setOuterMargin(double margin) {
+    _outerMargin = margin;
+    notifyListeners();
+  }
+
+  /// Set corner radius
+  void setCornerRadius(double radius) {
+    _cornerRadius = radius;
     notifyListeners();
   }
 
@@ -143,6 +179,16 @@ class CollageManager extends ChangeNotifier {
         photoLayout.size.width * _templateSize.width,
         photoLayout.size.height * _templateSize.height,
       );
+
+      // Debug: Print layout information
+      print('🔍 DEBUG - Layout Application:');
+      print('Layout ID: ${layout.id}');
+      print('Photo $i:');
+      print('  Original Position: ${photoLayout.position}');
+      print('  Original Size: ${photoLayout.size}');
+      print('  Template Size: $_templateSize');
+      print('  Actual Position: $actualPosition');
+      print('  Actual Size: $actualSize');
 
       // Create placeholder photo box
       final photoBox = PhotoBox(
@@ -541,23 +587,24 @@ class CollageManager extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Move a photo box
+  /// Move a photo box to a new position
   void moveBox(PhotoBox box, Offset delta) {
-    double newX = CollageUtils.safeClamp(
-      box.position.dx + delta.dx,
-      0.0,
-      _templateSize.width - box.size.width,
-    );
-    double newY = CollageUtils.safeClamp(
-      box.position.dy + delta.dy,
-      0.0,
-      _templateSize.height - box.size.height,
-    );
+    final newX = box.position.dx + delta.dx;
+    final newY = box.position.dy + delta.dy;
 
-    // Apply snapping to other photo boxes
+    // Apply snapping to the new position
     final snappedPosition = _applySnapping(Offset(newX, newY), box);
 
-    box.position = snappedPosition;
+    // Apply inner margin spacing between photos
+    final adjustedPosition = _applyInnerMarginSpacing(snappedPosition, box);
+
+    // Ensure the photo doesn't go outside the background boundaries
+    final clampedPosition = Offset(
+      adjustedPosition.dx.clamp(0.0, _templateSize.width - box.size.width),
+      adjustedPosition.dy.clamp(0.0, _templateSize.height - box.size.height),
+    );
+
+    box.position = clampedPosition;
     notifyListeners();
   }
 
@@ -692,6 +739,66 @@ class CollageManager extends ChangeNotifier {
     }
 
     return Offset(snappedX, snappedY);
+  }
+
+  /// Apply inner margin spacing between photos
+  Offset _applyInnerMarginSpacing(Offset position, PhotoBox movingBox) {
+    if (_innerMargin <= 0) return position;
+
+    double adjustedX = position.dx;
+    double adjustedY = position.dy;
+
+    for (final otherBox in _photoBoxes) {
+      if (otherBox == movingBox) continue;
+
+      // Check if boxes are touching or overlapping
+      final movingRight = position.dx + movingBox.size.width;
+      final movingBottom = position.dy + movingBox.size.height;
+      final otherRight = otherBox.position.dx + otherBox.size.width;
+      final otherBottom = otherBox.position.dy + otherBox.size.height;
+
+      // Horizontal spacing
+      if (movingRight <= otherBox.position.dx) {
+        // Moving box is to the left of other box
+        final gap = otherBox.position.dx - movingRight;
+        if (gap < _innerMargin) {
+          adjustedX =
+              otherBox.position.dx - movingBox.size.width - _innerMargin;
+        }
+      } else if (position.dx >= otherRight) {
+        // Moving box is to the right of other box
+        final gap = position.dx - otherRight;
+        if (gap < _innerMargin) {
+          adjustedX = otherRight + _innerMargin;
+        }
+      }
+
+      // Vertical spacing
+      if (movingBottom <= otherBox.position.dy) {
+        // Moving box is above other box
+        final gap = otherBox.position.dy - movingBottom;
+        if (gap < _innerMargin) {
+          adjustedY =
+              otherBox.position.dy - movingBox.size.height - _innerMargin;
+        }
+      } else if (position.dy >= otherBottom) {
+        // Moving box is below other box
+        final gap = position.dy - otherBottom;
+        if (gap < _innerMargin) {
+          adjustedY = otherBottom + _innerMargin;
+        }
+      }
+    }
+
+    return Offset(adjustedX, adjustedY);
+  }
+
+  /// Get adjusted position for photo box with inner margin
+  Offset getAdjustedPosition(PhotoBox box) {
+    if (_innerMargin <= 0) return box.position;
+
+    // Apply inner margin to current position
+    return _applyInnerMarginSpacing(box.position, box);
   }
 
   /// Resize a photo box
