@@ -270,15 +270,15 @@ class _BorderPanelState extends State<BorderPanel> {
         Slider(
           value: widget.collageManager.cornerRadius,
           min: 0.0,
-          max: 50.0,
-          divisions: 50,
+          max: 200.0, // Increased from 50 to 200 for full oval effect
+          divisions: 100,
           onChanged: (value) {
             widget.collageManager.setCornerRadius(value);
             setState(() {}); // Force UI update
           },
         ),
         Text(
-          'Corner Radius: ${widget.collageManager.cornerRadius.toStringAsFixed(1)}',
+          'Corner Radius: ${widget.collageManager.cornerRadius.toStringAsFixed(1)}px',
         ),
       ],
     );

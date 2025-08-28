@@ -78,9 +78,7 @@ class PhotoBoxWidget extends StatelessWidget {
           width: box.size.width,
           height: box.size.height,
           decoration: BoxDecoration(
-            // Corner radius - apply to the container
-            borderRadius: BorderRadius.circular(collageManager.cornerRadius),
-            // Shadow effect
+            // No radius here - only shadow
             boxShadow: collageManager.shadowIntensity > 0
                 ? [
                     BoxShadow(
@@ -100,20 +98,14 @@ class PhotoBoxWidget extends StatelessWidget {
               children: [
                 // Photo or placeholder
                 box.imageFile != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          collageManager.cornerRadius,
-                        ),
-                        child: Transform.scale(
-                          scale: box.photoScale,
-                          child: Image.file(
-                            box.imageFile!,
-                            fit: BoxFit.cover, // Always cover for pan to work
-                            width: box.size.width, // Normal boyut (3x değil)
-                            height: box.size.height, // Normal boyut (3x değil)
-                            alignment:
-                                box.alignment, // Use alignment for positioning
-                          ),
+                    ? Transform.scale(
+                        scale: box.photoScale,
+                        child: Image.file(
+                          box.imageFile!,
+                          fit: BoxFit.cover,
+                          width: box.size.width,
+                          height: box.size.height,
+                          alignment: box.alignment,
                         ),
                       )
                     : Container(
