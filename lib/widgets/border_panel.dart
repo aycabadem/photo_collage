@@ -247,17 +247,17 @@ class _BorderPanelState extends State<BorderPanel> {
         Slider(
           value: widget
               .collageManager
-              .globalBorderWidth, // Using border width for margin
+              .photoMargin, // Using new photoMargin property
           min: 0.0,
-          max: 50.0, // Reduced from 200 to 50 for easier movement
-          divisions: 25, // Reduced from 100 to 25 for bigger steps
+          max: 100.0, // 0-100 pixels of margin
+          divisions: 100,
           onChanged: (value) {
-            widget.collageManager.changeGlobalBorderWidth(value);
+            widget.collageManager.setPhotoMargin(value); // Using new setter
             setState(() {}); // Force UI update
           },
         ),
         Text(
-          'Margin: ${widget.collageManager.globalBorderWidth.toStringAsFixed(1)}px',
+          'Margin: ${widget.collageManager.photoMargin.toStringAsFixed(1)}px',
         ),
       ],
     );

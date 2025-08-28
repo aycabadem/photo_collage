@@ -101,69 +101,101 @@ class CollageCanvas extends StatelessWidget {
     );
   }
 
-  /// Build individual photo box widget
+  /// Build individual photo box widget with margin applied
   Widget _buildPhotoBox(PhotoBox box) {
-    return PhotoBoxWidget(
-      box: box,
-      isSelected: selectedBox == box,
-      onTap: () => onBoxSelected(box),
-      onPanUpdate: (details) => onBoxDragged(box, details),
-      onDelete: () => onBoxDeleted(box),
-      onAddPhoto: () async => await onAddPhotoToBox(box),
-      onPhotoModified: () {
-        // Notify CollageManager that photo has been modified
-        // This will trigger UI updates to show new pan/zoom values
-        collageManager.notifyListeners();
-      },
-      globalBorderWidth: collageManager.globalBorderWidth,
-      globalBorderColor: collageManager.globalBorderColor,
-      hasGlobalBorder: collageManager.hasGlobalBorder,
-      otherBoxes: photoBoxes.where((b) => b != box).toList(),
-      collageManager: collageManager,
+    // Calculate margin-adjusted size and position
+    final margin = collageManager.photoMargin;
+
+    // Reduce photo size to accommodate margin
+    final adjustedWidth = box.size.width - (margin * 2);
+    final adjustedHeight = box.size.height - (margin * 2);
+
+    // Adjust position to center the photo within its original space
+    final adjustedLeft = box.position.dx + margin;
+    final adjustedTop = box.position.dy + margin;
+
+    return Positioned(
+      left: adjustedLeft,
+      top: adjustedTop,
+      child: SizedBox(
+        width: adjustedWidth,
+        height: adjustedHeight,
+        child: PhotoBoxWidget(
+          box: box,
+          isSelected: selectedBox == box,
+          onTap: () => onBoxSelected(box),
+          onPanUpdate: (details) => onBoxDragged(box, details),
+          onDelete: () => onBoxDeleted(box),
+          onAddPhoto: () async => await onAddPhotoToBox(box),
+          onPhotoModified: () {
+            collageManager.notifyListeners();
+          },
+          globalBorderWidth: collageManager.globalBorderWidth,
+          globalBorderColor: collageManager.globalBorderColor,
+          hasGlobalBorder: collageManager.hasGlobalBorder,
+          otherBoxes: photoBoxes.where((b) => b != box).toList(),
+          collageManager: collageManager,
+        ),
+      ),
     );
   }
 
-  /// Build overlay with resize handles for selected box
+  /// Build overlay for selected box with margin applied
   Widget _buildOverlay(PhotoBox box) {
-    double handleSize = 16.0;
-    return Stack(
-      children: [
-        // Top-left resize handle
-        ResizeHandleWidget(
-          box: box,
-          alignment: Alignment.topLeft,
-          size: handleSize,
-          onDrag: (dx, dy) =>
-              onResizeHandleDragged(box, dx, dy, Alignment.topLeft),
-        ),
+    // Apply same margin logic to overlay
+    final margin = collageManager.photoMargin;
 
-        // Top-right resize handle
-        ResizeHandleWidget(
-          box: box,
-          alignment: Alignment.topRight,
-          size: handleSize,
-          onDrag: (dx, dy) =>
-              onResizeHandleDragged(box, dx, dy, Alignment.topRight),
-        ),
+    final adjustedWidth = box.size.width - (margin * 2);
+    final adjustedHeight = box.size.height - (margin * 2);
+    final adjustedLeft = box.position.dx + margin;
+    final adjustedTop = box.position.dy + margin;
 
-        // Bottom-left resize handle
-        ResizeHandleWidget(
-          box: box,
-          alignment: Alignment.bottomLeft,
-          size: handleSize,
-          onDrag: (dx, dy) =>
-              onResizeHandleDragged(box, dx, dy, Alignment.bottomLeft),
-        ),
+    return Positioned(
+      left: adjustedLeft,
+      top: adjustedTop,
+      child: SizedBox(
+        width: adjustedWidth,
+        height: adjustedHeight,
+        child: Stack(
+          children: [
+            // Top-left resize handle
+            ResizeHandleWidget(
+              box: box,
+              alignment: Alignment.topLeft,
+              size: 16.0,
+              onDrag: (dx, dy) =>
+                  onResizeHandleDragged(box, dx, dy, Alignment.topLeft),
+            ),
 
-        // Bottom-right resize handle
-        ResizeHandleWidget(
-          box: box,
-          alignment: Alignment.bottomRight,
-          size: handleSize,
-          onDrag: (dx, dy) =>
-              onResizeHandleDragged(box, dx, dy, Alignment.bottomRight),
+            // Top-right resize handle
+            ResizeHandleWidget(
+              box: box,
+              alignment: Alignment.topRight,
+              size: 16.0,
+              onDrag: (dx, dy) =>
+                  onResizeHandleDragged(box, dx, dy, Alignment.topRight),
+            ),
+
+            // Bottom-left resize handle
+            ResizeHandleWidget(
+              box: box,
+              alignment: Alignment.bottomLeft,
+              size: 16.0,
+              onDrag: (dx, dy) =>
+                  onResizeHandleDragged(box, dx, dy, Alignment.bottomLeft),
+            ),
+
+            // Bottom-right resize handle
+            ResizeHandleWidget(
+              box: box,
+              alignment: Alignment.bottomRight,
+              size: 16.0,
+              onDrag: (dx, dy) =>
+                  onResizeHandleDragged(box, dx, dy, Alignment.bottomRight),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

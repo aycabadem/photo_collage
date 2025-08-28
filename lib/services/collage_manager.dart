@@ -57,6 +57,9 @@ class CollageManager extends ChangeNotifier {
       Colors.white; // Changed back to white so border is visible
   bool _hasGlobalBorder = false;
 
+  // Photo margin settings (separate from border)
+  double _photoMargin = 0.0; // New property for photo spacing
+
   // New border effect properties
   double _shadowIntensity = 0.0;
   double _innerMargin = 0.0;
@@ -95,6 +98,14 @@ class CollageManager extends ChangeNotifier {
   // Layout template getters
   LayoutTemplate? get currentLayout => _currentLayout;
   bool get isCustomMode => _isCustomMode;
+
+  // Photo margin getter and setter
+  double get photoMargin => _photoMargin;
+
+  void setPhotoMargin(double margin) {
+    _photoMargin = margin.clamp(0.0, 100.0); // 0-100px range
+    notifyListeners();
+  }
 
   // Background color and opacity setters
   void changeBackgroundColor(Color color) {
