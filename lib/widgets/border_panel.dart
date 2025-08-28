@@ -83,7 +83,7 @@ class _BorderPanelState extends State<BorderPanel> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          // First row: SHADOW and BORDER
+          // First row: SHADOW and MARGIN
           Row(
             children: [
               Expanded(
@@ -97,10 +97,10 @@ class _BorderPanelState extends State<BorderPanel> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildEffectButton(
-                  'BORDER',
-                  Icons.border_style,
+                  'MARGIN',
+                  Icons.margin,
                   Colors.blue,
-                  () => _selectEffect('border'),
+                  () => _selectEffect('margin'),
                 ),
               ),
             ],
@@ -210,8 +210,8 @@ class _BorderPanelState extends State<BorderPanel> {
     switch (_selectedEffect) {
       case 'shadow':
         return _buildShadowSlider();
-      case 'border':
-        return _buildBorderSlider();
+      case 'margin':
+        return _buildMarginSlider();
       case 'corner_radius':
         return _buildCornerRadiusSlider();
       default:
@@ -240,22 +240,24 @@ class _BorderPanelState extends State<BorderPanel> {
     );
   }
 
-  /// Border slider (replaces inner/outer margin)
-  Widget _buildBorderSlider() {
+  /// Margin slider (creates space between photos)
+  Widget _buildMarginSlider() {
     return Column(
       children: [
         Slider(
-          value: widget.collageManager.globalBorderWidth,
+          value: widget
+              .collageManager
+              .globalBorderWidth, // Using border width for margin
           min: 0.0,
-          max: 500.0, // Increased to 500 for much more visible spacing
-          divisions: 100,
+          max: 50.0, // Reduced from 200 to 50 for easier movement
+          divisions: 25, // Reduced from 100 to 25 for bigger steps
           onChanged: (value) {
             widget.collageManager.changeGlobalBorderWidth(value);
             setState(() {}); // Force UI update
           },
         ),
         Text(
-          'Border Width: ${widget.collageManager.globalBorderWidth.toStringAsFixed(1)}',
+          'Margin: ${widget.collageManager.globalBorderWidth.toStringAsFixed(1)}px',
         ),
       ],
     );
@@ -287,8 +289,8 @@ class _BorderPanelState extends State<BorderPanel> {
     switch (_selectedEffect) {
       case 'shadow':
         return 'SHADOW';
-      case 'border':
-        return 'BORDER';
+      case 'margin':
+        return 'MARGIN';
       case 'corner_radius':
         return 'CORNER RADIUS';
       default:

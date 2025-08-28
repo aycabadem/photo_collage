@@ -52,8 +52,9 @@ class CollageManager extends ChangeNotifier {
   double _backgroundOpacity = 1.0;
 
   // Global border settings
-  double _globalBorderWidth = 0.0;
-  Color _globalBorderColor = Colors.transparent; // Changed to transparent
+  double _globalBorderWidth = 0.0; // Start with 0 margin
+  Color _globalBorderColor =
+      Colors.white; // Changed back to white so border is visible
   bool _hasGlobalBorder = false;
 
   // New border effect properties
@@ -107,8 +108,9 @@ class CollageManager extends ChangeNotifier {
   }
 
   // Global border setters
+  /// Change global border width (used for margin)
   void changeGlobalBorderWidth(double width) {
-    _globalBorderWidth = width.clamp(0.0, 10.0);
+    _globalBorderWidth = width.clamp(0.0, 50.0); // Fixed: allow 0-50px range
     _hasGlobalBorder = _globalBorderWidth > 0.0;
     notifyListeners();
   }
@@ -203,12 +205,12 @@ class CollageManager extends ChangeNotifier {
     // Clear selection
     _selectedBox = null;
 
-    // Auto-enable border for layout templates
-    if (!_hasGlobalBorder) {
-      _globalBorderWidth = 2.0;
-      _globalBorderColor = Colors.grey[400]!;
-      _hasGlobalBorder = true;
-    }
+    // Auto-enable border for layout templates - REMOVED to start without margin
+    // if (!_hasGlobalBorder) {
+    //   _globalBorderWidth = 2.0;
+    //   _globalBorderColor = Colors.grey[400]!;
+    //   _hasGlobalBorder = true;
+    // }
 
     notifyListeners();
   }
