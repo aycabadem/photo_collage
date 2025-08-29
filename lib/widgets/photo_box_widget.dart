@@ -65,32 +65,17 @@ class PhotoBoxWidget extends StatelessWidget {
       print('PhotoBox Offset: ${box.photoOffset}');
     }
 
-    return Positioned(
-      left: box.position.dx,
-      top: box.position.dy,
-      child: GestureDetector(
+    return GestureDetector(
         onDoubleTap: onTap, // Double tap to select
         onPanUpdate: isSelected
             ? onPanUpdate
             : null, // Only allow dragging when selected
         behavior: HitTestBehavior.opaque, // Prevent background taps
         child: Container(
-          width: box.size.width,
-          height: box.size.height,
           decoration: BoxDecoration(
-            // No radius here - only shadow
-            boxShadow: collageManager.shadowIntensity > 0
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: collageManager.shadowIntensity,
-                      offset: Offset(
-                        collageManager.shadowIntensity * 0.5,
-                        collageManager.shadowIntensity * 0.5,
-                      ),
-                    ),
-                  ]
-                : null,
+            borderRadius: BorderRadius.circular(collageManager.cornerRadius),
+            // Layered shadows for stronger 3D effect
+            boxShadow: _shadowLayers(collageManager.shadowIntensity),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(collageManager.cornerRadius),
@@ -103,8 +88,8 @@ class PhotoBoxWidget extends StatelessWidget {
                         child: Image.file(
                           box.imageFile!,
                           fit: BoxFit.cover,
-                          width: box.size.width,
-                          height: box.size.height,
+                          width: double.infinity,
+                          height: double.infinity,
                           alignment: box.alignment,
                         ),
                       )
@@ -125,11 +110,15 @@ class PhotoBoxWidget extends StatelessWidget {
                 // Smart border overlay (ignore pointer so it doesn't block interactions)
                 if (hasGlobalBorder && globalBorderWidth > 0)
                   IgnorePointer(
-                    child: SmartBorderOverlay(
-                      box: box,
-                      borderWidth: globalBorderWidth,
-                      borderColor: globalBorderColor,
-                      otherBoxes: otherBoxes,
+                    child: ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(collageManager.cornerRadius),
+                      child: SmartBorderOverlay(
+                        box: box,
+                        borderWidth: globalBorderWidth,
+                        borderColor: globalBorderColor,
+                        otherBoxes: otherBoxes,
+                      ),
                     ),
                   ),
 
@@ -201,8 +190,7 @@ class PhotoBoxWidget extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   /// Add photo to this specific box
@@ -262,4 +250,42 @@ class PhotoBoxWidget extends StatelessWidget {
       print('🔍 DEBUG - Final PhotoBox Alignment: ${box.alignment}');
     }
   }
+}
+
+/// Build layered shadows for a stronger, more 3D-like effect
+List<BoxShadow>? _shadowLayers(double intensity) {
+  if (intensity <= 0) return null;
+
+  // Normalize to 0..1 based on current slider range (0..14)
+  final double t = (intensity.clamp(0.0, 14.0)) / 14.0;
+
+  // Key shadow: prominent but tighter to the card
+  final keyShadow = BoxShadow(
+    color: Colors.black.withValues(alpha: 0.22 + 0.18 * t), // 0.22..0.40
+    blurRadius: 10 + 22 * t, // 10..32
+    offset: Offset(0, 6 + 10 * t), // 6..16
+    spreadRadius: 0.2 + 0.8 * t, // 0.2..1.0 (reduced spread to avoid greying)
+  );
+
+  // Ambient shadow: softer, low opacity, minimal spread (reduces background greying)
+  final ambientShadow = BoxShadow(
+    color: Colors.black.withValues(alpha: 0.06 + 0.10 * t), // 0.06..0.16
+    blurRadius: 18 + 22 * t, // 18..40
+    offset: Offset(0, 2 + 4 * t), // 2..6
+    spreadRadius: 0.0 + 1.5 * t, // 0..1.5
+  );
+
+  // Deep shadow only at higher intensities, still restrained
+  if (t > 0.7) {
+    final double u = (t - 0.7) / 0.3; // 0..1 for top 30%
+    final deepShadow = BoxShadow(
+      color: Colors.black.withValues(alpha: 0.10 + 0.14 * u), // 0.10..0.24
+      blurRadius: 30 + 24 * u, // 30..54
+      offset: Offset(0, 8 + 8 * u), // 8..16
+      spreadRadius: 0.0 + 1.0 * u, // 0..1.0
+    );
+    return [ambientShadow, keyShadow, deepShadow];
+  }
+
+  return [ambientShadow, keyShadow];
 }

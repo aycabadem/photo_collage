@@ -2,6 +2,8 @@
     <!-- Permissions for saving images to gallery -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- Android 13+ (API 33+) dedicated media permission for images -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     
     <application
         android:label="my_appflutter"

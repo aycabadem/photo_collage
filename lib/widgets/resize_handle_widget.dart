@@ -25,20 +25,9 @@ class ResizeHandleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double left = box.position.dx;
-    double top = box.position.dy;
-
-    // Calculate position based on alignment
-    if (alignment == Alignment.topRight) left += box.size.width - size;
-    if (alignment == Alignment.bottomLeft) top += box.size.height - size;
-    if (alignment == Alignment.bottomRight) {
-      left += box.size.width - size;
-      top += box.size.height - size;
-    }
-
-    return Positioned(
-      left: left,
-      top: top,
+    // Place handle relative to the overlay bounds, not global coordinates
+    return Align(
+      alignment: alignment,
       child: GestureDetector(
         onPanUpdate: (details) => onDrag(details.delta.dx, details.delta.dy),
         child: Container(

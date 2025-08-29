@@ -226,8 +226,8 @@ class _BorderPanelState extends State<BorderPanel> {
         Slider(
           value: widget.collageManager.shadowIntensity,
           min: 0.0,
-          max: 20.0,
-          divisions: 20,
+          max: 14.0, // Tamed upper range to avoid overdone shadow
+          divisions: 14,
           onChanged: (value) {
             widget.collageManager.setShadowIntensity(value);
             setState(() {}); // Force UI update
@@ -249,8 +249,8 @@ class _BorderPanelState extends State<BorderPanel> {
               .collageManager
               .photoMargin, // Using new photoMargin property
           min: 0.0,
-          max: 100.0, // 0-100 pixels of margin
-          divisions: 100,
+          max: 15.0, // Reduced max to 15px
+          divisions: 15,
           onChanged: (value) {
             widget.collageManager.setPhotoMargin(value); // Using new setter
             setState(() {}); // Force UI update
@@ -270,8 +270,8 @@ class _BorderPanelState extends State<BorderPanel> {
         Slider(
           value: widget.collageManager.cornerRadius,
           min: 0.0,
-          max: 200.0, // Increased from 50 to 200 for full oval effect
-          divisions: 100,
+          max: 40.0, // Reduced to avoid early full-round look
+          divisions: 40,
           onChanged: (value) {
             widget.collageManager.setCornerRadius(value);
             setState(() {}); // Force UI update

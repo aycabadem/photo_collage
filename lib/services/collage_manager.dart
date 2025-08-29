@@ -103,7 +103,7 @@ class CollageManager extends ChangeNotifier {
   double get photoMargin => _photoMargin;
 
   void setPhotoMargin(double margin) {
-    _photoMargin = margin.clamp(0.0, 100.0); // 0-100px range
+    _photoMargin = margin.clamp(0.0, 15.0); // Reduced max to 15px
     notifyListeners();
   }
 
@@ -133,7 +133,7 @@ class CollageManager extends ChangeNotifier {
 
   /// Set shadow intensity
   void setShadowIntensity(double intensity) {
-    _shadowIntensity = intensity;
+    _shadowIntensity = intensity.clamp(0.0, 14.0);
     notifyListeners();
   }
 
@@ -151,7 +151,7 @@ class CollageManager extends ChangeNotifier {
 
   /// Set corner radius
   void setCornerRadius(double radius) {
-    _cornerRadius = radius;
+    _cornerRadius = radius.clamp(0.0, 40.0); // Reduced max to 40px
     notifyListeners();
   }
 

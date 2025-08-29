@@ -50,5 +50,8 @@
 	<string>This app needs access to save collages to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to save collages.</string>
+	<!-- If camera is ever used for taking photos -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take photos for your collage.</string>
 </dict>
 </plist>
