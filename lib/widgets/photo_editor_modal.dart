@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:extended_image/extended_image.dart';
-import 'dart:io';
-import 'dart:async';
 import 'dart:ui' as ui;
-import 'package:flutter/services.dart';
 import '../models/photo_box.dart';
 
 class PhotoEditorModal extends StatefulWidget {
@@ -23,37 +20,13 @@ class PhotoEditorModal extends StatefulWidget {
 class _PhotoEditorModalState extends State<PhotoEditorModal> {
   GlobalKey<ExtendedImageEditorState> editorKey =
       GlobalKey<ExtendedImageEditorState>();
-  late Offset _initialFocalPoint;
-  late Alignment _initialAlignment;
-  late double _lastScale;
-  Size? _imageSize;
+  // Removed unused state fields
   final ImageEditorController _editorController = ImageEditorController();
 
   @override
   void initState() {
     super.initState();
-    _initialFocalPoint = Offset.zero;
-    _initialAlignment = widget.photoBox.alignment;
-    _lastScale = widget.photoBox.photoScale;
-    _loadImageSize();
-  }
-
-  Future<void> _loadImageSize() async {
-    if (widget.photoBox.imageFile != null) {
-      final image = await decodeImageFromList(
-        await widget.photoBox.imageFile!.readAsBytes(),
-      );
-      setState(() {
-        _imageSize = Size(image.width.toDouble(), image.height.toDouble());
-        // Debug: Print current alignment when image loads
-        print(
-          '🔍 DEBUG - Image loaded with alignment: ${widget.photoBox.alignment}',
-        );
-        print(
-          '🔍 DEBUG - Image loaded with scale: ${widget.photoBox.photoScale}',
-        );
-      });
-    }
+    // No-op initialization
   }
 
   @override
@@ -177,9 +150,6 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
     setState(() {
       widget.photoBox.photoScale = 1.0;
       widget.photoBox.alignment = Alignment.center;
-      _initialFocalPoint = Offset.zero;
-      _initialAlignment = Alignment.center;
-      _lastScale = 1.0;
     });
   }
 
@@ -187,15 +157,13 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
     // Use the ImageEditorController to get transformation data
     final editorDetails = _editorController.editActionDetails;
 
-    print('🔍 DEBUG - ExtendedImage Save:');
-    print('editorDetails: $editorDetails');
+    // Debug removed
 
     if (editorDetails != null) {
       final screenDestRect = editorDetails.screenDestinationRect;
       final screenCropRect = editorDetails.screenCropRect;
 
-      print('screenDestRect: $screenDestRect');
-      print('screenCropRect: $screenCropRect');
+      // Debug removed
 
       if (screenDestRect != null && screenCropRect != null) {
         // Simple approach: convert the relative position to alignment
@@ -208,8 +176,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
         final cropCenterX = screenCropRect.center.dx;
         final cropCenterY = screenCropRect.center.dy;
 
-        print('Image center: ($imageCenterX, $imageCenterY)');
-        print('Crop center: ($cropCenterX, $cropCenterY)');
+        // Debug removed
 
         // Convert to alignment (-1 to 1 range) - inverted
         final alignmentX = -((imageCenterX - cropCenterX) / (cropWidth / 2))
@@ -217,16 +184,16 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
         final alignmentY = -((imageCenterY - cropCenterY) / (cropHeight / 2))
             .clamp(-1.0, 1.0);
 
-        print('Simple alignment: ($alignmentX, $alignmentY)');
+        // Debug removed
 
         widget.photoBox.alignment = Alignment(alignmentX, alignmentY);
 
-        print('Final PhotoBox Alignment: ${widget.photoBox.alignment}');
+        // Debug removed
       } else {
-        print('🔍 DEBUG - Screen rects are null, keeping current values');
+        // Debug removed
       }
     } else {
-      print('🔍 DEBUG - Editor details null, keeping current values');
+      // Debug removed
     }
 
     // Notify parent that photo box has changed

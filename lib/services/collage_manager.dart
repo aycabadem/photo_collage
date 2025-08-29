@@ -168,6 +168,11 @@ class CollageManager extends ChangeNotifier {
     }
   }
 
+  /// Public method to trigger UI updates safely from widgets
+  void refresh() {
+    notifyListeners();
+  }
+
   // Layout template setters
   void applyLayoutTemplate(LayoutTemplate? layout) {
     if (layout == null) {
@@ -206,15 +211,7 @@ class CollageManager extends ChangeNotifier {
         photoLayout.size.height * _templateSize.height,
       );
 
-      // Debug: Print layout information
-      print('🔍 DEBUG - Layout Application:');
-      print('Layout ID: ${layout.id}');
-      print('Photo $i:');
-      print('  Original Position: ${photoLayout.position}');
-      print('  Original Size: ${photoLayout.size}');
-      print('  Template Size: $_templateSize');
-      print('  Actual Position: $actualPosition');
-      print('  Actual Size: $actualSize');
+      // Debug logs removed
 
       // Create placeholder photo box
       final photoBox = PhotoBox(

@@ -57,13 +57,7 @@ class PhotoBoxWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Debug: Print current photo box values
-    if (box.imageFile != null) {
-      print('🔍 DEBUG - PhotoBoxWidget BUILD:');
-      print('PhotoBox Alignment: ${box.alignment}');
-      print('PhotoBox Size: ${box.size}');
-      print('PhotoBox Scale: ${box.photoScale}');
-      print('PhotoBox Offset: ${box.photoOffset}');
-    }
+    // Debug prints removed for production cleanliness
 
     return GestureDetector(
         onDoubleTap: onTap, // Double tap to select
@@ -206,11 +200,7 @@ class PhotoBoxWidget extends StatelessWidget {
     _updatePhotoAlignment();
 
     // Debug: Print photo state BEFORE opening modal
-    print('🔍 DEBUG - BEFORE Opening Modal:');
-    print('PhotoBox Alignment: ${box.alignment}');
-    print('PhotoBox Size: ${box.size}');
-    print('PhotoBox Scale: ${box.photoScale}');
-    print('PhotoBox Offset: ${box.photoOffset}');
+    // Debug prints removed
 
     showDialog(
       context: context,
@@ -240,14 +230,14 @@ class PhotoBoxWidget extends StatelessWidget {
         final alignmentY = (box.photoOffset.dy / maxOffsetY).clamp(-1.0, 1.0);
 
         box.alignment = Alignment(alignmentX, alignmentY);
-        print('🔍 DEBUG - Calculated Alignment from Offset: ${box.alignment}');
+        // Debug removed
       } else {
         // If no offset, keep center alignment
         box.alignment = Alignment.center;
-        print('🔍 DEBUG - Kept Center Alignment');
+        // Debug removed
       }
 
-      print('🔍 DEBUG - Final PhotoBox Alignment: ${box.alignment}');
+      // Debug removed
     }
   }
 }

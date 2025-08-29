@@ -250,13 +250,7 @@ class _BorderPanelState extends State<BorderPanel> {
     }
   }
 
-  /// Select an effect to show its slider
-  void _selectEffect(String effect) {
-    setState(() {
-      _selectedEffect = effect;
-      _showSlider = true;
-    });
-  }
+  // _selectEffect removed (not used)
 }
 
 /// A compact gradient slider with small label, matching the visual style
