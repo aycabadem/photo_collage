@@ -17,12 +17,17 @@ class BorderPanel extends StatefulWidget {
 }
 
 class _BorderPanelState extends State<BorderPanel> {
-  String? _selectedEffect;
+  String _selectedEffect = 'corner_radius';
+  bool _showSlider = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 200,
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
+    return SafeArea(
+      top: false,
+      minimum: EdgeInsets.only(bottom: bottomInset > 0 ? 6 : 0),
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
@@ -38,170 +43,139 @@ class _BorderPanelState extends State<BorderPanel> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey[50],
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
+          // Minimal top bar with grabber and apply (check)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Border Effects',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
                 ),
-                IconButton(
-                  onPressed: widget.onClose,
-                  icon: const Icon(Icons.close),
+                GestureDetector(
+                  onTap: widget.onClose,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE91E63).withValues(alpha: 0.9),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.check, color: Colors.white, size: 16),
+                  ),
                 ),
               ],
             ),
           ),
 
-          // Effect Buttons or Active Slider
-          Expanded(
-            child: SingleChildScrollView(
-              child: _selectedEffect == null
-                  ? _buildEffectButtons()
-                  : _buildActiveSlider(),
+          // Compact slider area (shown above the icons)
+          if (_showSlider)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
+              child: _buildCompactSliderArea(),
+            ),
+
+          // Compact horizontal icon toolbar at the bottom
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+            child: _buildIconToolbar(),
+          ),
+        ],
+      ),
+    ),
+    );
+  }
+
+  /// Minimal horizontal toolbar with small monochrome icons
+  Widget _buildIconToolbar() {
+    Widget item(String key, IconData icon, String tooltip) {
+      final bool active = _selectedEffect == key;
+      return GestureDetector(
+        onTap: () {
+          setState(() {
+            if (_selectedEffect == key) {
+              _showSlider = !_showSlider; // toggle
+            } else {
+              _selectedEffect = key;
+              _showSlider = true; // show for newly selected effect
+            }
+          });
+          // Inform canvas to reserve more/less space based on slider visibility
+          widget.collageManager.setBottomUiInset(_showSlider ? 200 : 130);
+        },
+        child: Container(
+          width: 40,
+          height: 32,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: active
+                ? Colors.black.withValues(alpha: 0.06)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: active
+                  ? Colors.black.withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.12),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  /// Build the 3 effect buttons
-  Widget _buildEffectButtons() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // First row: SHADOW and MARGIN
-          Row(
-            children: [
-              Expanded(
-                child: _buildEffectButton(
-                  'SHADOW',
-                  Icons.blur_on,
-                  Colors.purple,
-                  () => _selectEffect('shadow'),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildEffectButton(
-                  'MARGIN',
-                  Icons.margin,
-                  Colors.blue,
-                  () => _selectEffect('margin'),
-                ),
-              ),
-            ],
+          child: Icon(
+            icon,
+            size: 16,
+            color: Colors.black.withValues(alpha: active ? 0.85 : 0.6),
+            semanticLabel: tooltip,
           ),
-          const SizedBox(height: 16),
-          // Second row: CORNER RADIUS
-          Row(
-            children: [
-              Expanded(
-                child: _buildEffectButton(
-                  'CORNER RADIUS',
-                  Icons.rounded_corner,
-                  Colors.orange,
-                  () => _selectEffect('corner_radius'),
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(child: SizedBox()), // Empty space
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Build individual effect button
-  Widget _buildEffectButton(
-    String title,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 60,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        item('shadow', Icons.blur_on, 'Shadow'),
+        item('margin', Icons.margin, 'Margin'),
+        item('corner_radius', Icons.rounded_corner, 'Corner radius'),
+      ],
     );
   }
 
-  /// Build the active slider for selected effect
-  Widget _buildActiveSlider() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
+  /// Compact slider area: label + slider stacked
+  Widget _buildCompactSliderArea() {
+    return SizedBox(
+      height: 60,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Effect title and back button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                _getEffectTitle(),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              IconButton(
-                onPressed: () => setState(() => _selectedEffect = null),
-                icon: const Icon(Icons.arrow_back),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Slider
-          _buildSlider(),
-
-          const SizedBox(height: 20),
-
-          // Checkmark
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(20),
+          Text(
+            _getEffectTitle(),
+            style: const TextStyle(
+              fontSize: 12,
+              letterSpacing: 1.0,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
             ),
-            child: const Icon(Icons.check, color: Colors.white, size: 20),
           ),
-        ],
-      ),
+        const SizedBox(height: 4),
+        _buildSlider(),
+      ],
+    ),
     );
   }
 
@@ -221,66 +195,44 @@ class _BorderPanelState extends State<BorderPanel> {
 
   /// Shadow slider
   Widget _buildShadowSlider() {
-    return Column(
-      children: [
-        Slider(
-          value: widget.collageManager.shadowIntensity,
-          min: 0.0,
-          max: 14.0, // Tamed upper range to avoid overdone shadow
-          divisions: 14,
-          onChanged: (value) {
-            widget.collageManager.setShadowIntensity(value);
-            setState(() {}); // Force UI update
-          },
-        ),
-        Text(
-          'Shadow: ${widget.collageManager.shadowIntensity.toStringAsFixed(1)}',
-        ),
-      ],
+    return _GradientSlider(
+      value: widget.collageManager.shadowIntensity,
+      min: 0.0,
+      max: 14.0,
+      onChanged: (v) {
+        widget.collageManager.setShadowIntensity(v);
+        setState(() {});
+      },
+      label: 'Shadow: ${widget.collageManager.shadowIntensity.toStringAsFixed(1)}',
     );
   }
 
   /// Margin slider (creates space between photos)
   Widget _buildMarginSlider() {
-    return Column(
-      children: [
-        Slider(
-          value: widget
-              .collageManager
-              .photoMargin, // Using new photoMargin property
-          min: 0.0,
-          max: 15.0, // Reduced max to 15px
-          divisions: 15,
-          onChanged: (value) {
-            widget.collageManager.setPhotoMargin(value); // Using new setter
-            setState(() {}); // Force UI update
-          },
-        ),
-        Text(
-          'Margin: ${widget.collageManager.photoMargin.toStringAsFixed(1)}px',
-        ),
-      ],
+    return _GradientSlider(
+      value: widget.collageManager.photoMargin,
+      min: 0.0,
+      max: 15.0,
+      onChanged: (v) {
+        widget.collageManager.setPhotoMargin(v);
+        setState(() {});
+      },
+      label: 'Margin: ${widget.collageManager.photoMargin.toStringAsFixed(1)}px',
     );
   }
 
   /// Corner radius slider
   Widget _buildCornerRadiusSlider() {
-    return Column(
-      children: [
-        Slider(
-          value: widget.collageManager.cornerRadius,
-          min: 0.0,
-          max: 40.0, // Reduced to avoid early full-round look
-          divisions: 40,
-          onChanged: (value) {
-            widget.collageManager.setCornerRadius(value);
-            setState(() {}); // Force UI update
-          },
-        ),
-        Text(
+    return _GradientSlider(
+      value: widget.collageManager.cornerRadius,
+      min: 0.0,
+      max: 40.0,
+      onChanged: (v) {
+        widget.collageManager.setCornerRadius(v);
+        setState(() {});
+      },
+      label:
           'Corner Radius: ${widget.collageManager.cornerRadius.toStringAsFixed(1)}px',
-        ),
-      ],
     );
   }
 
@@ -292,7 +244,7 @@ class _BorderPanelState extends State<BorderPanel> {
       case 'margin':
         return 'MARGIN';
       case 'corner_radius':
-        return 'CORNER RADIUS';
+        return 'RADIUS';
       default:
         return '';
     }
@@ -302,6 +254,63 @@ class _BorderPanelState extends State<BorderPanel> {
   void _selectEffect(String effect) {
     setState(() {
       _selectedEffect = effect;
+      _showSlider = true;
     });
+  }
+}
+
+/// A compact gradient slider with small label, matching the visual style
+class _GradientSlider extends StatelessWidget {
+  final double value;
+  final double min;
+  final double max;
+  final ValueChanged<double> onChanged;
+  final String label;
+
+  const _GradientSlider({
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const start = Color(0xFFE91E63); // pink
+    const end = Color(0xFF7C4DFF); // purple
+
+    return SizedBox(
+      height: 36,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Gradient bar behind the track
+          Container(
+            height: 4,
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(2)),
+              gradient: LinearGradient(colors: [start, end]),
+            ),
+          ),
+          // Transparent track slider on top
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 4,
+              activeTrackColor: Colors.transparent,
+              inactiveTrackColor: Colors.transparent,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+              overlayShape: SliderComponentShape.noOverlay,
+            ),
+            child: Slider(
+              value: value,
+              min: min,
+              max: max,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

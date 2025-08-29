@@ -61,7 +61,13 @@ class _CollageScreenState extends State<CollageScreen> {
                 const SizedBox(width: 8),
               ],
             ),
-            body: LayoutBuilder(
+            body: AnimatedPadding(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              padding: EdgeInsets.only(
+                bottom: collageManager.bottomUiInset,
+              ),
+              child: LayoutBuilder(
               builder: (context, constraints) {
                 // Initialize template size based on screen size on first frame
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -130,6 +136,7 @@ class _CollageScreenState extends State<CollageScreen> {
                   ),
                 );
               },
+            ),
             ),
             bottomNavigationBar: Consumer<CollageManager>(
               builder: (context, collageManager, child) {
@@ -295,15 +302,24 @@ class _CollageScreenState extends State<CollageScreen> {
 
   // Show border panel modal
   void _showBorderPanel(BuildContext context, CollageManager collageManager) {
+    // Reserve space for the bottom panel so canvas shrinks
+    collageManager.setBottomUiInset(130);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => BorderPanel(
         collageManager: collageManager,
-        onClose: () => Navigator.of(context).pop(),
+        onClose: () {
+          collageManager.setBottomUiInset(0);
+          Navigator.of(context).pop();
+        },
       ),
-    );
+    ).whenComplete(() {
+      // Ensure inset is reset if user dismisses with swipe/back
+      collageManager.setBottomUiInset(0);
+    });
   }
 
   // Show layout picker modal
