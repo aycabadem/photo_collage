@@ -66,9 +66,6 @@ class CollageManager extends ChangeNotifier {
   double _outerMargin = 0.0;
   double _cornerRadius = 0.0;
 
-  // UI insets for overlays (e.g., bottom panel)
-  double _bottomUiInset = 0.0;
-
   // Layout template settings
   LayoutTemplate? _currentLayout;
   bool _isCustomMode = true;
@@ -97,7 +94,6 @@ class CollageManager extends ChangeNotifier {
   double get innerMargin => _innerMargin;
   double get outerMargin => _outerMargin;
   double get cornerRadius => _cornerRadius;
-  double get bottomUiInset => _bottomUiInset;
 
   // Layout template getters
   LayoutTemplate? get currentLayout => _currentLayout;
@@ -157,15 +153,6 @@ class CollageManager extends ChangeNotifier {
   void setCornerRadius(double radius) {
     _cornerRadius = radius.clamp(0.0, 40.0); // Reduced max to 40px
     notifyListeners();
-  }
-
-  /// UI: Reserve space at bottom when overlays are open
-  void setBottomUiInset(double inset) {
-    final clamped = inset.clamp(0.0, 320.0);
-    if (_bottomUiInset != clamped) {
-      _bottomUiInset = clamped;
-      notifyListeners();
-    }
   }
 
   /// Public method to trigger UI updates safely from widgets

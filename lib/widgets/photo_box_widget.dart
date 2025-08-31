@@ -60,131 +60,133 @@ class PhotoBoxWidget extends StatelessWidget {
     // Debug prints removed for production cleanliness
 
     return GestureDetector(
-        onDoubleTap: onTap, // Double tap to select
-        onPanUpdate: isSelected
-            ? onPanUpdate
-            : null, // Only allow dragging when selected
-        behavior: HitTestBehavior.opaque, // Prevent background taps
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(collageManager.cornerRadius),
-            // Layered shadows for stronger 3D effect
-            boxShadow: _shadowLayers(collageManager.shadowIntensity),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(collageManager.cornerRadius),
-            child: Stack(
-              children: [
-                // Photo or placeholder
-                box.imageFile != null
-                    ? Transform.scale(
-                        scale: box.photoScale,
-                        child: Image.file(
-                          box.imageFile!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          alignment: box.alignment,
-                        ),
-                      )
-                    : Container(
-                        color: Colors.blue[300],
-                        child: Center(
-                          child: GestureDetector(
-                            onTap: () => _addPhotoToBox(context),
-                            child: const Icon(
-                              Icons.add_a_photo,
-                              color: Colors.white,
-                              size: 32,
-                            ),
+      onDoubleTap: onTap, // Double tap to select
+      onPanUpdate: isSelected
+          ? onPanUpdate
+          : null, // Only allow dragging when selected
+      behavior: HitTestBehavior.opaque, // Prevent background taps
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(collageManager.cornerRadius),
+          // Layered shadows for stronger 3D effect
+          boxShadow: _shadowLayers(collageManager.shadowIntensity),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(collageManager.cornerRadius),
+          child: Stack(
+            children: [
+              // Photo or placeholder
+              box.imageFile != null
+                  ? Transform.scale(
+                      scale: box.photoScale,
+                      alignment: box.alignment,
+                      child: Image.file(
+                        box.imageFile!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        alignment: box.alignment,
+                      ),
+                    )
+                  : Container(
+                      color: Colors.blue[300],
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () => _addPhotoToBox(context),
+                          child: const Icon(
+                            Icons.add_a_photo,
+                            color: Colors.white,
+                            size: 32,
                           ),
                         ),
                       ),
+                    ),
 
-                // Smart border overlay (ignore pointer so it doesn't block interactions)
-                if (hasGlobalBorder && globalBorderWidth > 0)
-                  IgnorePointer(
-                    child: ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(collageManager.cornerRadius),
-                      child: SmartBorderOverlay(
-                        box: box,
-                        borderWidth: globalBorderWidth,
-                        borderColor: globalBorderColor,
-                        otherBoxes: otherBoxes,
+              // Smart border overlay (ignore pointer so it doesn't block interactions)
+              if (hasGlobalBorder && globalBorderWidth > 0)
+                IgnorePointer(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      collageManager.cornerRadius,
+                    ),
+                    child: SmartBorderOverlay(
+                      box: box,
+                      borderWidth: globalBorderWidth,
+                      borderColor: globalBorderColor,
+                      otherBoxes: otherBoxes,
+                    ),
+                  ),
+                ),
+
+              // Action buttons (only for selected boxes)
+              if (isSelected) ...[
+                // Delete button
+                Positioned(
+                  top: 4,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: onDelete,
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline,
+                          size: 14,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
+                ),
 
-                // Action buttons (only for selected boxes)
-                if (isSelected) ...[
-                  // Delete button
+                // Edit button (only when photo exists)
+                if (box.imageFile != null)
                   Positioned(
                     top: 4,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: onDelete,
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 3,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.delete_outline,
-                            size: 14,
-                            color: Colors.white,
-                          ),
+                    right: 4,
+                    child: GestureDetector(
+                      onTap: () => _showPhotoEditor(context),
+                      child: Container(
+                        width: 24,
+                        height: 24,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 3,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 14,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ),
-
-                  // Edit button (only when photo exists)
-                  if (box.imageFile != null)
-                    Positioned(
-                      top: 4,
-                      right: 4,
-                      child: GestureDetector(
-                        onTap: () => _showPhotoEditor(context),
-                        child: Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.3),
-                                blurRadius: 3,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.edit,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
               ],
-            ),
+            ],
           ),
         ),
-      );
+      ),
+    );
   }
 
   /// Add photo to this specific box

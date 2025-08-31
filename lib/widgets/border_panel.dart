@@ -22,12 +22,10 @@ class _BorderPanelState extends State<BorderPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom - 16;
 
-    return SafeArea(
-      top: false,
-      minimum: EdgeInsets.only(bottom: bottomInset > 0 ? 6 : 0),
-      child: Container(
+    return Container(
+      padding: EdgeInsets.only(bottom: bottomInset),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
@@ -46,46 +44,6 @@ class _BorderPanelState extends State<BorderPanel> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Minimal top bar with grabber and apply (check)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: widget.onClose,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE91E63).withValues(alpha: 0.9),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.check, color: Colors.white, size: 16),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Compact slider area (shown above the icons)
           if (_showSlider)
             Padding(
@@ -100,7 +58,6 @@ class _BorderPanelState extends State<BorderPanel> {
           ),
         ],
       ),
-    ),
     );
   }
 
@@ -119,7 +76,6 @@ class _BorderPanelState extends State<BorderPanel> {
             }
           });
           // Inform canvas to reserve more/less space based on slider visibility
-          widget.collageManager.setBottomUiInset(_showSlider ? 200 : 130);
         },
         child: Container(
           width: 40,
@@ -172,10 +128,10 @@ class _BorderPanelState extends State<BorderPanel> {
               color: Colors.black87,
             ),
           ),
-        const SizedBox(height: 4),
-        _buildSlider(),
-      ],
-    ),
+          const SizedBox(height: 4),
+          _buildSlider(),
+        ],
+      ),
     );
   }
 
@@ -203,7 +159,8 @@ class _BorderPanelState extends State<BorderPanel> {
         widget.collageManager.setShadowIntensity(v);
         setState(() {});
       },
-      label: 'Shadow: ${widget.collageManager.shadowIntensity.toStringAsFixed(1)}',
+      label:
+          'Shadow: ${widget.collageManager.shadowIntensity.toStringAsFixed(1)}',
     );
   }
 
@@ -217,7 +174,8 @@ class _BorderPanelState extends State<BorderPanel> {
         widget.collageManager.setPhotoMargin(v);
         setState(() {});
       },
-      label: 'Margin: ${widget.collageManager.photoMargin.toStringAsFixed(1)}px',
+      label:
+          'Margin: ${widget.collageManager.photoMargin.toStringAsFixed(1)}px',
     );
   }
 

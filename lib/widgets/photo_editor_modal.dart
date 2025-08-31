@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:extended_image/extended_image.dart';
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 import '../models/photo_box.dart';
 
 class PhotoEditorModal extends StatefulWidget {
@@ -157,44 +158,55 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
     // Use the ImageEditorController to get transformation data
     final editorDetails = _editorController.editActionDetails;
 
-    // Debug removed
-
     if (editorDetails != null) {
       final screenDestRect = editorDetails.screenDestinationRect;
       final screenCropRect = editorDetails.screenCropRect;
 
-      // Debug removed
-
       if (screenDestRect != null && screenCropRect != null) {
-        // Simple approach: convert the relative position to alignment
-        final cropWidth = screenCropRect.width;
-        final cropHeight = screenCropRect.height;
+        // Compute overflow of the image (after zoom) relative to the crop area.
+        // Alignment should be normalized against the available overflow, not the crop size.
+        final overflowW = screenDestRect.width - screenCropRect.width;
+        final overflowH = screenDestRect.height - screenCropRect.height;
 
-        // Calculate where the image center is relative to crop center
-        final imageCenterX = screenDestRect.center.dx;
-        final imageCenterY = screenDestRect.center.dy;
-        final cropCenterX = screenCropRect.center.dx;
-        final cropCenterY = screenCropRect.center.dy;
+        double alignmentX = 0.0;
+        double alignmentY = 0.0;
 
-        // Debug removed
+        if (overflowW > 0) {
+          alignmentX =
+              ((screenCropRect.center.dx - screenDestRect.center.dx) /
+                      (overflowW / 2))
+                  .clamp(-1.0, 1.0);
+        }
+        if (overflowH > 0) {
+          alignmentY =
+              ((screenCropRect.center.dy - screenDestRect.center.dy) /
+                      (overflowH / 2))
+                  .clamp(-1.0, 1.0);
+        }
 
-        // Convert to alignment (-1 to 1 range) - inverted
-        final alignmentX = -((imageCenterX - cropCenterX) / (cropWidth / 2))
-            .clamp(-1.0, 1.0);
-        final alignmentY = -((imageCenterY - cropCenterY) / (cropHeight / 2))
-            .clamp(-1.0, 1.0);
+        // Snap tiny numerical noise to zero for cleaner values
+        if (alignmentX.abs() < 1e-6) alignmentX = 0.0;
+        if (alignmentY.abs() < 1e-6) alignmentY = 0.0;
 
-        // Debug removed
+        // Compute photo scale relative to how Image.file is shown (BoxFit.cover)
+        // In PhotoBoxWidget, 1.0 means "just cover" the box. The editor uses
+        // contain + zoom, so derive the extra scale over cover:
+        final scaleW = screenDestRect.width / screenCropRect.width;
+        final scaleH = screenDestRect.height / screenCropRect.height;
+        double computedPhotoScale = math.min(scaleW, scaleH);
+        if (computedPhotoScale < 1.0)
+          computedPhotoScale = 1.0; // never below cover
 
         widget.photoBox.alignment = Alignment(alignmentX, alignmentY);
+        widget.photoBox.photoScale = computedPhotoScale;
 
-        // Debug removed
-      } else {
-        // Debug removed
-      }
-    } else {
-      // Debug removed
-    }
+        // Debug: alignment result
+        // ignore: avoid_print
+        print(
+          "alignment: $alignmentX, $alignmentY  scale: ${widget.photoBox.photoScale}",
+        );
+      } else {}
+    } else {}
 
     // Notify parent that photo box has changed
     if (widget.onPhotoChanged != null) {
