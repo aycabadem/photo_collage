@@ -25,11 +25,20 @@ class AspectRatioSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Try to map the currently selected aspect to a known preset.
+    // If not found, don't force a value into Dropdown to avoid duplicate/zero match asserts.
+    const double eps = 1e-3;
+    final AspectSpec matched = presets.firstWhere(
+      (p) => (p.w - selectedAspect.w).abs() < eps && (p.h - selectedAspect.h).abs() < eps,
+      orElse: () => const AspectSpec(w: -1, h: -1, label: ''),
+    );
+    final AspectSpec? dropdownValue = (matched.w > 0 && matched.h > 0) ? matched : null;
+
     return Row(
       children: [
         // Aspect ratio dropdown
         DropdownButton<AspectSpec>(
-          value: selectedAspect,
+          value: dropdownValue,
           underline: Container(), // Remove default underline
           icon: Icon(
             Icons.arrow_drop_down,
@@ -39,23 +48,9 @@ class AspectRatioSelector extends StatelessWidget {
             color: Theme.of(context).primaryColor,
             fontWeight: FontWeight.w600,
           ),
-          items: [
-            // Preset ratios
-            ...presets.map(
-              (v) =>
-                  DropdownMenuItem<AspectSpec>(value: v, child: Text(v.label)),
-            ),
-            // Custom ratio (only if not in presets and different from current)
-            if (!presets.any(
-              (p) =>
-                  (p.w - selectedAspect.w).abs() < 0.001 &&
-                  (p.h - selectedAspect.h).abs() < 0.001,
-            ))
-              DropdownMenuItem<AspectSpec>(
-                value: selectedAspect,
-                child: Text(selectedAspect.label),
-              ),
-          ],
+          items: presets
+              .map((v) => DropdownMenuItem<AspectSpec>(value: v, child: Text(v.label)))
+              .toList(),
           onChanged: (v) {
             if (v != null) {
               onAspectChanged(v);

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -44,6 +45,7 @@ class CollageManager extends ChangeNotifier {
   // State variables
   AspectSpec _selectedAspect = _presets.firstWhere((a) => a.label == '9:16');
   Size _templateSize = Size(baseWidth, baseWidth);
+  Size? _availableArea; // last known canvas available area from LayoutBuilder
   final List<PhotoBox> _photoBoxes = [];
   PhotoBox? _selectedBox;
 
@@ -298,99 +300,51 @@ class CollageManager extends ChangeNotifier {
   // Image picker
   final ImagePicker _imagePicker = ImagePicker();
 
-  /// Calculate template size based on aspect ratio and screen size
+  /// Calculate template size based on aspect ratio and available area
+  /// screenSize here represents the available canvas area (constraints), not full screen
   Size _sizeForAspect(AspectSpec a, {Size? screenSize}) {
-    // Default sizes
-    double maxWidth = baseWidth;
-    double maxHeight = baseWidth;
-
+    // Available area
+    double availW = baseWidth;
+    double availH = baseWidth;
     if (screenSize != null) {
-      // Optimize spacing - minimal margin for maximum screen usage
-      double availableWidth = screenSize.width - 40; // Reduced from 60
-      double availableHeight = screenSize.height - 80; // Reduced from 120
+      // Use constraints, but leave a tasteful frame so canvas isn't full-bleed
+      const double sideMargin = 40.0;   // left+right total
+      const double vertMargin = 80.0;   // top+bottom total
 
-      // More generous limits for better visual appeal
-      maxWidth = availableWidth.clamp(350, 520.0); // Increased from 320-480
-      maxHeight = availableHeight.clamp(300, 600.0); // Increased from 280-550
+      availW = screenSize.width - sideMargin;
+      availH = screenSize.height - vertMargin;
+
+      // Keep reasonable lower bounds
+      if (availW < 260) availW = 260;
+      if (availH < 220) availH = 220;
     }
 
-    // Size strategy based on aspect ratio type
-    double aspectRatio = a.ratio;
+    final double r = a.ratio; // width / height
+
+    // Contain-fit without branchy clamps: exactly one side touches bound
     double width, height;
-
-    if (aspectRatio > 2) {
-      // Very wide ratios (10:1, 16:1 etc.)
-      width = maxWidth * 0.99; // Increased from 0.98
-      height = width / aspectRatio;
-
-      if (height < 120) {
-        // Increased from 100
-        height = 120;
-        width = height * aspectRatio;
-        if (width > maxWidth * 0.99) {
-          width = maxWidth * 0.99;
-          height = width / aspectRatio;
-        }
-      }
-    } else if (aspectRatio < 0.5) {
-      // Very tall ratios (9:16, 1:6 etc.)
-      width = maxWidth * 0.85; // Increased from 0.8
-      height = width / aspectRatio;
-      if (height > maxHeight * 0.99) {
-        // Increased from 0.98
-        height = maxHeight * 0.99;
-        width = height * aspectRatio;
-      }
-    } else if (aspectRatio >= 0.8 && aspectRatio <= 1.25) {
-      // Medium ratios (4:5, 5:4, 1:1, 3:4, 4:3)
-      if (aspectRatio >= 1) {
-        width = maxWidth * 0.96; // Increased from 0.92
-        height = width / aspectRatio;
-        if (height > maxHeight * 0.92) {
-          // Increased from 0.85
-          height = maxHeight * 0.92;
-          width = height * aspectRatio;
-        }
-      } else {
-        height = maxHeight * 0.92; // Increased from 0.85
-        width = height * aspectRatio;
-        if (width > maxWidth * 0.96) {
-          // Increased from 0.92
-          width = maxWidth * 0.96;
-          height = width / aspectRatio;
-        }
-      }
+    if (availH * r <= availW) {
+      // Height-bound
+      height = availH;
+      width = height * r;
     } else {
-      // Other ratios
-      if (aspectRatio >= 1) {
-        width = maxWidth * 0.98; // Increased from 0.95
-        height = width / aspectRatio;
-        if (height > maxHeight * 0.95) {
-          // Increased from 0.9
-          height = maxHeight * 0.95;
-          width = height * aspectRatio;
-        }
-      } else {
-        height = maxHeight * 0.95; // Increased from 0.9
-        width = height * aspectRatio;
-        if (width > maxWidth * 0.98) {
-          // Increased from 0.95
-          width = maxWidth * 0.98;
-          height = width / aspectRatio;
-        }
-      }
+      // Width-bound
+      width = availW;
+      height = width / r;
     }
 
-    // Minimum size control - increased for better visibility
-    if (width < 250) width = 250; // Increased from 200
-    if (height < 180) height = 180; // Increased from 150
-
-    // Maximum size control - more generous
-    if (width > maxWidth * 0.99) {
-      width = maxWidth * 0.99; // Increased from 0.98
-    }
-    if (height > maxHeight * 0.99) {
-      height = maxHeight * 0.99; // Increased from 0.98
+    // Enforce gentle minimums by uniform scaling up, but never exceed bounds
+    const double minW = 250.0;
+    const double minH = 180.0;
+    final double scaleUp = math.max(
+      math.max(minW / width, minH / height),
+      1.0,
+    );
+    if (scaleUp > 1.0) {
+      final double maxScale = math.min(availW / width, availH / height);
+      final double s = math.min(scaleUp, maxScale);
+      width *= s;
+      height *= s;
     }
 
     return Size(width, height);
@@ -401,7 +355,9 @@ class CollageManager extends ChangeNotifier {
     if (newAspect.w <= 0 || newAspect.h <= 0) return;
 
     _selectedAspect = newAspect;
-    _templateSize = _sizeForAspect(newAspect, screenSize: screenSize);
+    // Prefer last known available area from LayoutBuilder
+    final area = _availableArea ?? screenSize;
+    _templateSize = _sizeForAspect(newAspect, screenSize: area);
 
     // If using preset layout, re-apply it with new aspect ratio
     if (_currentLayout != null && !_isCustomMode) {
@@ -922,9 +878,10 @@ class CollageManager extends ChangeNotifier {
     }
   }
 
-  /// Initialize template size based on screen size
-  void initializeTemplateSize(Size screenSize) {
-    final newSize = _sizeForAspect(_selectedAspect, screenSize: screenSize);
+  /// Update available canvas area from LayoutBuilder and recompute size
+  void updateAvailableArea(Size area) {
+    _availableArea = area;
+    final newSize = _sizeForAspect(_selectedAspect, screenSize: _availableArea);
     if (_templateSize != newSize) {
       _templateSize = newSize;
       notifyListeners();

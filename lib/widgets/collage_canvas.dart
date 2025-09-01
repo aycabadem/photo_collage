@@ -65,7 +65,9 @@ class CollageCanvas extends StatelessWidget {
           // Only deselect if no photo box is tapped
           onBackgroundTap();
         },
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
           width: templateSize.width,
           height: templateSize.height,
           decoration: BoxDecoration(

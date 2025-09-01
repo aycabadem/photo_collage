@@ -59,8 +59,7 @@ class _CollageScreenState extends State<CollageScreen> {
                   selectedAspect: collageManager.selectedAspect,
                   presets: collageManager.presets,
                   onAspectChanged: (aspect) {
-                    final screenSize = MediaQuery.of(context).size;
-                    collageManager.applyAspect(aspect, screenSize: screenSize);
+                    collageManager.applyAspect(aspect);
                   },
                   onCustomRatioPressed: () {
                     setState(() {
@@ -89,11 +88,11 @@ class _CollageScreenState extends State<CollageScreen> {
               builder: (context, constraints) {
                 // Initialize template size based on screen size on first frame
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final screenSize = Size(
+                  final area = Size(
                     constraints.maxWidth,
                     constraints.maxHeight,
                   );
-                  collageManager.initializeTemplateSize(screenSize);
+                  collageManager.updateAvailableArea(area);
                 });
 
                 return GestureDetector(
@@ -264,11 +263,13 @@ class _CollageScreenState extends State<CollageScreen> {
             min: 0.5,
             max: 2.0,
             onChanged: (v) {
-              setState(() => _aspectScalar = v);
+              // Round to 2 decimals to reduce jitter and layout thrash
+              final vr = (v * 100).round() / 100.0;
+              setState(() => _aspectScalar = vr);
               // Convert scalar to AspectSpec and apply immediately
-              final AspectSpec spec = v >= 1
-                  ? AspectSpec(w: v, h: 1, label: formatRatio(v))
-                  : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
+              final AspectSpec spec = vr >= 1
+                  ? AspectSpec(w: vr, h: 1, label: formatRatio(vr))
+                  : AspectSpec(w: 1, h: 1 / vr, label: formatRatio(vr));
 
               final screenSize = MediaQuery.of(context).size;
               manager.applyAspect(spec, screenSize: screenSize);
