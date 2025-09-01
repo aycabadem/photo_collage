@@ -5,6 +5,8 @@ import '../widgets/photo_box_widget.dart';
 import '../widgets/resize_handle_widget.dart';
 import '../widgets/guidelines_overlay.dart';
 import '../services/collage_manager.dart';
+import '../models/background.dart';
+import 'dart:math' as math;
 
 /// Widget for the main collage canvas with photo boxes and interaction
 class CollageCanvas extends StatelessWidget {
@@ -71,7 +73,17 @@ class CollageCanvas extends StatelessWidget {
           width: templateSize.width,
           height: templateSize.height,
           decoration: BoxDecoration(
-            color: collageManager.backgroundColorWithOpacity,
+            gradient: collageManager.backgroundMode == BackgroundMode.gradient
+                ? LinearGradient(
+                    begin: _beginFromAngle(collageManager.backgroundGradient.angleDeg),
+                    end: _endFromAngle(collageManager.backgroundGradient.angleDeg),
+                    colors: collageManager.gradientColorsWithOpacity,
+                    stops: collageManager.gradientStops,
+                  )
+                : null,
+            color: collageManager.backgroundMode == BackgroundMode.solid
+                ? collageManager.backgroundColorWithOpacity
+                : null,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.1),
@@ -199,5 +211,20 @@ class CollageCanvas extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Map angle to begin/end alignments (-1..1)
+  Alignment _beginFromAngle(double deg) {
+    final rad = deg * math.pi / 180.0;
+    final dx = -math.cos(rad);
+    final dy = -math.sin(rad);
+    return Alignment(dx, dy);
+  }
+
+  Alignment _endFromAngle(double deg) {
+    final rad = deg * math.pi / 180.0;
+    final dx = math.cos(rad);
+    final dy = math.sin(rad);
+    return Alignment(dx, dy);
   }
 }

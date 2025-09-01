@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../models/background.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import '../models/photo_box.dart';
 import '../models/aspect_spec.dart';
@@ -52,6 +54,8 @@ class CollageManager extends ChangeNotifier {
   // Background color and opacity
   Color _backgroundColor = Colors.white;
   double _backgroundOpacity = 1.0;
+  BackgroundMode _backgroundMode = BackgroundMode.solid;
+  GradientSpec _backgroundGradient = GradientSpec.presetPinkPurple();
 
   // Global border settings
   double _globalBorderWidth = 0.0; // Start with 0 margin
@@ -85,6 +89,8 @@ class CollageManager extends ChangeNotifier {
   // Background color and opacity getters
   Color get backgroundColor => _backgroundColor;
   double get backgroundOpacity => _backgroundOpacity;
+  BackgroundMode get backgroundMode => _backgroundMode;
+  GradientSpec get backgroundGradient => _backgroundGradient;
 
   // Border getters
   bool get hasGlobalBorder => _hasGlobalBorder;
@@ -119,6 +125,26 @@ class CollageManager extends ChangeNotifier {
     _backgroundOpacity = opacity.clamp(0.0, 1.0);
     notifyListeners();
   }
+
+  void setBackgroundMode(BackgroundMode mode) {
+    _backgroundMode = mode;
+    notifyListeners();
+  }
+
+  void setBackgroundGradient(GradientSpec spec) {
+    _backgroundGradient = spec;
+    _backgroundMode = BackgroundMode.gradient;
+    notifyListeners();
+  }
+
+  List<Color> get gradientColorsWithOpacity {
+    return _backgroundGradient.stops
+        .map((s) => s.color.withValues(alpha: s.color.a * _backgroundOpacity))
+        .toList();
+  }
+
+  List<double> get gradientStops =>
+      _backgroundGradient.stops.map((s) => s.offset).toList();
 
   // Global border setters
   /// Change global border width (used for margin)
@@ -900,12 +926,29 @@ class CollageManager extends ChangeNotifier {
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
 
-      // Set background color
-      final paint = Paint()..color = const Color(0xFFF5F5F5); // Light grey
-      canvas.drawRect(
-        Rect.fromLTWH(0, 0, targetWidth.toDouble(), targetHeight.toDouble()),
-        paint,
-      );
+      // Draw background (solid or gradient)
+      final rect = Rect.fromLTWH(0, 0, targetWidth.toDouble(), targetHeight.toDouble());
+      if (_backgroundMode == BackgroundMode.gradient) {
+        final angle = _backgroundGradient.angleDeg * math.pi / 180.0;
+        final cx = targetWidth / 2.0;
+        final cy = targetHeight / 2.0;
+        final dx = math.cos(angle);
+        final dy = math.sin(angle);
+        final halfDiag = 0.5 * math.sqrt(targetWidth * targetWidth + targetHeight * targetHeight);
+        final start = Offset(cx - dx * halfDiag, cy - dy * halfDiag);
+        final end = Offset(cx + dx * halfDiag, cy + dy * halfDiag);
+
+        final colors = _backgroundGradient.stops
+            .map((s) => s.color.withValues(alpha: s.color.a * _backgroundOpacity))
+            .toList();
+        final stops = _backgroundGradient.stops.map((s) => s.offset).toList();
+        final shader = ui.Gradient.linear(start, end, colors, stops);
+        final paint = Paint()..shader = shader;
+        canvas.drawRect(rect, paint);
+      } else {
+        final paint = Paint()..color = backgroundColorWithOpacity;
+        canvas.drawRect(rect, paint);
+      }
 
       // Draw photo boxes with proper scaling
       final double scaleX = targetWidth / _templateSize.width;

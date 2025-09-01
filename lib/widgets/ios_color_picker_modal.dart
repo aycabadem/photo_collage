@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import '../models/background.dart';
 
 class IOSColorPickerModal extends StatefulWidget {
   final Color currentColor;
   final double currentOpacity;
   final Function(Color color, double opacity) onColorChanged;
+  final BackgroundMode initialMode;
+  final GradientSpec? initialGradient;
+  final void Function(GradientSpec spec, double opacity)? onGradientChanged;
 
   const IOSColorPickerModal({
     super.key,
     required this.currentColor,
     required this.currentOpacity,
     required this.onColorChanged,
+    this.initialMode = BackgroundMode.solid,
+    this.initialGradient,
+    this.onGradientChanged,
   });
 
   @override
@@ -19,94 +26,234 @@ class IOSColorPickerModal extends StatefulWidget {
 class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   late Color _selectedColor;
   late double _selectedOpacity;
+  late BackgroundMode _mode;
+  late GradientSpec _gradient;
+  late double _h; // 0..360
+  late double _s; // 0..1
+  late double _l; // 0..1
 
   @override
   void initState() {
     super.initState();
     _selectedColor = widget.currentColor;
     _selectedOpacity = widget.currentOpacity;
+    _mode = widget.initialMode;
+    _gradient = widget.initialGradient ?? GradientSpec.presetPinkPurple();
+    final hsl = HSLColor.fromColor(_selectedColor);
+    _h = hsl.hue;
+    _s = hsl.saturation;
+    _l = hsl.lightness;
+    // Başlangıç: ana rengi göstermek için L ve S değerlerini orta/yüksekten başlat
+    bool adjusted = false;
+    if (_l > 0.85 || _l < 0.15) {
+      _l = 0.5;
+      adjusted = true;
+    }
+    if (_s < 0.6) {
+      _s = 0.9; // doygunluğu yüksekten başlat
+      adjusted = true;
+    }
+    if (adjusted && _mode == BackgroundMode.solid) {
+      // Canlı önizleme için ilk açılışta da uygula
+      _selectedColor = HSLColor.fromAHSL(1.0, _h, _s, _l).toColor();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onColorChanged(_selectedColor, _selectedOpacity);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.6,
+    final size = MediaQuery.of(context).size;
+    return Container(
+      width: size.width,
+      constraints: BoxConstraints(maxHeight: size.height * 0.34),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
         ),
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(24),
-            topRight: Radius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+            spreadRadius: 5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            _buildHeader(),
-            Expanded(child: _buildColorGrid()),
-            _buildOpacitySlider(),
-            _buildSelectedColorPreview(),
-            const SizedBox(height: 12),
-            _buildApplyButton(),
-            SizedBox(height: MediaQuery.of(context).viewInsets.bottom + 16),
-          ],
-        ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildModeTabs(),
+          const SizedBox(height: 4),
+          _mode == BackgroundMode.solid
+              ? _buildHslControls()
+              : _buildGradientCompact(),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
-      children: [
-        // Handle bar
-        Container(
-          margin: const EdgeInsets.only(top: 12, bottom: 8),
-          width: 40,
-          height: 4,
-          decoration: BoxDecoration(
-            color: Colors.grey[400],
-            borderRadius: BorderRadius.circular(2),
+  // Header removed for compact design
+
+  Widget _buildModeTabs() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      child: Row(
+        children: [
+          _tab('Color', _mode == BackgroundMode.solid, () {
+            setState(() => _mode = BackgroundMode.solid);
+            // Apply current solid as live preview
+            widget.onColorChanged(_selectedColor, _selectedOpacity);
+          }),
+          const SizedBox(width: 8),
+          _tab('Gradient', _mode == BackgroundMode.gradient, () {
+            setState(() => _mode = BackgroundMode.gradient);
+            // Apply current gradient as live preview
+            if (widget.onGradientChanged != null) {
+              widget.onGradientChanged!(_gradient, _selectedOpacity);
+            }
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _tab(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? Colors.black.withValues(alpha: 0.06) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: active
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.black.withValues(alpha: 0.15),
           ),
         ),
-        // Header content
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: Row(
+        child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ),
+    );
+  }
+
+  Widget _buildColorGrid() {
+    // Replaced by HSL sliders. Keep method for compatibility if referenced.
+    return _buildHslControls();
+  }
+
+  Widget _buildHslControls() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _hueSlider(),
+          const SizedBox(height: 8),
+          _saturationSlider(),
+          const SizedBox(height: 8),
+          _lightnessSlider(),
+        ],
+      ),
+    );
+  }
+
+  Widget _hueSlider() {
+    final colors = [
+      for (int i = 0; i <= 12; i++)
+        HSLColor.fromAHSL(1.0, i * 30.0, 1.0, 0.5).toColor(),
+    ];
+    return _gradientLineSlider(
+      label: 'H',
+      valueLabel: '${_h.round()}°',
+      colors: colors,
+      min: 0,
+      max: 360,
+      value: _h,
+      onChanged: (v) {
+        setState(() => _h = v);
+        _applyHslLive();
+      },
+    );
+  }
+
+  Widget _saturationSlider() {
+    final c0 = HSLColor.fromAHSL(1.0, _h, 0.0, _l).toColor();
+    final c1 = HSLColor.fromAHSL(1.0, _h, 1.0, _l).toColor();
+    return _gradientLineSlider(
+      label: 'S',
+      valueLabel: '${(_s * 100).round()}%',
+      colors: [c0, c1],
+      min: 0,
+      max: 1,
+      value: _s,
+      onChanged: (v) {
+        setState(() => _s = v);
+        _applyHslLive();
+      },
+    );
+  }
+
+  Widget _lightnessSlider() {
+    final mid = HSLColor.fromAHSL(1.0, _h, _s, 0.5).toColor();
+    return _gradientLineSlider(
+      label: 'L',
+      valueLabel: '${(_l * 100).round()}%',
+      colors: [Colors.black, mid, Colors.white],
+      min: 0,
+      max: 1,
+      value: _l,
+      onChanged: (v) {
+        setState(() => _l = v);
+        _applyHslLive();
+      },
+    );
+  }
+
+  Widget _gradientLineSlider({
+    required String label,
+    required String valueLabel,
+    required List<Color> colors,
+    required double min,
+    required double max,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            const Spacer(),
+            Text(valueLabel, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          height: 32,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              Icon(
-                Icons.colorize,
-                color: Theme.of(context).primaryColor,
-                size: 20, // Daha küçük ve şık
-              ),
-              const Expanded(
-                child: Text(
-                  'Colours',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Container(
+                height: 4,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2),
+                  gradient: LinearGradient(colors: colors),
                 ),
               ),
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  width: 28, // Daha küçük
-                  height: 28, // Daha küçük
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.close, size: 16), // Daha küçük icon
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 4,
+                  activeTrackColor: Colors.transparent,
+                  inactiveTrackColor: Colors.transparent,
+                  overlayShape: SliderComponentShape.noOverlay,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
                 ),
+                child: Slider(min: min, max: max, value: value, onChanged: onChanged),
               ),
             ],
           ),
@@ -115,68 +262,21 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     );
   }
 
-  Widget _buildColorGrid() {
-    final colors = _generateColorGrid();
-
-    return GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 12,
-        childAspectRatio: 1.0,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
-      ),
-      itemCount: colors.length,
-      itemBuilder: (context, index) {
-        final color = colors[index];
-        final isSelected = color == _selectedColor;
-
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedColor = color;
-            });
-            // Live preview: apply immediately without closing
-            widget.onColorChanged(_selectedColor, _selectedOpacity);
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(4),
-              border: isSelected
-                  ? Border.all(color: Colors.white, width: 2)
-                  : null,
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                        spreadRadius: 1,
-                      ),
-                    ]
-                  : null,
-            ),
-          ),
-        );
-      },
-    );
+  void _applyHslLive() {
+    final c = HSLColor.fromAHSL(1.0, _h, _s, _l).toColor();
+    _selectedColor = c;
+    if (_mode == BackgroundMode.solid) {
+      widget.onColorChanged(_selectedColor, _selectedOpacity);
+    }
   }
 
   Widget _buildOpacitySlider() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'OPACITY',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
+          // Compact: remove label to save space
           Row(
             children: [
               Expanded(
@@ -186,9 +286,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                     thumbShape: const RoundSliderThumbShape(
                       enabledThumbRadius: 8,
                     ),
-                    overlayShape: const RoundSliderOverlayShape(
-                      overlayRadius: 16,
-                    ),
+                    overlayShape: SliderComponentShape.noOverlay,
                   ),
                   child: Slider(
                     value: _selectedOpacity,
@@ -200,14 +298,18 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                         _selectedOpacity = value;
                       });
                       // Live preview: apply immediately without closing
-                      widget.onColorChanged(_selectedColor, _selectedOpacity);
+                      if (_mode == BackgroundMode.solid) {
+                        widget.onColorChanged(_selectedColor, _selectedOpacity);
+                      } else if (widget.onGradientChanged != null) {
+                        widget.onGradientChanged!(_gradient, _selectedOpacity);
+                      }
                     },
                   ),
                 ),
               ),
               Container(
-                width: 60,
-                height: 30,
+                width: 52,
+                height: 24,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
@@ -216,10 +318,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                 child: Center(
                   child: Text(
                     '${(_selectedOpacity * 100).round()}%',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),
@@ -290,33 +389,72 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     return colors;
   }
 
-  Widget _buildApplyButton() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: ElevatedButton(
-          onPressed: _applyColor,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).primaryColor,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 2,
-          ),
-          child: const Text(
-            'Apply',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  Widget _buildGradientCompact() {
+    return Column(
+      children: [
+        // Presets row
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _gradientPresetChip(GradientSpec.presetPinkPurple()),
+              _gradientPresetChip(GradientSpec.presetTealBlue()),
+              _gradientPresetChip(GradientSpec.presetSunset()),
+              _gradientPresetChip(GradientSpec.presetLime()),
+            ],
           ),
         ),
-      ),
+        // Angle slider
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          child: Row(
+            children: [
+              const Text('ANGLE', style: TextStyle(fontSize: 12)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Slider(
+                  value: _gradient.angleDeg,
+                  min: 0,
+                  max: 360,
+                  divisions: 36,
+                  onChanged: (v) {
+                    setState(() => _gradient = _gradient.copyWith(angleDeg: v));
+                    if (widget.onGradientChanged != null) {
+                      widget.onGradientChanged!(_gradient, _selectedOpacity);
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  void _applyColor() {
-    widget.onColorChanged(_selectedColor, _selectedOpacity);
-    Navigator.of(context).pop();
+  Widget _gradientPresetChip(GradientSpec spec) {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _gradient = spec);
+        if (widget.onGradientChanged != null) {
+          widget.onGradientChanged!(spec, _selectedOpacity);
+        }
+      },
+      child: Container(
+        width: 48,
+        height: 28,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            colors: spec.stops.map((s) => s.color).toList(),
+            stops: spec.stops.map((s) => s.offset).toList(),
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
+        ),
+      ),
+    );
   }
 }

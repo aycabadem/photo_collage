@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/aspect_spec.dart';
+import '../models/background.dart';
 import '../services/collage_manager.dart';
 import '../widgets/aspect_ratio_selector.dart';
 import '../widgets/collage_canvas.dart';
@@ -372,11 +373,19 @@ class _CollageScreenState extends State<CollageScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
       builder: (context) => IOSColorPickerModal(
         currentColor: collageManager.backgroundColor,
         currentOpacity: collageManager.backgroundOpacity,
+        initialMode: collageManager.backgroundMode,
+        initialGradient: collageManager.backgroundGradient,
         onColorChanged: (color, opacity) {
+          collageManager.setBackgroundMode(BackgroundMode.solid);
           collageManager.changeBackgroundColor(color);
+          collageManager.changeBackgroundOpacity(opacity);
+        },
+        onGradientChanged: (spec, opacity) {
+          collageManager.setBackgroundGradient(spec);
           collageManager.changeBackgroundOpacity(opacity);
         },
       ),
