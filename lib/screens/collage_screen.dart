@@ -25,6 +25,7 @@ class _CollageScreenState extends State<CollageScreen> {
 
   bool _showAspectSlider = false;
   double _aspectScalar = 1.0; // width/height ratio in [0.5, 2.0]
+  bool _isAspectDragging = false;
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +115,7 @@ class _CollageScreenState extends State<CollageScreen> {
                           templateSize: collageManager.templateSize,
                           photoBoxes: collageManager.photoBoxes,
                           selectedBox: collageManager.selectedBox,
+                          animateSize: !_isAspectDragging,
                           onBoxSelected: (box) => collageManager.selectBox(box),
                           onBoxDragged: (box, details) {
                             // Handle box dragging with scale
@@ -262,16 +264,18 @@ class _CollageScreenState extends State<CollageScreen> {
             min: 0.5,
             max: 2.0,
             onChanged: (v) {
-              // Round to 2 decimals to reduce jitter and layout thrash
-              final vr = (v * 100).round() / 100.0;
-              setState(() => _aspectScalar = vr);
+              _isAspectDragging = true;
+              setState(() => _aspectScalar = v);
               // Convert scalar to AspectSpec and apply immediately
-              final AspectSpec spec = vr >= 1
-                  ? AspectSpec(w: vr, h: 1, label: formatRatio(vr))
-                  : AspectSpec(w: 1, h: 1 / vr, label: formatRatio(vr));
+              final AspectSpec spec = v >= 1
+                  ? AspectSpec(w: v, h: 1, label: formatRatio(v))
+                  : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
 
               final screenSize = MediaQuery.of(context).size;
               manager.applyAspect(spec, screenSize: screenSize);
+            },
+            onChangeEnd: (_) {
+              setState(() => _isAspectDragging = false);
             },
           ),
         ),

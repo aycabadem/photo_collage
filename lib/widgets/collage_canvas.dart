@@ -55,6 +55,7 @@ class CollageCanvas extends StatelessWidget {
     required this.onBackgroundTap,
     this.guidelines = const [],
     required this.collageManager,
+    this.animateSize = true,
   });
 
   @override
@@ -67,53 +68,62 @@ class CollageCanvas extends StatelessWidget {
           // Only deselect if no photo box is tapped
           onBackgroundTap();
         },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOut,
-          width: templateSize.width,
-          height: templateSize.height,
-          decoration: BoxDecoration(
-            gradient: collageManager.backgroundMode == BackgroundMode.gradient
-                ? LinearGradient(
-                    begin: _beginFromAngle(collageManager.backgroundGradient.angleDeg),
-                    end: _endFromAngle(collageManager.backgroundGradient.angleDeg),
-                    colors: collageManager.gradientColorsWithOpacity,
-                    stops: collageManager.gradientStops,
-                  )
-                : null,
-            color: collageManager.backgroundMode == BackgroundMode.solid
-                ? collageManager.backgroundColorWithOpacity
-                : null,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-                spreadRadius: 2,
+        child: animateSize
+            ? AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                width: templateSize.width,
+                height: templateSize.height,
+                decoration: _decoration(),
+                child: _contentStack(),
+              )
+            : Container(
+                width: templateSize.width,
+                height: templateSize.height,
+                decoration: _decoration(),
+                child: _contentStack(),
               ),
-            ],
-          ),
-          child: Stack(
-            clipBehavior: Clip.hardEdge,
-            children: [
-              // Photo boxes (bottom layer)
-              for (var box in photoBoxes) _buildPhotoBox(box),
-
-              // Overlay for selected box (resize handles)
-              if (selectedBox != null) _buildOverlay(selectedBox!),
-
-              // Guidelines overlay (top layer, but IgnorePointer)
-              if (guidelines.isNotEmpty)
-                GuidelinesOverlay(
-                  guidelines: guidelines,
-                  templateSize: templateSize,
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }
+
+  final bool animateSize;
+
+  BoxDecoration _decoration() => BoxDecoration(
+        gradient: collageManager.backgroundMode == BackgroundMode.gradient
+            ? LinearGradient(
+                begin:
+                    _beginFromAngle(collageManager.backgroundGradient.angleDeg),
+                end: _endFromAngle(collageManager.backgroundGradient.angleDeg),
+                colors: collageManager.gradientColorsWithOpacity,
+                stops: collageManager.gradientStops,
+              )
+            : null,
+        color: collageManager.backgroundMode == BackgroundMode.solid
+            ? collageManager.backgroundColorWithOpacity
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+            spreadRadius: 2,
+          ),
+        ],
+      );
+
+  Widget _contentStack() => Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          for (var box in photoBoxes) _buildPhotoBox(box),
+          if (selectedBox != null) _buildOverlay(selectedBox!),
+          if (guidelines.isNotEmpty)
+            GuidelinesOverlay(
+              guidelines: guidelines,
+              templateSize: templateSize,
+            ),
+        ],
+      );
 
   /// Build individual photo box widget with margin applied
   Widget _buildPhotoBox(PhotoBox box) {
