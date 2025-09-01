@@ -74,146 +74,130 @@ class _CollageScreenState extends State<CollageScreen> {
                   },
                 ),
                 const SizedBox(width: 8),
-                // Save Collage button
-                IconButton(
-                  onPressed: () => _saveCollage(context, collageManager),
-                  icon: const Icon(Icons.save),
-                  tooltip: 'Save Collage',
-                  visualDensity: VisualDensity.compact,
-                ),
-                const SizedBox(width: 8),
               ],
             ),
-            body: LayoutBuilder(
-              builder: (context, constraints) {
-                // Initialize template size based on screen size on first frame
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final area = Size(
-                    constraints.maxWidth,
-                    constraints.maxHeight,
-                  );
-                  collageManager.updateAvailableArea(area);
-                });
+            body: Stack(
+              children: [
+                // Main canvas and interactions
+                Padding(
+                  // Reserve space so canvas size doesn't grow after removing navbar
+                  padding: const EdgeInsets.only(bottom: 90),
+                  child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Initialize template size based on screen size on first frame
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final area = Size(
+                        constraints.maxWidth,
+                        constraints.maxHeight,
+                      );
+                      collageManager.updateAvailableArea(area);
+                    });
 
-                return GestureDetector(
-                  onTap: () {
-                    // Deselect when tapping outside the InteractiveViewer
-                    collageManager.selectBox(null);
-                  },
-                  child: InteractiveViewer(
-                    transformationController: _transformationController,
-                    minScale: 0.3,
-                    maxScale: 3.0,
-                    panEnabled: true, // Always allow panning
-                    scaleEnabled: true, // Zoom active
-                    boundaryMargin: EdgeInsets.zero,
-                    child: SizedBox(
-                      width: constraints.maxWidth,
-                      height: constraints.maxHeight,
-                      child: Center(
-                        child: CollageCanvas(
-                          templateSize: collageManager.templateSize,
-                          photoBoxes: collageManager.photoBoxes,
-                          selectedBox: collageManager.selectedBox,
-                          animateSize: !_isAspectDragging,
-                          onBoxSelected: (box) => collageManager.selectBox(box),
-                          onBoxDragged: (box, details) {
-                            // Handle box dragging with scale
-                            final scale = _getCurrentScale();
-                            collageManager.moveBox(
-                              box,
-                              Offset(
-                                details.delta.dx / scale,
-                                details.delta.dy / scale,
-                              ),
-                            );
-                          },
-                          onBoxDeleted: (box) => collageManager.deleteBox(box),
-                          onAddPhotoToBox: (box) async =>
-                              await collageManager.addPhotoToBox(box),
-                          onResizeHandleDragged: (box, dx, dy, alignment) {
-                            // Handle resize with scale
-                            final scale = _getCurrentScale();
-                            collageManager.resizeBoxFromHandle(
-                              box,
-                              alignment,
-                              dx / scale,
-                              dy / scale,
-                            );
-                          },
-                          onBackgroundTap: () => collageManager.selectBox(null),
-                          guidelines: collageManager.selectedBox != null
-                              ? collageManager.getAlignmentGuidelines(
-                                  collageManager.selectedBox!,
-                                )
-                              : [],
-                          collageManager: collageManager,
+                    return GestureDetector(
+                      onTap: () {
+                        // Deselect when tapping outside the InteractiveViewer
+                        collageManager.selectBox(null);
+                      },
+                      child: InteractiveViewer(
+                        transformationController: _transformationController,
+                        minScale: 0.3,
+                        maxScale: 3.0,
+                        panEnabled: true, // Always allow panning
+                        scaleEnabled: true, // Zoom active
+                        boundaryMargin: EdgeInsets.zero,
+                        child: SizedBox(
+                          width: constraints.maxWidth,
+                          height: constraints.maxHeight,
+                          child: Center(
+                            child: CollageCanvas(
+                              templateSize: collageManager.templateSize,
+                              photoBoxes: collageManager.photoBoxes,
+                              selectedBox: collageManager.selectedBox,
+                              animateSize: !_isAspectDragging,
+                              onBoxSelected: (box) => collageManager.selectBox(box),
+                              onBoxDragged: (box, details) {
+                                // Handle box dragging with scale
+                                final scale = _getCurrentScale();
+                                collageManager.moveBox(
+                                  box,
+                                  Offset(
+                                    details.delta.dx / scale,
+                                    details.delta.dy / scale,
+                                  ),
+                                );
+                              },
+                              onBoxDeleted: (box) => collageManager.deleteBox(box),
+                              onAddPhotoToBox: (box) async =>
+                                  await collageManager.addPhotoToBox(box),
+                              onResizeHandleDragged: (box, dx, dy, alignment) {
+                                // Handle resize with scale
+                                final scale = _getCurrentScale();
+                                collageManager.resizeBoxFromHandle(
+                                  box,
+                                  alignment,
+                                  dx / scale,
+                                  dy / scale,
+                                );
+                              },
+                              onBackgroundTap: () => collageManager.selectBox(null),
+                              guidelines: collageManager.selectedBox != null
+                                  ? collageManager.getAlignmentGuidelines(
+                                      collageManager.selectedBox!,
+                                    )
+                                  : [],
+                              collageManager: collageManager,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            bottomNavigationBar: Consumer<CollageManager>(
-              builder: (context, collageManager, child) {
-                return Container(
-                  height: 90, // Orta seviye alan
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, -2),
-                        spreadRadius: 0,
-                      ),
-                    ],
-                  ),
+                    );
+                  },
+                ),
+                ),
+
+                // Free-floating bottom controls (no navbar)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 24, // slightly higher from the bottom
                   child: Row(
+                    mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // Layout picker button
+                      // Layouts
                       _buildBottomBarButton(
                         icon: Icons.grid_view,
-                        onPressed: () =>
-                            _showLayoutPicker(context, collageManager),
+                        onPressed: () => _showLayoutPicker(context, collageManager),
                         isActive: false,
                       ),
-                      // Future button 2
-                      _buildBottomBarButton(
-                        icon: Icons.info_outline,
-                        onPressed: () {},
-                        isActive: false,
-                      ),
-                      // Border button
+                      // Margins / Border panel
                       _buildBottomBarButton(
                         icon: Icons.border_all,
-                        onPressed: () =>
-                            _showBorderPanel(context, collageManager),
+                        onPressed: () => _showBorderPanel(context, collageManager),
                         isActive: false,
                       ),
-                      // Color picker button
+                      // Background color
                       _buildBottomBarButton(
-                        icon: Icons.format_paint, // Boya kovası icon'u
-                        onPressed: () =>
-                            _showColorPicker(context, collageManager),
+                        icon: Icons.format_paint,
+                        onPressed: () => _showColorPicker(context, collageManager),
                         isActive: false,
                       ),
-                      // Photo add button
+                      // Add photo
                       _buildBottomBarButton(
-                        icon: Icons.camera_alt, // Sadece kamera icon'u
+                        icon: Icons.camera_alt,
                         onPressed: () => collageManager.addPhotoBox(),
-                        isActive: false, // Diğerleri ile aynı renk
+                        isActive: false,
+                      ),
+                      // Save collage (moved from AppBar)
+                      _buildBottomBarButton(
+                        icon: Icons.save,
+                        onPressed: () => _saveCollage(context, collageManager),
+                        isActive: false,
                       ),
                     ],
                   ),
-                );
-              },
+                ),
+              ],
             ),
           );
         },
