@@ -77,10 +77,7 @@ class _CollageScreenState extends State<CollageScreen> {
                   onPressed: () => _saveCollage(context, collageManager),
                   icon: const Icon(Icons.save),
                   tooltip: 'Save Collage',
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                  ),
+                  visualDensity: VisualDensity.compact,
                 ),
                 const SizedBox(width: 8),
               ],
