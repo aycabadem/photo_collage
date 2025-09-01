@@ -136,6 +136,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
             setState(() {
               _selectedColor = color;
             });
+            // Live preview: apply immediately without closing
+            widget.onColorChanged(_selectedColor, _selectedOpacity);
           },
           child: Container(
             decoration: BoxDecoration(
@@ -197,6 +199,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                       setState(() {
                         _selectedOpacity = value;
                       });
+                      // Live preview: apply immediately without closing
+                      widget.onColorChanged(_selectedColor, _selectedOpacity);
                     },
                   ),
                 ),
