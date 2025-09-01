@@ -11,9 +11,9 @@ class LayoutPickerModal extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -42,7 +42,7 @@ class LayoutPickerModal extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
@@ -53,9 +53,13 @@ class LayoutPickerModal extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Text(
+                Text(
                   'Choose Layout',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ],
             ),
@@ -86,15 +90,17 @@ class LayoutPickerModal extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.blue[50],
+          color: Theme.of(context).colorScheme.tertiary.withOpacity(0.25),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.blue[200]!),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          ),
         ),
         child: Row(
           children: [
             Icon(
               Icons.edit,
-              color: Colors.blue[600],
+              color: Theme.of(context).colorScheme.primary,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -107,14 +113,14 @@ class LayoutPickerModal extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue[700],
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   Text(
                     'Create your own layout',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.blue[600],
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ],
@@ -122,7 +128,7 @@ class LayoutPickerModal extends StatelessWidget {
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: Colors.blue[400],
+              color: Theme.of(context).colorScheme.primary,
               size: 16,
             ),
           ],
@@ -161,7 +167,8 @@ class LayoutPickerModal extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.blue,
+          color: Theme.of(context).colorScheme.tertiary,
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Stack(
           children: [
@@ -170,7 +177,11 @@ class LayoutPickerModal extends StatelessWidget {
               margin: const EdgeInsets.all(4),
               child: CustomPaint(
                 size: const Size.square(double.infinity),
-                painter: ModernLayoutPreviewPainter(layout.photoLayouts),
+                painter: ModernLayoutPreviewPainter(
+                  layout.photoLayouts,
+                  fillColor: Theme.of(context).colorScheme.secondary,
+                  strokeColor: Colors.white,
+                ),
               ),
             ),
           ],
@@ -183,19 +194,25 @@ class LayoutPickerModal extends StatelessWidget {
 /// Modern layout preview painter with visible borders
 class ModernLayoutPreviewPainter extends CustomPainter {
   final List<PhotoLayout> photoLayouts;
+  final Color fillColor;
+  final Color strokeColor;
 
-  ModernLayoutPreviewPainter(this.photoLayouts);
+  ModernLayoutPreviewPainter(
+    this.photoLayouts, {
+    required this.fillColor,
+    required this.strokeColor,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     // Background fill
     final backgroundPaint = Paint()
-      ..color = Colors.blue
+      ..color = fillColor
       ..style = PaintingStyle.fill;
 
     // Border paint
     final borderPaint = Paint()
-      ..color = Colors.white
+      ..color = strokeColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 

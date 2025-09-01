@@ -27,7 +27,7 @@ class _BorderPanelState extends State<BorderPanel> {
     return Container(
       padding: EdgeInsets.only(bottom: bottomInset),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
@@ -53,7 +53,7 @@ class _BorderPanelState extends State<BorderPanel> {
 
           // Compact horizontal icon toolbar at the bottom
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: _buildIconToolbar(),
           ),
         ],
@@ -61,9 +61,9 @@ class _BorderPanelState extends State<BorderPanel> {
     );
   }
 
-  /// Minimal horizontal toolbar with small monochrome icons
+  /// Minimal horizontal toolbar with clearer icons and labels
   Widget _buildIconToolbar() {
-    Widget item(String key, IconData icon, String tooltip) {
+    Widget item(String key, IconData icon, String label) {
       final bool active = _selectedEffect == key;
       return GestureDetector(
         onTap: () {
@@ -78,25 +78,50 @@ class _BorderPanelState extends State<BorderPanel> {
           // Inform canvas to reserve more/less space based on slider visibility
         },
         child: Container(
-          width: 40,
-          height: 32,
+          width: 64,
+          height: 54,
           margin: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
             color: active
-                ? Colors.black.withValues(alpha: 0.06)
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.10)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: active
-                  ? Colors.black.withValues(alpha: 0.25)
-                  : Colors.black.withValues(alpha: 0.12),
+                  ? Theme.of(context).colorScheme.primary.withOpacity(0.30)
+                  : Theme.of(context).colorScheme.primary.withOpacity(0.20),
             ),
           ),
-          child: Icon(
-            icon,
-            size: 16,
-            color: Colors.black.withValues(alpha: active ? 0.85 : 0.6),
-            semanticLabel: tooltip,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: active
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withOpacity(0.70),
+                semanticLabel: label,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: active
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.80),
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -105,9 +130,9 @@ class _BorderPanelState extends State<BorderPanel> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        item('shadow', Icons.blur_on, 'Shadow'),
-        item('margin', Icons.margin, 'Margin'),
-        item('corner_radius', Icons.rounded_corner, 'Corner radius'),
+        item('shadow', Icons.tonality, 'Shadow'),
+        item('margin', Icons.open_in_full, 'Spacing'),
+        item('corner_radius', Icons.rounded_corner, 'Radius'),
       ],
     );
   }
@@ -121,11 +146,11 @@ class _BorderPanelState extends State<BorderPanel> {
         children: [
           Text(
             _getEffectTitle(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               letterSpacing: 1.0,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           const SizedBox(height: 4),
@@ -229,8 +254,8 @@ class _GradientSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const start = Color(0xFFE91E63); // pink
-    const end = Color(0xFF7C4DFF); // purple
+    final start = Theme.of(context).colorScheme.primary;
+    final end = Theme.of(context).colorScheme.secondary;
 
     return SizedBox(
       height: 36,
@@ -240,8 +265,8 @@ class _GradientSlider extends StatelessWidget {
           // Gradient bar behind the track
           Container(
             height: 4,
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(2)),
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.all(Radius.circular(2)),
               gradient: LinearGradient(colors: [start, end]),
             ),
           ),
