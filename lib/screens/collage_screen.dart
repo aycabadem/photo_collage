@@ -41,17 +41,19 @@ class _CollageScreenState extends State<CollageScreen> {
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
               ),
               toolbarHeight: 64,
-              backgroundColor: Colors.white,
-              elevation: 2,
-              shadowColor: Colors.black.withValues(alpha: 0.1),
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              elevation: 0,
+              shadowColor: Colors.transparent,
               bottom: PreferredSize(
                 preferredSize: Size.fromHeight(_showAspectSlider ? 64 : 0),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
                   height: _showAspectSlider ? 64 : 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   child: _showAspectSlider
                       ? _buildAspectInlineSlider(context, collageManager)
                       : const SizedBox.shrink(),
@@ -66,9 +68,10 @@ class _CollageScreenState extends State<CollageScreen> {
                   },
                   onCustomRatioPressed: () {
                     setState(() {
-                      // Initialize slider with current aspect ratio
-                      _aspectScalar = collageManager.selectedAspect.ratio
-                          .clamp(0.5, 2.0);
+                      _aspectScalar = collageManager.selectedAspect.ratio.clamp(
+                        0.5,
+                        2.0,
+                      );
                       _showAspectSlider = !_showAspectSlider;
                     });
                   },
@@ -80,79 +83,83 @@ class _CollageScreenState extends State<CollageScreen> {
               children: [
                 // Main canvas and interactions
                 Padding(
-                  // Reserve space so canvas size doesn't grow after removing navbar
+                  // Reserve only bottom space; AppBar manages top
                   padding: const EdgeInsets.only(bottom: 90),
                   child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Initialize template size based on screen size on first frame
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      final area = Size(
-                        constraints.maxWidth,
-                        constraints.maxHeight,
-                      );
-                      collageManager.updateAvailableArea(area);
-                    });
+                    builder: (context, constraints) {
+                      // Initialize template size based on screen size on first frame
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        final area = Size(
+                          constraints.maxWidth,
+                          constraints.maxHeight,
+                        );
+                        collageManager.updateAvailableArea(area);
+                      });
 
-                    return GestureDetector(
-                      onTap: () {
-                        // Deselect when tapping outside the InteractiveViewer
-                        collageManager.selectBox(null);
-                      },
-                      child: InteractiveViewer(
-                        transformationController: _transformationController,
-                        minScale: 0.3,
-                        maxScale: 3.0,
-                        panEnabled: true, // Always allow panning
-                        scaleEnabled: true, // Zoom active
-                        boundaryMargin: EdgeInsets.zero,
-                        child: SizedBox(
-                          width: constraints.maxWidth,
-                          height: constraints.maxHeight,
-                          child: Center(
-                            child: CollageCanvas(
-                              templateSize: collageManager.templateSize,
-                              photoBoxes: collageManager.photoBoxes,
-                              selectedBox: collageManager.selectedBox,
-                              animateSize: !_isAspectDragging,
-                              onBoxSelected: (box) => collageManager.selectBox(box),
-                              onBoxDragged: (box, details) {
-                                // Handle box dragging with scale
-                                final scale = _getCurrentScale();
-                                collageManager.moveBox(
-                                  box,
-                                  Offset(
-                                    details.delta.dx / scale,
-                                    details.delta.dy / scale,
-                                  ),
-                                );
-                              },
-                              onBoxDeleted: (box) => collageManager.deleteBox(box),
-                              onAddPhotoToBox: (box) async =>
-                                  await collageManager.addPhotoToBox(box),
-                              onResizeHandleDragged: (box, dx, dy, alignment) {
-                                // Handle resize with scale
-                                final scale = _getCurrentScale();
-                                collageManager.resizeBoxFromHandle(
-                                  box,
-                                  alignment,
-                                  dx / scale,
-                                  dy / scale,
-                                );
-                              },
-                              onBackgroundTap: () => collageManager.selectBox(null),
-                              guidelines: collageManager.selectedBox != null
-                                  ? collageManager.getAlignmentGuidelines(
-                                      collageManager.selectedBox!,
-                                    )
-                                  : [],
-                              collageManager: collageManager,
+                      return GestureDetector(
+                        onTap: () {
+                          // Deselect when tapping outside the InteractiveViewer
+                          collageManager.selectBox(null);
+                        },
+                        child: InteractiveViewer(
+                          transformationController: _transformationController,
+                          minScale: 0.3,
+                          maxScale: 3.0,
+                          panEnabled: true, // Always allow panning
+                          scaleEnabled: true, // Zoom active
+                          boundaryMargin: EdgeInsets.zero,
+                          child: SizedBox(
+                            width: constraints.maxWidth,
+                            height: constraints.maxHeight,
+                            child: Center(
+                              child: CollageCanvas(
+                                templateSize: collageManager.templateSize,
+                                photoBoxes: collageManager.photoBoxes,
+                                selectedBox: collageManager.selectedBox,
+                                animateSize: !_isAspectDragging,
+                                onBoxSelected: (box) =>
+                                    collageManager.selectBox(box),
+                                onBoxDragged: (box, details) {
+                                  // Handle box dragging with scale
+                                  final scale = _getCurrentScale();
+                                  collageManager.moveBox(
+                                    box,
+                                    Offset(
+                                      details.delta.dx / scale,
+                                      details.delta.dy / scale,
+                                    ),
+                                  );
+                                },
+                                onBoxDeleted: (box) =>
+                                    collageManager.deleteBox(box),
+                                onAddPhotoToBox: (box) async =>
+                                    await collageManager.addPhotoToBox(box),
+                                onResizeHandleDragged:
+                                    (box, dx, dy, alignment) {
+                                      // Handle resize with scale
+                                      final scale = _getCurrentScale();
+                                      collageManager.resizeBoxFromHandle(
+                                        box,
+                                        alignment,
+                                        dx / scale,
+                                        dy / scale,
+                                      );
+                                    },
+                                onBackgroundTap: () =>
+                                    collageManager.selectBox(null),
+                                guidelines: collageManager.selectedBox != null
+                                    ? collageManager.getAlignmentGuidelines(
+                                        collageManager.selectedBox!,
+                                      )
+                                    : [],
+                                collageManager: collageManager,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
                 ),
 
                 // Free-floating bottom controls (no navbar)
@@ -167,19 +174,22 @@ class _CollageScreenState extends State<CollageScreen> {
                       // Layouts
                       _buildBottomBarButton(
                         icon: Icons.grid_view,
-                        onPressed: () => _showLayoutPicker(context, collageManager),
+                        onPressed: () =>
+                            _showLayoutPicker(context, collageManager),
                         isActive: false,
                       ),
                       // Margins / Border panel
                       _buildBottomBarButton(
                         icon: Icons.border_all,
-                        onPressed: () => _showBorderPanel(context, collageManager),
+                        onPressed: () =>
+                            _showBorderPanel(context, collageManager),
                         isActive: false,
                       ),
                       // Background color
                       _buildBottomBarButton(
                         icon: Icons.format_paint,
-                        onPressed: () => _showColorPicker(context, collageManager),
+                        onPressed: () =>
+                            _showColorPicker(context, collageManager),
                         isActive: false,
                       ),
                       // Add photo
@@ -207,7 +217,9 @@ class _CollageScreenState extends State<CollageScreen> {
 
   /// Inline aspect slider UI shown under AppBar
   Widget _buildAspectInlineSlider(
-      BuildContext context, CollageManager manager) {
+    BuildContext context,
+    CollageManager manager,
+  ) {
     String _fmt2(double v) {
       final s = v.toStringAsFixed(2);
       return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
@@ -429,7 +441,7 @@ class _CollageScreenState extends State<CollageScreen> {
       onTap: onPressed,
       child: Icon(
         icon,
-        color: isActive ? Theme.of(context).primaryColor : Colors.grey[600],
+        color: Theme.of(context).colorScheme.primary,
         size: 28, // Sadece icon, hiç arka plan yok
       ),
     );

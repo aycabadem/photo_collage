@@ -89,7 +89,7 @@ class PhotoBoxWidget extends StatelessWidget {
                       ),
                     )
                   : Container(
-                      color: Colors.blue[300],
+                      color: Theme.of(context).colorScheme.secondary,
                       child: Center(
                         child: GestureDetector(
                           onTap: () => _addPhotoToBox(context),

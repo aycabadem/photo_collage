@@ -55,11 +55,18 @@ class CollageManager extends ChangeNotifier {
   final List<PhotoBox> _photoBoxes = [];
   PhotoBox? _selectedBox;
 
-  // Background color and opacity
+  // Background color and opacity (canvas default stays white; user can change)
   Color _backgroundColor = Colors.white;
   double _backgroundOpacity = 1.0;
   BackgroundMode _backgroundMode = BackgroundMode.solid;
-  GradientSpec _backgroundGradient = GradientSpec.presetPinkPurple();
+  // Keep a default gradient spec available for when user switches to gradient
+  GradientSpec _backgroundGradient = GradientSpec(
+    stops: [
+      GradientStop(offset: 0.0, color: const Color(0xFFFFDBB6)),
+      GradientStop(offset: 1.0, color: const Color(0xFFFFF2EF)),
+    ],
+    angleDeg: 35,
+  );
 
   // Global border settings
   double _globalBorderWidth = 0.0; // Start with 0 margin
