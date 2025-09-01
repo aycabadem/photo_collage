@@ -199,7 +199,6 @@ class PhotoBoxWidget extends StatelessWidget {
   /// Show photo editor modal
   void _showPhotoEditor(BuildContext context) {
     // Update alignment based on current photo display
-    _updatePhotoAlignment();
 
     // Debug: Print photo state BEFORE opening modal
     // Debug prints removed
@@ -212,36 +211,6 @@ class PhotoBoxWidget extends StatelessWidget {
   }
 
   /// Update photo alignment to show the current visible part
-  void _updatePhotoAlignment() {
-    // Calculate alignment based on current photo display
-    // This ensures the modal shows the same part of the photo
-    if (box.imageFile != null) {
-      // Calculate alignment based on current photo position
-      // Since the photo is currently showing the center, set alignment to center
-      // But we need to calculate this based on actual photo content
-
-      // For now, let's try to detect if the photo has been moved
-      // If photoOffset is not zero, calculate alignment from it
-      if (box.photoOffset != Offset.zero) {
-        // Convert photoOffset to alignment
-        final boxSize = box.size;
-        final maxOffsetX = boxSize.width / 2;
-        final maxOffsetY = boxSize.height / 2;
-
-        final alignmentX = (box.photoOffset.dx / maxOffsetX).clamp(-1.0, 1.0);
-        final alignmentY = (box.photoOffset.dy / maxOffsetY).clamp(-1.0, 1.0);
-
-        box.alignment = Alignment(alignmentX, alignmentY);
-        // Debug removed
-      } else {
-        // If no offset, keep center alignment
-        box.alignment = Alignment.center;
-        // Debug removed
-      }
-
-      // Debug removed
-    }
-  }
 }
 
 /// Build layered shadows for a stronger, more 3D-like effect
