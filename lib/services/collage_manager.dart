@@ -980,6 +980,7 @@ class CollageManager extends ChangeNotifier {
                 dstRect.size,
                 box.imageFit,
                 box.alignment,
+                box.photoScale,
               );
 
               // Clip for corner radius
@@ -1056,6 +1057,7 @@ class CollageManager extends ChangeNotifier {
     Size dstSize,
     BoxFit fit,
     Alignment alignment,
+    double additionalScale,
   ) {
     final double imgW = image.width.toDouble();
     final double imgH = image.height.toDouble();
@@ -1069,7 +1071,10 @@ class CollageManager extends ChangeNotifier {
       return Rect.fromLTWH(0, 0, visibleW, visibleH);
     }
     // Default: cover
-    final double scale = math.max(dstSize.width / imgW, dstSize.height / imgH);
+    double scale = math.max(dstSize.width / imgW, dstSize.height / imgH);
+    if (additionalScale.isFinite && additionalScale > 0) {
+      scale *= additionalScale;
+    }
     final double cropW = dstSize.width / scale;
     final double cropH = dstSize.height / scale;
     final double extraW = imgW - cropW;
