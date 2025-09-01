@@ -42,10 +42,10 @@ class AspectRatioSelector extends StatelessWidget {
           underline: Container(), // Remove default underline
           icon: Icon(
             Icons.arrow_drop_down,
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).colorScheme.primary,
           ),
           style: TextStyle(
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.w600,
           ),
           items: presets
@@ -61,10 +61,10 @@ class AspectRatioSelector extends StatelessWidget {
         IconButton(
           tooltip: 'Custom ratio',
           onPressed: onCustomRatioPressed,
-          icon: Icon(Icons.tune, color: Theme.of(context).primaryColor),
+          icon: Icon(Icons.tune, color: Theme.of(context).colorScheme.primary),
           style: IconButton.styleFrom(
             backgroundColor: Colors.transparent,
-            foregroundColor: Theme.of(context).primaryColor,
+            foregroundColor: Theme.of(context).colorScheme.primary,
           ),
         ),
       ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 import '../models/aspect_spec.dart';
 import '../models/background.dart';
 import '../services/collage_manager.dart';
@@ -44,6 +45,7 @@ class _CollageScreenState extends State<CollageScreen> {
               backgroundColor: Theme.of(context).colorScheme.surface,
               elevation: 0,
               shadowColor: Colors.transparent,
+              // No flexibleSpace gradient (reverted to solid surface)
               bottom: PreferredSize(
                 preferredSize: Size.fromHeight(_showAspectSlider ? 64 : 0),
                 child: AnimatedContainer(
@@ -81,6 +83,21 @@ class _CollageScreenState extends State<CollageScreen> {
             ),
             body: Stack(
               children: [
+                // Gradient outer background (behind white canvas)
+                Positioned.fill(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFFFFDBB6), // Accent
+                          Color(0xFFFFF2EF), // Surface
+                        ],
+                        begin: Alignment(-0.819152, -0.573576), // ~35°
+                        end: Alignment(0.819152, 0.573576),     // ~35°
+                      ),
+                    ),
+                  ),
+                ),
                 // Main canvas and interactions
                 Padding(
                   // Reserve only bottom space; AppBar manages top
