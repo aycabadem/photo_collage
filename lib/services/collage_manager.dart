@@ -18,12 +18,16 @@ class CustomLayoutSnapshot {
   final AspectSpec originalAspect;
   final Map<int, String> photoPathsMap; // Store photo paths by index
   final Map<int, BoxFit> photoFitsMap; // Store photo fits by index
+  final Map<int, Alignment> photoAlignsMap; // Store alignment by index
+  final Map<int, double> photoScalesMap; // Store scale by index
 
   CustomLayoutSnapshot({
     required this.photoLayouts,
     required this.originalAspect,
     required this.photoPathsMap,
     required this.photoFitsMap,
+    required this.photoAlignsMap,
+    required this.photoScalesMap,
   });
 }
 
@@ -299,6 +303,8 @@ class CollageManager extends ChangeNotifier {
             imageFile: existingPhotos[i]!.imageFile,
             imagePath: existingPhotos[i]!.imagePath,
             imageFit: existingPhotos[i]!.imageFit,
+            alignment: existingPhotos[i]!.alignment,
+            photoScale: existingPhotos[i]!.photoScale,
           );
         } else {
           // Create placeholder photo box
@@ -408,6 +414,8 @@ class CollageManager extends ChangeNotifier {
     final photoLayouts = <PhotoLayout>[];
     final photoPathsMap = <int, String>{};
     final photoFitsMap = <int, BoxFit>{};
+    final photoAlignsMap = <int, Alignment>{};
+    final photoScalesMap = <int, double>{};
 
     for (int i = 0; i < _photoBoxes.length; i++) {
       final box = _photoBoxes[i];
@@ -432,6 +440,8 @@ class CollageManager extends ChangeNotifier {
           box.imagePath!.isNotEmpty) {
         photoPathsMap[i] = box.imagePath!;
         photoFitsMap[i] = box.imageFit;
+        photoAlignsMap[i] = box.alignment;
+        photoScalesMap[i] = box.photoScale;
       }
     }
 
@@ -441,6 +451,8 @@ class CollageManager extends ChangeNotifier {
       originalAspect: _selectedAspect,
       photoPathsMap: photoPathsMap,
       photoFitsMap: photoFitsMap,
+      photoAlignsMap: photoAlignsMap,
+      photoScalesMap: photoScalesMap,
     );
   }
 
@@ -451,51 +463,45 @@ class CollageManager extends ChangeNotifier {
     // Clear current boxes
     _photoBoxes.clear();
 
-    // Get scaled layouts for new aspect ratio (like preset layouts do)
-    final scaledLayouts = _customLayoutSnapshot!.photoLayouts.map((layout) {
-      return PhotoLayout(
-        position: layout.position, // Already normalized 0-1
-        size: layout.size, // Already normalized 0-1
-      );
-    }).toList();
+    // Normalized layouts (0..1) from snapshot
+    final layouts = _customLayoutSnapshot!.photoLayouts;
 
-    // Calculate template coverage to determine stretch factors
-    double maxX = 0, maxY = 0;
-    for (final layout in scaledLayouts) {
-      final rightEdge = layout.position.dx + layout.size.width;
-      final bottomEdge = layout.position.dy + layout.size.height;
-      if (rightEdge > maxX) maxX = rightEdge;
-      if (bottomEdge > maxY) maxY = bottomEdge;
+    // Compute normalized bounds of the group
+    double minNX = double.infinity, minNY = double.infinity;
+    double maxNX = -double.infinity, maxNY = -double.infinity;
+    for (final l in layouts) {
+      minNX = math.min(minNX, l.position.dx);
+      minNY = math.min(minNY, l.position.dy);
+      maxNX = math.max(maxNX, l.position.dx + l.size.width);
+      maxNY = math.max(maxNY, l.position.dy + l.size.height);
     }
+    if (!minNX.isFinite || !minNY.isFinite) return;
 
-    // Calculate stretch factors for both dimensions
-    double stretchX = maxX < 0.95 ? 0.95 / maxX : 1.0;
-    double stretchY = maxY < 0.95 ? 0.95 / maxY : 1.0;
+    final groupNW = maxNX - minNX;
+    final groupNH = maxNY - minNY;
 
-    // Use the larger stretch factor to fill template better
-    double stretchFactor = stretchX > stretchY ? stretchX : stretchY;
+    // Normalize positions to start at 0,0 then scale anisotropically
+    // so that the group's bounds exactly fit 0..1 in both axes (no white gaps)
+    final double sX = groupNW > 0 ? 1.0 / groupNW : 1.0;
+    final double sY = groupNH > 0 ? 1.0 / groupNH : 1.0;
 
-    // Create photo boxes with new template size (exactly like preset layouts)
-    for (int i = 0; i < scaledLayouts.length; i++) {
-      final photoLayout = scaledLayouts[i];
+    for (int i = 0; i < layouts.length; i++) {
+      final l = layouts[i];
+      final nx = (l.position.dx - minNX) * sX;
+      final ny = (l.position.dy - minNY) * sY;
+      final nw = l.size.width * sX;
+      final nh = l.size.height * sY;
 
-      // Calculate actual positions and sizes based on NEW template size with stretch
-      final actualPosition = Offset(
-        photoLayout.position.dx * _templateSize.width * stretchFactor,
-        photoLayout.position.dy * _templateSize.height * stretchFactor,
-      );
-
-      // Apply stretch factor to sizes to fill template better
-      final actualSize = Size(
-        photoLayout.size.width * _templateSize.width * stretchFactor,
-        photoLayout.size.height * _templateSize.height * stretchFactor,
-      );
+      final actualPosition = Offset(nx * _templateSize.width, ny * _templateSize.height);
+      final actualSize = Size(nw * _templateSize.width, nh * _templateSize.height);
 
       // Restore photo if it existed
       PhotoBox photoBox;
       if (_customLayoutSnapshot!.photoPathsMap.containsKey(i)) {
         final imagePath = _customLayoutSnapshot!.photoPathsMap[i]!;
         final imageFit = _customLayoutSnapshot!.photoFitsMap[i] ?? BoxFit.cover;
+        final align = _customLayoutSnapshot!.photoAlignsMap[i] ?? Alignment.center;
+        final pScale = _customLayoutSnapshot!.photoScalesMap[i] ?? 1.0;
 
         photoBox = PhotoBox(
           position: actualPosition,
@@ -503,6 +509,8 @@ class CollageManager extends ChangeNotifier {
           imageFile: File(imagePath),
           imagePath: imagePath,
           imageFit: imageFit,
+          alignment: align,
+          photoScale: pScale,
         );
       } else {
         // Create placeholder
@@ -905,7 +913,19 @@ class CollageManager extends ChangeNotifier {
     _availableArea = area;
     final newSize = _sizeForAspect(_selectedAspect, screenSize: _availableArea);
     if (_templateSize != newSize) {
+      final oldSize = _templateSize;
       _templateSize = newSize;
+
+      // Scale all boxes proportionally to prevent crop/gaps when canvas shrinks/grows
+      if (oldSize.width > 0 && oldSize.height > 0 && _photoBoxes.isNotEmpty) {
+        final sx = newSize.width / oldSize.width;
+        final sy = newSize.height / oldSize.height;
+        for (final b in _photoBoxes) {
+          b.position = Offset(b.position.dx * sx, b.position.dy * sy);
+          b.size = Size(b.size.width * sx, b.size.height * sy);
+        }
+      }
+
       notifyListeners();
     }
   }

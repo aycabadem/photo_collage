@@ -39,6 +39,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 'Photo Collage',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
               ),
+              toolbarHeight: 64,
               backgroundColor: Colors.white,
               elevation: 2,
               shadowColor: Colors.black.withValues(alpha: 0.1),
