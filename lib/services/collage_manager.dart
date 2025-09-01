@@ -167,6 +167,8 @@ class CollageManager extends ChangeNotifier {
       _currentLayout = null;
       _isCustomMode = true;
       _photoBoxes.clear();
+      // In custom mode, default to no margin for free placement
+      _photoMargin = 0.0;
       notifyListeners();
       return;
     }
@@ -212,6 +214,10 @@ class CollageManager extends ChangeNotifier {
 
     // Clear selection
     _selectedBox = null;
+
+    // For preset grid layouts, start with a tiny margin so grid is visible
+    // Users can still adjust via the panel afterward
+    _photoMargin = 1.0; // ~1px default spacing for templates
 
     // Auto-enable border for layout templates - REMOVED to start without margin
     // if (!_hasGlobalBorder) {

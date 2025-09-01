@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/aspect_spec.dart';
 import '../services/collage_manager.dart';
 import '../widgets/aspect_ratio_selector.dart';
 import '../widgets/collage_canvas.dart';
@@ -21,12 +22,16 @@ class _CollageScreenState extends State<CollageScreen> {
   final TransformationController _transformationController =
       TransformationController();
 
+  bool _showAspectSlider = false;
+  double _aspectScalar = 1.0; // width/height ratio in [0.5, 2.0]
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => CollageManager(),
       child: Consumer<CollageManager>(
         builder: (context, collageManager, child) {
+          // Keep scalar in sync with current aspect when opening UI
           return Scaffold(
             appBar: AppBar(
               title: const Text(
@@ -36,6 +41,19 @@ class _CollageScreenState extends State<CollageScreen> {
               backgroundColor: Colors.white,
               elevation: 2,
               shadowColor: Colors.black.withValues(alpha: 0.1),
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(_showAspectSlider ? 64 : 0),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  height: _showAspectSlider ? 64 : 0,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: _showAspectSlider
+                      ? _buildAspectInlineSlider(context, collageManager)
+                      : const SizedBox.shrink(),
+                ),
+              ),
               actions: [
                 AspectRatioSelector(
                   selectedAspect: collageManager.selectedAspect,
@@ -44,8 +62,14 @@ class _CollageScreenState extends State<CollageScreen> {
                     final screenSize = MediaQuery.of(context).size;
                     collageManager.applyAspect(aspect, screenSize: screenSize);
                   },
-                  onCustomRatioPressed: () =>
-                      _openCustomAspectDialog(context, collageManager),
+                  onCustomRatioPressed: () {
+                    setState(() {
+                      // Initialize slider with current aspect ratio
+                      _aspectScalar = collageManager.selectedAspect.ratio
+                          .clamp(0.5, 2.0);
+                      _showAspectSlider = !_showAspectSlider;
+                    });
+                  },
                 ),
                 const SizedBox(width: 8),
                 // Save Collage button
@@ -194,6 +218,71 @@ class _CollageScreenState extends State<CollageScreen> {
           );
         },
       ),
+    );
+  }
+
+  /// Inline aspect slider UI shown under AppBar
+  Widget _buildAspectInlineSlider(
+      BuildContext context, CollageManager manager) {
+    String _fmt2(double v) {
+      final s = v.toStringAsFixed(2);
+      return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
+    }
+
+    String formatRatio(double r) {
+      if (r >= 1.0) {
+        return '${_fmt2(r)}:1';
+      } else {
+        final inv = (1.0 / r);
+        return '1:${_fmt2(inv)}';
+      }
+    }
+
+    return Row(
+      children: [
+        // Current value label
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Text(
+            formatRatio(_aspectScalar),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Live-updating slider
+        Expanded(
+          child: Slider(
+            value: _aspectScalar,
+            min: 0.5,
+            max: 2.0,
+            onChanged: (v) {
+              setState(() => _aspectScalar = v);
+              // Convert scalar to AspectSpec and apply immediately
+              final AspectSpec spec = v >= 1
+                  ? AspectSpec(w: v, h: 1, label: formatRatio(v))
+                  : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
+
+              final screenSize = MediaQuery.of(context).size;
+              manager.applyAspect(spec, screenSize: screenSize);
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Close toggle
+        IconButton(
+          onPressed: () => setState(() => _showAspectSlider = false),
+          icon: const Icon(Icons.close, size: 18),
+          visualDensity: VisualDensity.compact,
+        ),
+      ],
     );
   }
 
