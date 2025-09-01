@@ -151,7 +151,13 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                 : Colors.black.withValues(alpha: 0.15),
           ),
         ),
-        child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
       ),
     );
   }
