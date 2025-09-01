@@ -31,6 +31,11 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   late double _h; // 0..360
   late double _s; // 0..1
   late double _l; // 0..1
+  // Gradient A/B editing (compact, two-color)
+  late Color _gA;
+  late Color _gB;
+  bool _activeA = true; // which chip is active for HSL edits
+  late double _gH, _gS, _gL; // working HSL for active chip
 
   @override
   void initState() {
@@ -60,6 +65,16 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         widget.onColorChanged(_selectedColor, _selectedOpacity);
       });
     }
+
+    // Initialize gradient A/B from current gradient spec (first/last stops)
+    if (_gradient.stops.length >= 2) {
+      _gA = _gradient.stops.first.color;
+      _gB = _gradient.stops.last.color;
+    } else {
+      _gA = Colors.pink;
+      _gB = Colors.purple;
+    }
+    _loadActiveStopHsl(fromA: _activeA);
   }
 
   @override
@@ -91,7 +106,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           const SizedBox(height: 4),
           _mode == BackgroundMode.solid
               ? _buildHslControls()
-              : _buildGradientCompact(),
+              : _buildGradientTwoColorCompact(),
         ],
       ),
     );
@@ -431,6 +446,231 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         ),
       ],
     );
+  }
+
+  // New compact two‑color gradient editor (keeps presets + adds A/B chips + H/S sliders)
+  Widget _buildGradientTwoColorCompact() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // A/B chips + preview + swap
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: Row(
+            children: [
+              _colorChip(_gA, _activeA, 'A', () {
+                setState(() => _activeA = true);
+                _loadActiveStopHsl(fromA: true);
+              }),
+              const SizedBox(width: 8),
+              _colorChip(_gB, !_activeA, 'B', () {
+                setState(() => _activeA = false);
+                _loadActiveStopHsl(fromA: false);
+              }),
+              const SizedBox(width: 12),
+              // Preview bar
+              Expanded(
+                child: Container(
+                  height: 18,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(6),
+                    gradient: LinearGradient(
+                      colors: [_gA, _gB],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _swapAB,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.black.withValues(alpha: 0.15)),
+                  ),
+                  child: const Icon(Icons.swap_horiz, size: 18),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Compact H + S + L sliders for active stop
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          child: _gradientHueSlider(),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          child: _gradientSatSlider(),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          child: _gradientLightSlider(),
+        ),
+
+        // Angle slider styled like H/S/L
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          child: _angleSlider(),
+        ),
+      ],
+    );
+  }
+
+  Widget _colorChip(Color c, bool active, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: c,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: active
+                ? Colors.black.withValues(alpha: 0.35)
+                : Colors.black.withValues(alpha: 0.15),
+          ),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _gradientHueSlider() {
+    final colors = [
+      for (int i = 0; i <= 12; i++)
+        HSLColor.fromAHSL(1.0, i * 30.0, 1.0, 0.5).toColor(),
+    ];
+    return _gradientLineSlider(
+      label: _activeA ? 'H (A)' : 'H (B)',
+      valueLabel: '${_gH.round()}°',
+      colors: colors,
+      min: 0,
+      max: 360,
+      value: _gH,
+      onChanged: (v) {
+        setState(() => _gH = v);
+        _commitActiveHsl();
+      },
+    );
+  }
+
+  Widget _gradientSatSlider() {
+    final c0 = HSLColor.fromAHSL(1.0, _gH, 0.0, _gL).toColor();
+    final c1 = HSLColor.fromAHSL(1.0, _gH, 1.0, _gL).toColor();
+    return _gradientLineSlider(
+      label: _activeA ? 'S (A)' : 'S (B)',
+      valueLabel: '${(_gS * 100).round()}%',
+      colors: [c0, c1],
+      min: 0,
+      max: 1,
+      value: _gS,
+      onChanged: (v) {
+        setState(() => _gS = v);
+        _commitActiveHsl();
+      },
+    );
+  }
+
+  Widget _gradientLightSlider() {
+    final mid = HSLColor.fromAHSL(1.0, _gH, _gS, 0.5).toColor();
+    return _gradientLineSlider(
+      label: _activeA ? 'L (A)' : 'L (B)',
+      valueLabel: '${(_gL * 100).round()}%',
+      colors: [Colors.black, mid, Colors.white],
+      min: 0,
+      max: 1,
+      value: _gL,
+      onChanged: (v) {
+        setState(() => _gL = v);
+        _commitActiveHsl();
+      },
+    );
+  }
+
+  Widget _angleSlider() {
+    // Subtle grey gradient as track styling
+    return _gradientLineSlider(
+      label: 'ANGLE',
+      valueLabel: '${_gradient.angleDeg.round()}°',
+      colors: const [Color(0xFFE0E0E0), Color(0xFF757575)],
+      min: 0,
+      max: 360,
+      value: _gradient.angleDeg,
+      onChanged: (v) {
+        setState(() => _gradient = _gradient.copyWith(angleDeg: v));
+        _applyGradientLive();
+      },
+    );
+  }
+
+  void _swapAB() {
+    setState(() {
+      final tmp = _gA;
+      _gA = _gB;
+      _gB = tmp;
+      _activeA = !_activeA; // keep editing the same visual end
+    });
+    _applyGradientLive();
+  }
+
+  void _loadActiveStopHsl({required bool fromA}) {
+    final c = fromA ? _gA : _gB;
+    final hsl = HSLColor.fromColor(c);
+    _gH = hsl.hue;
+    _gS = hsl.saturation < 0.6 ? 0.9 : hsl.saturation;
+    _gL = (hsl.lightness > 0.85 || hsl.lightness < 0.15) ? 0.5 : hsl.lightness;
+  }
+
+  void _commitActiveHsl() {
+    final c = HSLColor.fromAHSL(1.0, _gH, _gS, _gL).toColor();
+    setState(() {
+      if (_activeA) {
+        _gA = c;
+      } else {
+        _gB = c;
+      }
+    });
+    _applyGradientLive();
+  }
+
+  void _applyGradientLive() {
+    _gradient = GradientSpec(
+      stops: [
+        GradientStop(offset: 0.0, color: _gA),
+        GradientStop(offset: 1.0, color: _gB),
+      ],
+      angleDeg: _gradient.angleDeg,
+    );
+    if (widget.onGradientChanged != null) {
+      widget.onGradientChanged!(_gradient, _selectedOpacity);
+    }
   }
 
   Widget _gradientPresetChip(GradientSpec spec) {
