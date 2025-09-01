@@ -530,9 +530,7 @@ class CollageManager extends ChangeNotifier {
   Future<void> addPhotoBox() async {
     final XFile? pickedFile = await _imagePicker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 85,
+      imageQuality: 95,
     );
 
     if (pickedFile != null) {
@@ -560,9 +558,7 @@ class CollageManager extends ChangeNotifier {
   Future<void> addPhotoToBox(PhotoBox targetBox) async {
     final XFile? pickedFile = await _imagePicker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
-      imageQuality: 85,
+      imageQuality: 95,
     );
 
     if (pickedFile != null) {
@@ -919,7 +915,7 @@ class CollageManager extends ChangeNotifier {
     try {
       // Create a high-quality image with the selected aspect ratio
       final double aspectRatio = _selectedAspect.ratio;
-      final int targetWidth = 1200; // High quality base width
+      final int targetWidth = 2000; // Higher quality base width
       final int targetHeight = (targetWidth / aspectRatio).round();
 
       // Create a custom painter for the collage
@@ -968,28 +964,45 @@ class CollageManager extends ChangeNotifier {
                 box.size.height * scaleY,
               );
 
-              // Draw the image with proper scaling and positioning
-              final srcRect = Rect.fromLTWH(
-                0,
-                0,
-                image.width.toDouble(),
-                image.height.toDouble(),
-              );
-              final dstRect = Rect.fromLTWH(
-                scaledPosition.dx,
-                scaledPosition.dy,
-                scaledSize.width,
-                scaledSize.height,
+              // Apply photo margin
+              final double mX = photoMargin * scaleX;
+              final double mY = photoMargin * scaleY;
+              final Rect dstRect = Rect.fromLTWH(
+                scaledPosition.dx + mX,
+                scaledPosition.dy + mY,
+                math.max(1, scaledSize.width - 2 * mX),
+                math.max(1, scaledSize.height - 2 * mY),
               );
 
-              canvas.drawImageRect(image, srcRect, dstRect, Paint());
+              // Compute source rect according to fit and alignment (cover by default)
+              final Rect srcRect = _computeSrcRectForFit(
+                image,
+                dstRect.size,
+                box.imageFit,
+                box.alignment,
+              );
+
+              // Clip for corner radius
+              final double r = cornerRadius * ((scaleX + scaleY) / 2);
+              canvas.save();
+              if (r > 0) {
+                canvas.clipRRect(RRect.fromRectAndRadius(dstRect, Radius.circular(r)));
+              } else {
+                canvas.clipRect(dstRect);
+              }
+
+              final paintImg = Paint()
+                ..isAntiAlias = true
+                ..filterQuality = FilterQuality.high;
+              canvas.drawImageRect(image, srcRect, dstRect, paintImg);
+              canvas.restore();
 
               // Draw borders if enabled
               if (_hasGlobalBorder && _globalBorderWidth > 0) {
                 _drawSimpleBorders(
                   canvas,
-                  scaledPosition,
-                  scaledSize,
+                  Offset(dstRect.left, dstRect.top),
+                  Size(dstRect.width, dstRect.height),
                   scaleX,
                   scaleY,
                 );
@@ -1035,6 +1048,37 @@ class CollageManager extends ChangeNotifier {
       // Error loading image - return null
       return null;
     }
+  }
+
+  /// Compute source crop rect for given fit/alignment
+  Rect _computeSrcRectForFit(
+    ui.Image image,
+    Size dstSize,
+    BoxFit fit,
+    Alignment alignment,
+  ) {
+    final double imgW = image.width.toDouble();
+    final double imgH = image.height.toDouble();
+    if (fit == BoxFit.fill) {
+      return Rect.fromLTWH(0, 0, imgW, imgH);
+    }
+    if (fit == BoxFit.contain) {
+      final double scale = math.min(dstSize.width / imgW, dstSize.height / imgH);
+      final double visibleW = imgW;
+      final double visibleH = imgH;
+      return Rect.fromLTWH(0, 0, visibleW, visibleH);
+    }
+    // Default: cover
+    final double scale = math.max(dstSize.width / imgW, dstSize.height / imgH);
+    final double cropW = dstSize.width / scale;
+    final double cropH = dstSize.height / scale;
+    final double extraW = imgW - cropW;
+    final double extraH = imgH - cropH;
+    final double alignX = (alignment.x + 1) / 2; // 0..1
+    final double alignY = (alignment.y + 1) / 2; // 0..1
+    final double left = extraW * alignX.clamp(0.0, 1.0);
+    final double top = extraH * alignY.clamp(0.0, 1.0);
+    return Rect.fromLTWH(left, top, cropW, cropH);
   }
 
   /// Draw simple borders for save collage (all edges)
