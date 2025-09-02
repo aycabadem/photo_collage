@@ -46,25 +46,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     _gradient = widget.initialGradient ?? GradientSpec.presetPinkPurple();
     final hsl = HSLColor.fromColor(_selectedColor);
     _h = hsl.hue;
-    _s = hsl.saturation;
+    _s = 1.0; // Start Saturation slider at max by default
     _l = hsl.lightness;
-    // Başlangıç: ana rengi göstermek için L ve S değerlerini orta/yüksekten başlat
-    bool adjusted = false;
-    if (_l > 0.85 || _l < 0.15) {
-      _l = 0.5;
-      adjusted = true;
-    }
-    if (_s < 0.6) {
-      _s = 0.9; // doygunluğu yüksekten başlat
-      adjusted = true;
-    }
-    if (adjusted && _mode == BackgroundMode.solid) {
-      // Canlı önizleme için ilk açılışta da uygula
-      _selectedColor = HSLColor.fromAHSL(1.0, _h, _s, _l).toColor();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onColorChanged(_selectedColor, _selectedOpacity);
-      });
-    }
+    // İlk açılışta mevcut rengi aynen koru; otomatik doygunluk/aydınlık ayarı yapma.
 
     // Initialize gradient A/B from current gradient spec (first/last stops)
     if (_gradient.stops.length >= 2) {
@@ -199,6 +183,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _h = v);
         _applyHslLive();
       },
+      divisions: 360,
+      snapToEnds: true,
     );
   }
 
@@ -216,6 +202,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _s = v);
         _applyHslLive();
       },
+      divisions: 100,
+      snapToEnds: true,
     );
   }
 
@@ -232,6 +220,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _l = v);
         _applyHslLive();
       },
+      divisions: 100,
+      snapToEnds: true,
     );
   }
 
@@ -243,6 +233,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     required double max,
     required double value,
     required ValueChanged<double> onChanged,
+    int? divisions,
+    bool snapToEnds = false,
   }) {
     return Column(
       children: [
@@ -274,7 +266,21 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                   overlayShape: SliderComponentShape.noOverlay,
                   thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
                 ),
-                child: Slider(min: min, max: max, value: value, onChanged: onChanged),
+                child: Slider(
+                  min: min,
+                  max: max,
+                  value: value,
+                  divisions: divisions,
+                  onChanged: onChanged,
+                  onChangeEnd: (v) {
+                    if (!snapToEnds) return;
+                    final thr = (max - min) * 0.02; // 2% snapping
+                    double snapped = v;
+                    if ((v - min).abs() <= thr) snapped = min;
+                    if ((max - v).abs() <= thr) snapped = max;
+                    if (snapped != v) onChanged(snapped);
+                  },
+                ),
               ),
             ],
           ),
@@ -584,6 +590,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _gH = v);
         _commitActiveHsl();
       },
+      divisions: 360,
+      snapToEnds: true,
     );
   }
 
@@ -601,6 +609,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _gS = v);
         _commitActiveHsl();
       },
+      divisions: 100,
+      snapToEnds: true,
     );
   }
 
@@ -617,6 +627,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _gL = v);
         _commitActiveHsl();
       },
+      divisions: 100,
+      snapToEnds: true,
     );
   }
 
@@ -633,6 +645,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _gradient = _gradient.copyWith(angleDeg: v));
         _applyGradientLive();
       },
+      divisions: 360,
+      snapToEnds: true,
     );
   }
 
