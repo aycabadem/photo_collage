@@ -162,9 +162,37 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           _saturationSlider(),
           const SizedBox(height: 8),
           _lightnessSlider(),
+          const SizedBox(height: 12),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: _resetToWhite,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Reset'),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _resetToWhite() {
+    setState(() {
+      _mode = BackgroundMode.solid;
+      _selectedColor = Colors.white;
+      _selectedOpacity = 1.0;
+      final hsl = HSLColor.fromColor(_selectedColor);
+      _h = hsl.hue;
+      _s = 0.0;
+      _l = hsl.lightness;
+    });
+    widget.onColorChanged(_selectedColor, _selectedOpacity);
   }
 
   Widget _hueSlider() {
