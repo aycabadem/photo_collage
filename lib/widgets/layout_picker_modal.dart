@@ -139,7 +139,7 @@ class LayoutPickerModal extends StatelessWidget {
 
   Widget _buildLayoutGrid() {
     // Get all layouts
-    List<LayoutTemplate> layouts = LayoutTemplates.templates;
+    List<LayoutTemplate> layouts = _uniqueLayoutsBySignature(LayoutTemplates.templates);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -158,6 +158,26 @@ class LayoutPickerModal extends StatelessWidget {
       ),
     );
   }
+
+  // Deduplicate visually identical layouts by rounding rects to 1 decimal and hashing
+  List<LayoutTemplate> _uniqueLayoutsBySignature(List<LayoutTemplate> all) {
+    final seen = <String>{};
+    final result = <LayoutTemplate>[];
+    for (final t in all) {
+      final sigParts = t.photoLayouts
+          .map((p) =>
+              '${_r(p.position.dx)},${_r(p.position.dy)},${_r(p.size.width)},${_r(p.size.height)}')
+          .toList()
+        ..sort();
+      final sig = sigParts.join('|');
+      if (seen.add(sig)) {
+        result.add(t);
+      }
+    }
+    return result;
+  }
+
+  String _r(double v) => (v * 10).round().toString(); // 1 decimal rounding key
 
   Widget _buildModernLayoutTile(LayoutTemplate layout, BuildContext context) {
     return GestureDetector(
