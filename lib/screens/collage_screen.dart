@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:math' as math;
 import '../models/aspect_spec.dart';
 import '../models/background.dart';
 import '../services/collage_manager.dart';
@@ -38,7 +37,7 @@ class _CollageScreenState extends State<CollageScreen> {
           return Scaffold(
             appBar: AppBar(
               title: const Text(
-                'Photo Collage',
+                'Custom Collage',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
               ),
               toolbarHeight: 64,
@@ -89,8 +88,8 @@ class _CollageScreenState extends State<CollageScreen> {
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Color(0xFFFFDBB6), // Accent
-                          Color(0xFFFFF2EF), // Surface
+                          Color(0xFFD0DDD0), // Tertiary
+                          Color(0xFFF0F0D7), // Surface
                         ],
                         begin: Alignment(-0.819152, -0.573576), // ~35°
                         end: Alignment(0.819152, 0.573576),     // ~35°

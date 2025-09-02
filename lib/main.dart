@@ -10,11 +10,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // App-wide color palette
-    const primary = Color(0xFF5D688A); // #5D688A
-    const secondary = Color(0xFFF7A5A5); // #F7A5A5
-    const tertiary = Color(0xFFFFDBB6); // #FFDBB6 (accent)
-    const surface = Color(0xFFFFF2EF); // #FFF2EF
+    // App-wide color palette (updated)
+    const primary = Color(0xFF727D73); // #727D73
+    const secondary = Color(0xFFAAB99A); // #AAB99A
+    const tertiary = Color(0xFFD0DDD0); // #D0DDD0
+    const surface = Color(0xFFF0F0D7); // #F0F0D7
 
     final scheme = const ColorScheme.light(
       primary: primary,
@@ -29,8 +29,26 @@ class MyApp extends StatelessWidget {
       onBackground: Colors.black87,
     );
 
+    TextTheme _bolden(TextTheme t) => TextTheme(
+          displayLarge: t.displayLarge?.copyWith(fontWeight: FontWeight.w700),
+          displayMedium: t.displayMedium?.copyWith(fontWeight: FontWeight.w700),
+          displaySmall: t.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+          headlineLarge: t.headlineLarge?.copyWith(fontWeight: FontWeight.w700),
+          headlineMedium: t.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
+          headlineSmall: t.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+          titleLarge: t.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+          titleMedium: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          titleSmall: t.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          bodyLarge: t.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+          bodyMedium: t.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+          bodySmall: t.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+          labelLarge: t.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+          labelMedium: t.labelMedium?.copyWith(fontWeight: FontWeight.w700),
+          labelSmall: t.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+        );
+
     return MaterialApp(
-      title: 'Photo Collage',
+      title: 'Custom Collage',
       theme: ThemeData(
         colorScheme: scheme,
         scaffoldBackgroundColor: surface,
@@ -43,6 +61,8 @@ class MyApp extends StatelessWidget {
           actionsIconTheme: IconThemeData(color: primary),
         ),
         iconTheme: const IconThemeData(color: primary),
+        textTheme: _bolden(ThemeData.light().textTheme),
+        primaryTextTheme: _bolden(ThemeData.light().primaryTextTheme),
         useMaterial3: true,
       ),
       home: const CollageScreen(),
