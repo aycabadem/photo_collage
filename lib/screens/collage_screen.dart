@@ -64,7 +64,7 @@ class _CollageScreenState extends State<CollageScreen> {
               actions: [
                 AspectRatioSelector(
                   selectedAspect: collageManager.selectedAspect,
-                  presets: collageManager.presets,
+                  presets: collageManager.presetsWithCustom,
                   onAspectChanged: (aspect) {
                     collageManager.applyAspect(aspect);
                   },
@@ -289,6 +289,11 @@ class _CollageScreenState extends State<CollageScreen> {
             },
             onChangeEnd: (_) {
               setState(() => _isAspectDragging = false);
+              // Persist as the current custom aspect in the selector list
+              final AspectSpec spec = _aspectScalar >= 1
+                  ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
+                  : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
+              manager.setCustomAspect(spec);
             },
           ),
         ),

@@ -50,6 +50,7 @@ class CollageManager extends ChangeNotifier {
 
   // State variables
   AspectSpec _selectedAspect = _presets.firstWhere((a) => a.label == '9:16');
+  AspectSpec? _customAspect; // Last custom ratio selected via slider
   Size _templateSize = Size(baseWidth, baseWidth);
   Size? _availableArea; // last known canvas available area from LayoutBuilder
   final List<PhotoBox> _photoBoxes = [];
@@ -96,6 +97,9 @@ class CollageManager extends ChangeNotifier {
   List<PhotoBox> get photoBoxes => List.unmodifiable(_photoBoxes);
   PhotoBox? get selectedBox => _selectedBox;
   List<AspectSpec> get presets => List.unmodifiable(_presets);
+  List<AspectSpec> get presetsWithCustom =>
+      _customAspect != null ? List.unmodifiable([..._presets, _customAspect!]) : presets;
+  AspectSpec? get customAspect => _customAspect;
 
   // Background color and opacity getters
   Color get backgroundColor => _backgroundColor;
@@ -411,6 +415,12 @@ class CollageManager extends ChangeNotifier {
       }
     }
 
+    notifyListeners();
+  }
+
+  /// Set or update the current custom aspect entry (shown in selector list)
+  void setCustomAspect(AspectSpec custom) {
+    _customAspect = custom;
     notifyListeners();
   }
 
