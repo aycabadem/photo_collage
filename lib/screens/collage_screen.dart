@@ -226,11 +226,12 @@ class _CollageScreenState extends State<CollageScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFFFCFAEE),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0x33DA8359)),
+            border: Border.all(color: const Color(0x33A5B68D)),
           ),
           child: Text(
             formatRatio(_aspectScalar),
-            style: const TextStyle(
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),
@@ -239,30 +240,37 @@ class _CollageScreenState extends State<CollageScreen> {
         const SizedBox(width: 12),
         // Live-updating slider
         Expanded(
-          child: Slider(
-            value: _aspectScalar,
-            min: 0.5,
-            max: 2.0,
-            onChanged: (v) {
-              _isAspectDragging = true;
-              setState(() => _aspectScalar = v);
-              // Convert scalar to AspectSpec and apply immediately
-              final AspectSpec spec = v >= 1
-                  ? AspectSpec(w: v, h: 1, label: formatRatio(v))
-                  : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: const Color(0xFFA5B68D),
+              inactiveTrackColor: const Color(0x4DA5B68D),
+              thumbColor: const Color(0xFFA5B68D),
+            ),
+            child: Slider(
+              value: _aspectScalar,
+              min: 0.5,
+              max: 2.0,
+              onChanged: (v) {
+                _isAspectDragging = true;
+                setState(() => _aspectScalar = v);
+                // Convert scalar to AspectSpec and apply immediately
+                final AspectSpec spec = v >= 1
+                    ? AspectSpec(w: v, h: 1, label: formatRatio(v))
+                    : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
 
-              final screenSize = MediaQuery.of(context).size;
-              manager.applyAspect(spec, screenSize: screenSize);
-            },
-            onChangeEnd: (_) {
-              setState(() => _isAspectDragging = false);
-              // Persist as the current custom aspect in the selector list
-              final AspectSpec spec = _aspectScalar >= 1
-                  ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
-                  : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
-              manager.setCustomAspect(spec);
+                final screenSize = MediaQuery.of(context).size;
+                manager.applyAspect(spec, screenSize: screenSize);
+              },
+              onChangeEnd: (_) {
+                setState(() => _isAspectDragging = false);
+                // Persist as the current custom aspect in the selector list
+                final AspectSpec spec = _aspectScalar >= 1
+                    ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
+                    : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
+                manager.setCustomAspect(spec);
             },
           ),
+        ),
         ),
         const SizedBox(width: 8),
       ],
@@ -378,11 +386,12 @@ class _CollageScreenState extends State<CollageScreen> {
           decoration: BoxDecoration(
             color: const Color(0xFFFCFAEE),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0x33DA8359)),
+            border: Border.all(color: const Color(0x33A5B68D)),
           ),
           child: Text(
             formatRatio(_aspectScalar),
-            style: const TextStyle(
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),
@@ -390,29 +399,36 @@ class _CollageScreenState extends State<CollageScreen> {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: Slider(
-            value: _aspectScalar,
-            min: 0.5,
-            max: 2.0,
-            onChanged: (v) {
-              _isAspectDragging = true;
-              setLocal(() => _aspectScalar = v);
-              final AspectSpec spec = v >= 1
-                  ? AspectSpec(w: v, h: 1, label: formatRatio(v))
-                  : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
-              final screenSize = MediaQuery.of(context).size;
-              manager.applyAspect(spec, screenSize: screenSize);
-            },
-            onChangeEnd: (_) {
-              setLocal(() => _isAspectDragging = false);
-              final AspectSpec spec = _aspectScalar >= 1
-                  ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
-                  : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
-              manager.setCustomAspect(spec);
-              // Collapse only the slider, keep sheet open
-              hideSlider();
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: const Color(0xFFA5B68D),
+              inactiveTrackColor: const Color(0x4DA5B68D),
+              thumbColor: const Color(0xFFA5B68D),
+            ),
+            child: Slider(
+              value: _aspectScalar,
+              min: 0.5,
+              max: 2.0,
+              onChanged: (v) {
+                _isAspectDragging = true;
+                setLocal(() => _aspectScalar = v);
+                final AspectSpec spec = v >= 1
+                    ? AspectSpec(w: v, h: 1, label: formatRatio(v))
+                    : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
+                final screenSize = MediaQuery.of(context).size;
+                manager.applyAspect(spec, screenSize: screenSize);
+              },
+              onChangeEnd: (_) {
+                setLocal(() => _isAspectDragging = false);
+                final AspectSpec spec = _aspectScalar >= 1
+                    ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
+                    : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
+                manager.setCustomAspect(spec);
+                // Collapse only the slider, keep sheet open
+                hideSlider();
             },
           ),
+        ),
         ),
       ],
     );

@@ -270,7 +270,14 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       children: [
         Row(
           children: [
-            Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
             const Spacer(),
             Text(
               valueLabel,
@@ -591,7 +598,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         width: 28,
         height: 28,
         decoration: BoxDecoration(
-          color: c,
+          color: active ? const Color(0xFFA5B68D) : const Color(0xFFFCFAEE),
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: active
@@ -601,7 +608,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
+                    color: const Color(0x26000000),
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -611,8 +618,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         child: Center(
           child: Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: active ? const Color(0xFFFCFAEE) : const Color(0xFFA5B68D),
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),

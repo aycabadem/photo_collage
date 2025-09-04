@@ -40,7 +40,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
         width: MediaQuery.of(context).size.width * 0.8,
         height: MediaQuery.of(context).size.height * 0.7,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFFFCFAEE),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -49,7 +49,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: const Color(0xFFFCFAEE),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -60,7 +60,10 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                 children: [
                   Text(
                     'Crop Photo',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(color: const Color(0xFFA5B68D)),
                   ),
                   Row(
                     children: [
@@ -88,8 +91,8 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                 child: Container(
                   margin: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!, width: 2),
-                    color: Colors.grey[800],
+                    border: Border.all(color: const Color(0xFFA5B68D), width: 1.0),
+                    color: const Color(0xFFFCFAEE),
                   ),
                   child: SizedBox(
                     width: widget.photoBox.size.width,
@@ -161,7 +164,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                               },
                             )
                           : Container(
-                              color: Colors.grey[300],
+                              color: const Color(0xFFFCFAEE),
                               child: const Center(
                                 child: Icon(Icons.image, size: 64),
                               ),
@@ -172,22 +175,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
               ),
             ),
 
-            // Instructions
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Text(
-                    '📱 Gesture Instructions:',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text('👆 Drag: Move photo'),
-                  const Text('🤏 Pinch: Zoom in/out'),
-                  const Text('🔄 Reset: Return to original'),
-                ],
-              ),
-            ),
+            // Instructions removed per design: keep editor area clean
           ],
         ),
       ),
