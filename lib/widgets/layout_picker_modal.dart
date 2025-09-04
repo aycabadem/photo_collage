@@ -202,8 +202,8 @@ class LayoutPickerModal extends StatelessWidget {
                 size: const Size.square(double.infinity),
                 painter: ModernLayoutPreviewPainter(
                   layout.photoLayouts,
-                  fillColor: Theme.of(context).colorScheme.secondary,
-                  strokeColor: Colors.white,
+                  fillColor: const Color(0xFFFCFAEE), // background fill
+                  strokeColor: const Color(0xFFA5B68D), // frame color
                 ),
               ),
             ),
