@@ -67,17 +67,17 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     return Container(
       width: size.width,
       constraints: BoxConstraints(maxHeight: size.height * 0.34),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+      decoration: const BoxDecoration(
+        color: Color(0xFFFCFAEE),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Color(0x33000000), // ~20% black
             blurRadius: 20,
-            offset: const Offset(0, -5),
+            offset: Offset(0, -5),
             spreadRadius: 5,
           ),
         ],

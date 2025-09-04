@@ -42,7 +42,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
               ),
               toolbarHeight: 64,
-              backgroundColor: Theme.of(context).colorScheme.surface,
+              backgroundColor: const Color(0xFFFCFAEE),
               elevation: 0,
               shadowColor: Colors.transparent,
               actions: [
@@ -65,14 +65,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 Positioned.fill(
                   child: Container(
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFFFCFAEE), // Tertiary
-                          Color(0xFFDA8359), // Surface
-                        ],
-                        begin: Alignment(-0.819152, -0.573576), // ~35°
-                        end: Alignment(0.819152, 0.573576),     // ~35°
-                      ),
+                      color: Color(0xFFFCFAEE),
                     ),
                   ),
                 ),
@@ -231,9 +224,9 @@ class _CollageScreenState extends State<CollageScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: const Color(0xFFFCFAEE),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: const Color(0x33DA8359)),
           ),
           child: Text(
             formatRatio(_aspectScalar),
@@ -301,9 +294,9 @@ class _CollageScreenState extends State<CollageScreen> {
         return StatefulBuilder(
           builder: (context, setLocal) => Container(
             padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewPadding.bottom),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: const BorderRadius.only(
+            decoration: const BoxDecoration(
+              color: Color(0xFFFCFAEE),
+              borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
               ),
@@ -383,9 +376,9 @@ class _CollageScreenState extends State<CollageScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: const Color(0xFFFCFAEE),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: const Color(0x33DA8359)),
           ),
           child: Text(
             formatRatio(_aspectScalar),
