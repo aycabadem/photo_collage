@@ -68,7 +68,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       width: size.width,
       constraints: BoxConstraints(maxHeight: size.height * 0.34),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -127,12 +127,14 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: active ? Colors.black.withValues(alpha: 0.06) : Colors.transparent,
+          color: active
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.10)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: active
-                ? Colors.black.withValues(alpha: 0.25)
-                : Colors.black.withValues(alpha: 0.15),
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.30)
+                : Theme.of(context).colorScheme.primary.withOpacity(0.20),
           ),
         ),
         child: Text(
@@ -270,7 +272,13 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           children: [
             Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
             const Spacer(),
-            Text(valueLabel, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            Text(
+              valueLabel,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.75),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 4),
@@ -366,14 +374,20 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                 width: 52,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.grey[300]!),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.30),
+                  ),
                 ),
                 child: Center(
                   child: Text(
                     '${(_selectedOpacity * 100).round()}%',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
               ),
@@ -392,9 +406,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           Text(
             'SELECTED COLOR',
             style: TextStyle(
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.primary,
               fontSize: 12,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
@@ -404,7 +418,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
             decoration: BoxDecoration(
               color: _selectedColor.withValues(alpha: _selectedOpacity),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.20),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -519,7 +535,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
-                    border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.20),
+                    ),
                   ),
                 ),
               ),
@@ -530,9 +548,11 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                   width: 28,
                   height: 28,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.black.withValues(alpha: 0.15)),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.25),
+                    ),
                   ),
                   child: const Icon(Icons.swap_horiz, size: 18),
                 ),
@@ -575,8 +595,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: active
-                ? Colors.black.withValues(alpha: 0.35)
-                : Colors.black.withValues(alpha: 0.15),
+                ? Theme.of(context).colorScheme.primary.withOpacity(0.50)
+                : Theme.of(context).colorScheme.primary.withOpacity(0.25),
           ),
           boxShadow: active
               ? [
@@ -740,7 +760,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.1)),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.20),
+          ),
         ),
       ),
     );

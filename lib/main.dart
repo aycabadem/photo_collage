@@ -11,10 +11,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // App-wide color palette (updated)
-    const primary = Color(0xFF727D73); // #727D73
-    const secondary = Color(0xFFAAB99A); // #AAB99A
-    const tertiary = Color(0xFFD0DDD0); // #D0DDD0
-    const surface = Color(0xFFF0F0D7); // #F0F0D7
+    const primary = Color(0xFFA5B68D); // #A5B68D
+    const secondary = Color(0xFFECDFCC); // #ECDFCC
+    const tertiary = Color(0xFFFCFAEE); // #FCFAEE
+    const surface = Color(0xFFDA8359); // #DA8359
 
     final scheme = const ColorScheme.light(
       primary: primary,

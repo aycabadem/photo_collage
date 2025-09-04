@@ -125,8 +125,8 @@ class LayoutTemplates {
       photoCount: 3,
       photoLayouts: [
         PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.67, 1.0)),
-        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.5)),
-        PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.34, 1.0)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 1.0)),
       ],
     ),
     LayoutTemplate(

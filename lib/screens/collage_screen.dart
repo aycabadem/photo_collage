@@ -26,6 +26,7 @@ class _CollageScreenState extends State<CollageScreen> {
   bool _showAspectSlider = false;
   double _aspectScalar = 1.0; // width/height ratio in [0.5, 2.0]
   bool _isAspectDragging = false;
+  String? _activeTool;
 
   @override
   Widget build(BuildContext context) {
@@ -44,38 +45,16 @@ class _CollageScreenState extends State<CollageScreen> {
               backgroundColor: Theme.of(context).colorScheme.surface,
               elevation: 0,
               shadowColor: Colors.transparent,
-              // No flexibleSpace gradient (reverted to solid surface)
-              bottom: PreferredSize(
-                preferredSize: Size.fromHeight(_showAspectSlider ? 64 : 0),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  height: _showAspectSlider ? 64 : 0,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: _showAspectSlider
-                      ? _buildAspectInlineSlider(context, collageManager)
-                      : const SizedBox.shrink(),
-                ),
-              ),
               actions: [
-                AspectRatioSelector(
-                  selectedAspect: collageManager.selectedAspect,
-                  presets: collageManager.presetsWithCustom,
-                  onAspectChanged: (aspect) {
-                    collageManager.applyAspect(aspect);
-                  },
-                  onCustomRatioPressed: () {
-                    setState(() {
-                      _aspectScalar = collageManager.selectedAspect.ratio.clamp(
-                        0.5,
-                        2.0,
-                      );
-                      _showAspectSlider = !_showAspectSlider;
-                    });
-                  },
+                IconButton(
+                  tooltip: 'Add Photo Box',
+                  icon: const Icon(Icons.camera_alt),
+                  onPressed: () => collageManager.addPhotoBox(),
+                ),
+                IconButton(
+                  tooltip: 'Save Collage',
+                  icon: const Icon(Icons.save),
+                  onPressed: () => _saveCollage(context, collageManager),
                 ),
                 const SizedBox(width: 8),
               ],
@@ -88,8 +67,8 @@ class _CollageScreenState extends State<CollageScreen> {
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          Color(0xFFD0DDD0), // Tertiary
-                          Color(0xFFF0F0D7), // Surface
+                          Color(0xFFFCFAEE), // Tertiary
+                          Color(0xFFDA8359), // Surface
                         ],
                         begin: Alignment(-0.819152, -0.573576), // ~35°
                         end: Alignment(0.819152, 0.573576),     // ~35°
@@ -190,36 +169,32 @@ class _CollageScreenState extends State<CollageScreen> {
                       // Layouts
                       _buildBottomBarButton(
                         icon: Icons.grid_view,
-                        onPressed: () =>
-                            _showLayoutPicker(context, collageManager),
+                        label: 'Layout',
+                        onPressed: () => _showLayoutPicker(context, collageManager),
                         isActive: false,
                       ),
                       // Margins / Border panel
                       _buildBottomBarButton(
                         icon: Icons.border_all,
-                        onPressed: () =>
-                            _showBorderPanel(context, collageManager),
+                        label: 'Spacing',
+                        onPressed: () => _showBorderPanel(context, collageManager),
                         isActive: false,
                       ),
                       // Background color
                       _buildBottomBarButton(
                         icon: Icons.format_paint,
-                        onPressed: () =>
-                            _showColorPicker(context, collageManager),
+                        label: 'Background',
+                        onPressed: () => _toggleTool(context, 'background', () => _showColorPicker(context, collageManager)),
                         isActive: false,
                       ),
-                      // Add photo
+                      // Aspect panel
                       _buildBottomBarButton(
-                        icon: Icons.camera_alt,
-                        onPressed: () => collageManager.addPhotoBox(),
+                        icon: Icons.aspect_ratio,
+                        label: 'Aspect',
+                        onPressed: () => _toggleTool(context, 'aspect', () => _showAspectPanel(context, collageManager)),
                         isActive: false,
                       ),
-                      // Save collage (moved from AppBar)
-                      _buildBottomBarButton(
-                        icon: Icons.save,
-                        onPressed: () => _saveCollage(context, collageManager),
-                        isActive: false,
-                      ),
+                      // Save was moved to AppBar
                     ],
                   ),
                 ),
@@ -297,11 +272,154 @@ class _CollageScreenState extends State<CollageScreen> {
           ),
         ),
         const SizedBox(width: 8),
-        // Close toggle
-        IconButton(
-          onPressed: () => setState(() => _showAspectSlider = false),
-          icon: const Icon(Icons.close, size: 18),
-          visualDensity: VisualDensity.compact,
+      ],
+    );
+  }
+
+  void _toggleTool(BuildContext context, String key, VoidCallback open) {
+    if (_activeTool == key) {
+      Navigator.of(context).maybePop();
+      _activeTool = null;
+      return;
+    }
+    _activeTool = key;
+    open();
+  }
+
+  // Aspect as a bottom sheet: presets + slider
+  void _showAspectPanel(BuildContext context, CollageManager manager) {
+    // Initialize current ratio for potential slider use
+    setState(() {
+      _aspectScalar = manager.selectedAspect.ratio.clamp(0.5, 2.0);
+    });
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        bool showSlider = false;
+        return StatefulBuilder(
+          builder: (context, setLocal) => Container(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewPadding.bottom),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      AspectRatioSelector(
+                        selectedAspect: manager.selectedAspect,
+                        presets: manager.presetsWithCustom,
+                        onAspectChanged: (aspect) {
+                          manager.applyAspect(aspect);
+                          // Rebuild header instantly so selection reflects
+                          setLocal(() {});
+                        },
+                        onCustomRatioPressed: () {
+                          setLocal(() {
+                            showSlider = true;
+                            _aspectScalar = manager.selectedAspect.ratio.clamp(0.5, 2.0);
+                          });
+                        },
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      )
+                    ],
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: showSlider
+                        ? Padding(
+                            key: const ValueKey('slider'),
+                            padding: const EdgeInsets.only(top: 8, bottom: 10),
+                            child: _buildAspectSliderInlineBody(
+                              context,
+                              manager,
+                              setLocal,
+                              () => setLocal(() {
+                                    showSlider = false;
+                                  }),
+                            ),
+                          )
+                        : const SizedBox.shrink(key: ValueKey('empty')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ).whenComplete(() {
+      _activeTool = null;
+    });
+  }
+
+  // Slider body used in bottom sheet; closes on change end
+  Widget _buildAspectSliderInlineBody(
+    BuildContext context,
+    CollageManager manager,
+    void Function(void Function()) setLocal,
+    VoidCallback hideSlider,
+  ) {
+    String _fmt2(double v) {
+      final s = v.toStringAsFixed(2);
+      return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
+    }
+    String formatRatio(double r) => r >= 1.0 ? '${_fmt2(r)}:1' : '1:${_fmt2(1.0 / r)}';
+
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: Text(
+            formatRatio(_aspectScalar),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Slider(
+            value: _aspectScalar,
+            min: 0.5,
+            max: 2.0,
+            onChanged: (v) {
+              _isAspectDragging = true;
+              setLocal(() => _aspectScalar = v);
+              final AspectSpec spec = v >= 1
+                  ? AspectSpec(w: v, h: 1, label: formatRatio(v))
+                  : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
+              final screenSize = MediaQuery.of(context).size;
+              manager.applyAspect(spec, screenSize: screenSize);
+            },
+            onChangeEnd: (_) {
+              setLocal(() => _isAspectDragging = false);
+              final AspectSpec spec = _aspectScalar >= 1
+                  ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
+                  : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
+              manager.setCustomAspect(spec);
+              // Collapse only the slider, keep sheet open
+              hideSlider();
+            },
+          ),
         ),
       ],
     );
@@ -450,6 +568,7 @@ class _CollageScreenState extends State<CollageScreen> {
   // Build bottom bar button
   Widget _buildBottomBarButton({
     required IconData icon,
+    String? label,
     required VoidCallback onPressed,
     required bool isActive,
     Widget? child,
@@ -458,12 +577,30 @@ class _CollageScreenState extends State<CollageScreen> {
       return child;
     }
 
+    final color = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: onPressed,
-      child: Icon(
-        icon,
-        color: Theme.of(context).colorScheme.primary,
-        size: 28, // Sadece icon, hiç arka plan yok
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: 28,
+          ),
+          if (label != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
