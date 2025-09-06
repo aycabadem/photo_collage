@@ -93,7 +93,7 @@ class LayoutPickerModal extends StatelessWidget {
           color: const Color(0xFFFCFAEE),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -190,7 +190,7 @@ class LayoutPickerModal extends StatelessWidget {
           color: const Color(0xFFFCFAEE),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
           ),
         ),
         child: Stack(

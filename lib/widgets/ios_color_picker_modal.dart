@@ -69,11 +69,11 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       constraints: BoxConstraints(maxHeight: size.height * 0.34),
       decoration: const BoxDecoration(
         color: Color(0xFFFCFAEE),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: Color(0x33000000), // ~20% black
             blurRadius: 20,
@@ -128,13 +128,13 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: active
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.10)
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.10)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: active
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.30)
-                : Theme.of(context).colorScheme.primary.withOpacity(0.20),
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.30)
+                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.20),
           ),
         ),
         child: Text(
@@ -148,10 +148,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     );
   }
 
-  Widget _buildColorGrid() {
-    // Replaced by HSL sliders. Keep method for compatibility if referenced.
-    return _buildHslControls();
-  }
+  // Removed: legacy color grid (replaced by HSL sliders)
 
   Widget _buildHslControls() {
     return Padding(
@@ -283,7 +280,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
               valueLabel,
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.75),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.75),
               ),
             ),
           ],
@@ -340,176 +337,11 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     }
   }
 
-  Widget _buildOpacitySlider() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Compact: remove label to save space
-          Row(
-            children: [
-              Expanded(
-                child: SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    trackHeight: 4,
-                    thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 8,
-                    ),
-                    overlayShape: SliderComponentShape.noOverlay,
-                  ),
-                  child: Slider(
-                    value: _selectedOpacity,
-                    min: 0.0,
-                    max: 1.0,
-                    divisions: 100,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedOpacity = value;
-                      });
-                      // Live preview: apply immediately without closing
-                      if (_mode == BackgroundMode.solid) {
-                        widget.onColorChanged(_selectedColor, _selectedOpacity);
-                      } else if (widget.onGradientChanged != null) {
-                        widget.onGradientChanged!(_gradient, _selectedOpacity);
-                      }
-                    },
-                  ),
-                ),
-              ),
-              Container(
-                width: 52,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.30),
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    '${(_selectedOpacity * 100).round()}%',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSelectedColorPreview() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          Text(
-            'SELECTED COLOR',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: 80,
-            height: 50,
-            decoration: BoxDecoration(
-              color: _selectedColor.withValues(alpha: _selectedOpacity),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  List<Color> _generateColorGrid() {
-    final colors = <Color>[];
+  // Removed: unused color grid generator
 
-    // First row: Grays
-    for (int i = 0; i < 12; i++) {
-      final grayValue = (255 * (i / 11)).round();
-      colors.add(Color.fromRGBO(grayValue, grayValue, grayValue, 1));
-    }
-
-    // Next 6 rows: Color spectrum
-    for (int row = 0; row < 6; row++) {
-      for (int col = 0; col < 12; col++) {
-        final hue = (col / 11) * 360;
-        final saturation = 0.3 + (row / 5) * 0.7;
-        final lightness = 0.2 + (row / 5) * 0.6;
-
-        colors.add(
-          HSLColor.fromAHSL(1.0, hue, saturation, lightness).toColor(),
-        );
-      }
-    }
-
-    return colors;
-  }
-
-  Widget _buildGradientCompact() {
-    return Column(
-      children: [
-        // Presets row
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _gradientPresetChip(GradientSpec.presetPinkPurple()),
-              _gradientPresetChip(GradientSpec.presetTealBlue()),
-              _gradientPresetChip(GradientSpec.presetSunset()),
-              _gradientPresetChip(GradientSpec.presetLime()),
-            ],
-          ),
-        ),
-        // Angle slider
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          child: Row(
-            children: [
-              const Text('ANGLE', style: TextStyle(fontSize: 12)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Slider(
-                  value: _gradient.angleDeg,
-                  min: 0,
-                  max: 360,
-                  divisions: 36,
-                  onChanged: (v) {
-                    setState(() => _gradient = _gradient.copyWith(angleDeg: v));
-                    if (widget.onGradientChanged != null) {
-                      widget.onGradientChanged!(_gradient, _selectedOpacity);
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  // Removed: _buildGradientCompact (unused legacy)
 
   // New compact two‑color gradient editor (keeps presets + adds A/B chips + H/S sliders)
   Widget _buildGradientTwoColorCompact() {
@@ -543,7 +375,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                       end: Alignment.centerRight,
                     ),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.20),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.20),
                     ),
                   ),
                 ),
@@ -558,7 +390,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.25),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
                     ),
                   ),
                   child: const Icon(Icons.swap_horiz, size: 18),
@@ -602,8 +434,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: active
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.50)
-                : Theme.of(context).colorScheme.primary.withOpacity(0.25),
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.50)
+                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
           ),
           boxShadow: active
               ? [
@@ -748,30 +580,5 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     }
   }
 
-  Widget _gradientPresetChip(GradientSpec spec) {
-    return GestureDetector(
-      onTap: () {
-        setState(() => _gradient = spec);
-        if (widget.onGradientChanged != null) {
-          widget.onGradientChanged!(spec, _selectedOpacity);
-        }
-      },
-      child: Container(
-        width: 48,
-        height: 28,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          gradient: LinearGradient(
-            colors: spec.stops.map((s) => s.color).toList(),
-            stops: spec.stops.map((s) => s.offset).toList(),
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.20),
-          ),
-        ),
-      ),
-    );
-  }
+  // Removed: _gradientPresetChip (unused)
 }

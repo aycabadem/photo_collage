@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'dart:math' as math;
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/background.dart';
@@ -64,7 +63,7 @@ class CollageManager extends ChangeNotifier {
   GradientSpec _backgroundGradient = GradientSpec(
     stops: [
       GradientStop(offset: 0.0, color: const Color(0xFFFCFAEE)),
-      GradientStop(offset: 1.0, color: const Color(0xFFDA8359)),
+      GradientStop(offset: 1.0, color: const Color(0xFFA5B68D)),
     ],
     angleDeg: 35,
   );
@@ -1102,7 +1101,7 @@ class CollageManager extends ChangeNotifier {
       return Rect.fromLTWH(0, 0, imgW, imgH);
     }
     if (fit == BoxFit.contain) {
-      final double scale = math.min(dstSize.width / imgW, dstSize.height / imgH);
+      // scale not used here; contain shows full image
       final double visibleW = imgW;
       final double visibleH = imgH;
       return Rect.fromLTWH(0, 0, visibleW, visibleH);

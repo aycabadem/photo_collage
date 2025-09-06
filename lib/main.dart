@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     const primary = Color(0xFFA5B68D); // #A5B68D
     const secondary = Color(0xFFECDFCC); // #ECDFCC
     const tertiary = Color(0xFFFCFAEE); // #FCFAEE
-    const surface = Color(0xFFDA8359); // #DA8359
+    const surface = Color(0xFFFCFAEE); // use light background as surface
 
     final scheme = const ColorScheme.light(
       primary: primary,
@@ -25,11 +25,9 @@ class MyApp extends StatelessWidget {
       onTertiary: Colors.black,
       surface: surface,
       onSurface: Colors.black87,
-      background: surface,
-      onBackground: Colors.black87,
     );
 
-    TextTheme _bolden(TextTheme t) => TextTheme(
+    TextTheme bolden(TextTheme t) => TextTheme(
           displayLarge: t.displayLarge?.copyWith(fontWeight: FontWeight.w700),
           displayMedium: t.displayMedium?.copyWith(fontWeight: FontWeight.w700),
           displaySmall: t.displaySmall?.copyWith(fontWeight: FontWeight.w700),
@@ -61,8 +59,8 @@ class MyApp extends StatelessWidget {
           actionsIconTheme: IconThemeData(color: primary),
         ),
         iconTheme: const IconThemeData(color: primary),
-        textTheme: _bolden(ThemeData.light().textTheme),
-        primaryTextTheme: _bolden(ThemeData.light().primaryTextTheme),
+        textTheme: bolden(ThemeData.light().textTheme),
+        primaryTextTheme: bolden(ThemeData.light().primaryTextTheme),
         useMaterial3: true,
       ),
       home: const CollageScreen(),

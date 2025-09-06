@@ -28,11 +28,11 @@ class _BorderPanelState extends State<BorderPanel> {
       padding: EdgeInsets.only(bottom: bottomInset),
       decoration: const BoxDecoration(
         color: Color(0xFFFCFAEE),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
             color: Color(0x1A000000), // ~10% black
             blurRadius: 10,
@@ -83,13 +83,13 @@ class _BorderPanelState extends State<BorderPanel> {
           margin: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
             color: active
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.10)
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.10)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: active
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.30)
-                  : Theme.of(context).colorScheme.primary.withOpacity(0.20),
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.30)
+                  : Theme.of(context).colorScheme.primary.withValues(alpha: 0.20),
             ),
           ),
           child: Column(
@@ -103,7 +103,7 @@ class _BorderPanelState extends State<BorderPanel> {
                     : Theme.of(context)
                         .colorScheme
                         .primary
-                        .withOpacity(0.70),
+                        .withValues(alpha: 0.70),
                 semanticLabel: label,
               ),
               const SizedBox(height: 4),
@@ -117,7 +117,7 @@ class _BorderPanelState extends State<BorderPanel> {
                       : Theme.of(context)
                           .colorScheme
                           .primary
-                          .withOpacity(0.80),
+                          .withValues(alpha: 0.80),
                   letterSpacing: 0.6,
                 ),
               ),

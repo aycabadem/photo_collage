@@ -262,22 +262,6 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
     Navigator.of(context).pop();
   }
 
-  // Map continuous Alignment to nearest InitialAlignment for gesture init.
-  InitialAlignment _initialAlignmentFrom(Alignment a) {
-    final double x = a.x;
-    final double y = a.y;
-    final int col = x < -0.33 ? 0 : (x > 0.33 ? 2 : 1);
-    final int row = y < -0.33 ? 0 : (y > 0.33 ? 2 : 1);
-    if (row == 0 && col == 0) return InitialAlignment.topLeft;
-    if (row == 0 && col == 1) return InitialAlignment.topCenter;
-    if (row == 0 && col == 2) return InitialAlignment.topRight;
-    if (row == 1 && col == 0) return InitialAlignment.centerLeft;
-    if (row == 1 && col == 1) return InitialAlignment.center;
-    if (row == 1 && col == 2) return InitialAlignment.centerRight;
-    if (row == 2 && col == 0) return InitialAlignment.bottomLeft;
-    if (row == 2 && col == 1) return InitialAlignment.bottomCenter;
-    return InitialAlignment.bottomRight;
-  }
 
   void _applyInitialViewFromPhotoBox(
     ExtendedImageState? state,

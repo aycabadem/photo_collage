@@ -5,7 +5,6 @@ import '../models/background.dart';
 import '../services/collage_manager.dart';
 import '../widgets/aspect_ratio_selector.dart';
 import '../widgets/collage_canvas.dart';
-import '../widgets/custom_aspect_ratio_dialog.dart';
 
 import '../widgets/ios_color_picker_modal.dart';
 import '../widgets/border_panel.dart';
@@ -23,7 +22,6 @@ class _CollageScreenState extends State<CollageScreen> {
   final TransformationController _transformationController =
       TransformationController();
 
-  bool _showAspectSlider = false;
   double _aspectScalar = 1.0; // width/height ratio in [0.5, 2.0]
   bool _isAspectDragging = false;
   String? _activeTool;
@@ -200,82 +198,7 @@ class _CollageScreenState extends State<CollageScreen> {
   }
 
   /// Inline aspect slider UI shown under AppBar
-  Widget _buildAspectInlineSlider(
-    BuildContext context,
-    CollageManager manager,
-  ) {
-    String _fmt2(double v) {
-      final s = v.toStringAsFixed(2);
-      return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
-    }
-
-    String formatRatio(double r) {
-      if (r >= 1.0) {
-        return '${_fmt2(r)}:1';
-      } else {
-        final inv = (1.0 / r);
-        return '1:${_fmt2(inv)}';
-      }
-    }
-
-    return Row(
-      children: [
-        // Current value label
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFCFAEE),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0x33A5B68D)),
-          ),
-          child: Text(
-            formatRatio(_aspectScalar),
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Live-updating slider
-        Expanded(
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: const Color(0xFFA5B68D),
-              inactiveTrackColor: const Color(0x4DA5B68D),
-              thumbColor: const Color(0xFFA5B68D),
-            ),
-            child: Slider(
-              value: _aspectScalar,
-              min: 0.5,
-              max: 2.0,
-              onChanged: (v) {
-                _isAspectDragging = true;
-                setState(() => _aspectScalar = v);
-                // Convert scalar to AspectSpec and apply immediately
-                final AspectSpec spec = v >= 1
-                    ? AspectSpec(w: v, h: 1, label: formatRatio(v))
-                    : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
-
-                final screenSize = MediaQuery.of(context).size;
-                manager.applyAspect(spec, screenSize: screenSize);
-              },
-              onChangeEnd: (_) {
-                setState(() => _isAspectDragging = false);
-                // Persist as the current custom aspect in the selector list
-                final AspectSpec spec = _aspectScalar >= 1
-                    ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
-                    : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
-                manager.setCustomAspect(spec);
-            },
-          ),
-        ),
-        ),
-        const SizedBox(width: 8),
-      ],
-    );
-  }
+  // Removed: old inline aspect slider (Aspect now handled by bottom sheet)
 
   void _toggleTool(BuildContext context, String key, VoidCallback open) {
     if (_activeTool == key) {
@@ -373,11 +296,11 @@ class _CollageScreenState extends State<CollageScreen> {
     void Function(void Function()) setLocal,
     VoidCallback hideSlider,
   ) {
-    String _fmt2(double v) {
+    String fmt2(double v) {
       final s = v.toStringAsFixed(2);
       return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
     }
-    String formatRatio(double r) => r >= 1.0 ? '${_fmt2(r)}:1' : '1:${_fmt2(1.0 / r)}';
+    String formatRatio(double r) => r >= 1.0 ? '${fmt2(r)}:1' : '1:${fmt2(1.0 / r)}';
 
     return Row(
       children: [
@@ -440,22 +363,7 @@ class _CollageScreenState extends State<CollageScreen> {
     return matrix.getMaxScaleOnAxis();
   }
 
-  /// Open custom aspect ratio dialog
-  Future<void> _openCustomAspectDialog(
-    BuildContext context,
-    CollageManager manager,
-  ) async {
-    await showDialog<void>(
-      context: context,
-      builder: (context) => CustomAspectRatioDialog(
-        currentAspect: manager.selectedAspect,
-        onRatioApplied: (customAspect) {
-          final screenSize = MediaQuery.of(context).size;
-          manager.applyAspect(customAspect, screenSize: screenSize);
-        },
-      ),
-    );
-  }
+  // Legacy custom aspect dialog removed (handled via bottom sheet)
 
   /// Save the current collage
   Future<void> _saveCollage(
