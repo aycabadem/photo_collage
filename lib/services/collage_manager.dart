@@ -598,6 +598,21 @@ class CollageManager extends ChangeNotifier {
 
   /// Delete a photo box
   void deleteBox(PhotoBox box) {
+    // In preset layout mode, keep the box but clear its photo so user can add again
+    if (_currentLayout != null && !_isCustomMode) {
+      box.imageFile = null;
+      box.imagePath = '';
+      box.photoScale = 1.0;
+      box.alignment = Alignment.center;
+      if (_selectedBox == box) {
+        // keep it selected so add icon is visible and tappable
+        _selectedBox = box;
+      }
+      notifyListeners();
+      return;
+    }
+
+    // Custom/free mode: remove the entire box
     _photoBoxes.remove(box);
     if (_selectedBox == box) {
       _selectedBox = null;
