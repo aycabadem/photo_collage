@@ -65,6 +65,7 @@ class _BorderPanelState extends State<BorderPanel> {
   Widget _buildIconToolbar() {
     Widget item(String key, IconData icon, String label) {
       final bool active = _selectedEffect == key;
+      final primary = Theme.of(context).colorScheme.primary;
       return GestureDetector(
         onTap: () {
           setState(() {
@@ -75,49 +76,25 @@ class _BorderPanelState extends State<BorderPanel> {
               _showSlider = true; // show for newly selected effect
             }
           });
-          // Inform canvas to reserve more/less space based on slider visibility
         },
-        child: Container(
-          width: 64,
-          height: 54,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          decoration: BoxDecoration(
-            color: active
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.10)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: active
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.30)
-                  : Theme.of(context).colorScheme.primary.withValues(alpha: 0.20),
-            ),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                size: 20,
-                color: active
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.70),
+                size: 22,
+                color: active ? primary : primary.withValues(alpha: 0.6),
                 semanticLabel: label,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 label.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: active
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.80),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: active ? primary : primary.withValues(alpha: 0.8),
                   letterSpacing: 0.6,
                 ),
               ),
