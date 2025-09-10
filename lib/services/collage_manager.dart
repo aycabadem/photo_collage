@@ -209,8 +209,16 @@ class CollageManager extends ChangeNotifier {
       _currentLayout = null;
       _isCustomMode = true;
       _photoBoxes.clear();
+      _selectedBox = null; // clear any stale selection to avoid ghost overlay
       // In custom mode, default to no margin for free placement
       _photoMargin = 0.0;
+      // Reset visual effects when switching modes
+      _shadowIntensity = 0.0;
+      _innerMargin = 0.0;
+      _outerMargin = 0.0;
+      _cornerRadius = 0.0;
+      _globalBorderWidth = 0.0;
+      _hasGlobalBorder = false;
       notifyListeners();
       return;
     }
@@ -221,6 +229,14 @@ class CollageManager extends ChangeNotifier {
 
     // Clear existing photo boxes
     _photoBoxes.clear();
+
+    // Reset visual effects when entering a preset layout
+    _shadowIntensity = 0.0;
+    _innerMargin = 0.0;
+    _outerMargin = 0.0;
+    _cornerRadius = 0.0;
+    _globalBorderWidth = 0.0;
+    _hasGlobalBorder = false;
 
     // Get scaled layouts for current aspect ratio
     final scaledLayouts = layout.getScaledLayouts(
