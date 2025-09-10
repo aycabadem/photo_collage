@@ -347,9 +347,8 @@ class _CollageScreenState extends State<CollageScreen> {
                     ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
                     : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
                 manager.setCustomAspect(spec);
-                // Collapse only the slider, keep sheet open
-                hideSlider();
-            },
+                // Keep the slider open until the sheet is dismissed
+              },
           ),
         ),
         ),
