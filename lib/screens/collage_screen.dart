@@ -46,8 +46,8 @@ class _CollageScreenState extends State<CollageScreen> {
               actions: [
                 IconButton(
                   tooltip: 'Add Photo Box',
-                  icon: const Icon(Icons.camera_alt),
                   onPressed: () => collageManager.addPhotoBox(),
+                  icon: const Icon(Icons.add_a_photo),
                 ),
                 IconButton(
                   tooltip: 'Save Collage',
