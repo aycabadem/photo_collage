@@ -25,41 +25,51 @@ class ResizeHandleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Place handle relative to the overlay bounds, not global coordinates
+    // Center the handle exactly on the corner: half inside, half outside
+    final double half = size / 2;
+    double ox = 0, oy = 0;
+    if (alignment == Alignment.topLeft) {
+      ox = -half;
+      oy = -half;
+    } else if (alignment == Alignment.topRight) {
+      ox = half;
+      oy = -half;
+    } else if (alignment == Alignment.bottomLeft) {
+      ox = -half;
+      oy = half;
+    } else if (alignment == Alignment.bottomRight) {
+      ox = half;
+      oy = half;
+    }
+
+    // Direction vector pointing inward from the corner
+    Offset dir;
+    if (alignment == Alignment.topLeft) dir = const Offset(1, 1);
+    else if (alignment == Alignment.topRight) dir = const Offset(-1, 1);
+    else if (alignment == Alignment.bottomLeft) dir = const Offset(1, -1);
+    else dir = const Offset(-1, -1);
+
     return Align(
       alignment: alignment,
-      child: GestureDetector(
-        onPanUpdate: (details) => onDrag(details.delta.dx, details.delta.dy),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.blue[400]!, Colors.blue[600]!],
+      child: Transform.translate(
+        offset: Offset(ox, oy),
+        child: GestureDetector(
+          onPanUpdate: (details) => onDrag(details.delta.dx, details.delta.dy),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.black, width: 1.4),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x1A000000),
+                  blurRadius: 2,
+                  offset: Offset(0, 1),
+                ),
+              ],
             ),
-            borderRadius: BorderRadius.circular(size / 2), // Perfect circle
-            border: Border.all(color: Colors.white, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-                spreadRadius: 1,
-              ),
-              BoxShadow(
-                color: Colors.white.withValues(alpha: 0.8),
-                blurRadius: 1,
-                offset: const Offset(0, 1),
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Icon(
-            Icons.open_in_full,
-            color: Colors.white,
-            size: size * 0.6, // Proportional icon size
           ),
         ),
       ),

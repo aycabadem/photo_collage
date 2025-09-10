@@ -255,7 +255,7 @@ class CollageCanvas extends StatelessWidget {
             ResizeHandleWidget(
               box: box,
               alignment: Alignment.topLeft,
-              size: 16.0,
+              size: 12.0,
               onDrag: (dx, dy) =>
                   onResizeHandleDragged(box, dx, dy, Alignment.topLeft),
             ),
@@ -264,7 +264,7 @@ class CollageCanvas extends StatelessWidget {
             ResizeHandleWidget(
               box: box,
               alignment: Alignment.topRight,
-              size: 16.0,
+              size: 12.0,
               onDrag: (dx, dy) =>
                   onResizeHandleDragged(box, dx, dy, Alignment.topRight),
             ),
@@ -273,7 +273,7 @@ class CollageCanvas extends StatelessWidget {
             ResizeHandleWidget(
               box: box,
               alignment: Alignment.bottomLeft,
-              size: 16.0,
+              size: 12.0,
               onDrag: (dx, dy) =>
                   onResizeHandleDragged(box, dx, dy, Alignment.bottomLeft),
             ),
@@ -282,7 +282,7 @@ class CollageCanvas extends StatelessWidget {
             ResizeHandleWidget(
               box: box,
               alignment: Alignment.bottomRight,
-              size: 16.0,
+              size: 12.0,
               onDrag: (dx, dy) =>
                   onResizeHandleDragged(box, dx, dy, Alignment.bottomRight),
             ),
