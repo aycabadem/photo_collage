@@ -75,13 +75,13 @@ class CollageCanvas extends StatelessWidget {
                 width: templateSize.width,
                 height: templateSize.height,
                 decoration: _decoration(),
-                child: _contentStack(),
+                child: _contentStack(context),
               )
             : Container(
                 width: templateSize.width,
                 height: templateSize.height,
                 decoration: _decoration(),
-                child: _contentStack(),
+                child: _contentStack(context),
               ),
       ),
     );
@@ -112,31 +112,66 @@ class CollageCanvas extends StatelessWidget {
         ],
       );
 
-  Widget _contentStack() => Stack(
-        clipBehavior: Clip.hardEdge,
-        children: [
-          for (var box in photoBoxes) _buildPhotoBox(box),
-          if (selectedBox != null) _buildOverlay(selectedBox!),
-          if (guidelines.isNotEmpty)
-            GuidelinesOverlay(
-              guidelines: guidelines,
-              templateSize: templateSize,
-            ),
-        ],
+  Widget _contentStack(BuildContext context) => Padding(
+        padding: EdgeInsets.all(collageManager.outerMargin),
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            for (var box in photoBoxes) _buildPhotoBox(box, context),
+            if (selectedBox != null) _buildOverlay(selectedBox!, context),
+            if (guidelines.isNotEmpty)
+              GuidelinesOverlay(
+                guidelines: guidelines,
+                templateSize: templateSize,
+              ),
+          ],
+        ),
       );
 
-  /// Build individual photo box widget with margin applied
-  Widget _buildPhotoBox(PhotoBox box) {
-    // Calculate margin-adjusted size and position
-    final margin = collageManager.photoMargin;
+  /// Build individual photo box widget with inner/outer margins applied
+  Widget _buildPhotoBox(PhotoBox box, BuildContext context) {
+    // Outer margin: uniformly scale (preserve aspect) then center to create equal frame on all sides
+    final double outer = collageManager.outerMargin;
+    double s = 1.0;
+    if (outer > 0) {
+      final double sx = (templateSize.width - 2 * outer) / templateSize.width;
+      final double sy = (templateSize.height - 2 * outer) / templateSize.height;
+      s = math.min(sx, sy);
+    }
+    final double marginX = (templateSize.width - templateSize.width * s) / 2;
+    final double marginY = (templateSize.height - templateSize.height * s) / 2;
 
-    // Reduce photo size to accommodate margin
-    final adjustedWidth = box.size.width - (margin * 2);
-    final adjustedHeight = box.size.height - (margin * 2);
+    double baseLeft = marginX + box.position.dx * s;
+    double baseTop = marginY + box.position.dy * s;
+    double baseWidth = box.size.width * s;
+    double baseHeight = box.size.height * s;
 
-    // Adjust position to center the photo within its original space
-    final adjustedLeft = box.position.dx + margin;
-    final adjustedTop = box.position.dy + margin;
+    // Inner margin: apply only between photos (edge-aware), not on outer edges
+    final double inner = collageManager.innerMargin;
+    final double half = inner * 0.5;
+    const double eps = 0.5; // edge tolerance in logical px
+    final bool isLeftEdge = box.position.dx <= eps;
+    final bool isRightEdge = (box.position.dx + box.size.width) >= (templateSize.width - eps);
+    final bool isTopEdge = box.position.dy <= eps;
+    final bool isBottomEdge = (box.position.dy + box.size.height) >= (templateSize.height - eps);
+
+    final double leftInset = isLeftEdge ? 0.0 : half;
+    final double rightInset = isRightEdge ? 0.0 : half;
+    final double topInset = isTopEdge ? 0.0 : half;
+    final double bottomInset = isBottomEdge ? 0.0 : half;
+
+    double adjustedLeft = baseLeft + leftInset;
+    double adjustedTop = baseTop + topInset;
+    double adjustedWidth = baseWidth - (leftInset + rightInset);
+    double adjustedHeight = baseHeight - (topInset + bottomInset);
+
+    // Pixel-snap for symmetry across columns/rows
+    final double dpr = MediaQuery.of(context).devicePixelRatio;
+    double snap(double v) => (v * dpr).round() / dpr;
+    adjustedLeft = snap(adjustedLeft);
+    adjustedTop = snap(adjustedTop);
+    adjustedWidth = snap(adjustedWidth);
+    adjustedHeight = snap(adjustedHeight);
 
     return Positioned(
       left: adjustedLeft,
@@ -164,15 +199,49 @@ class CollageCanvas extends StatelessWidget {
     );
   }
 
-  /// Build overlay for selected box with margin applied
-  Widget _buildOverlay(PhotoBox box) {
-    // Apply same margin logic to overlay
-    final margin = collageManager.photoMargin;
+  /// Build overlay for selected box with inner/outer margins applied
+  Widget _buildOverlay(PhotoBox box, BuildContext context) {
+    // Outer scaling same as for the box (uniform scale + centered)
+    final double outer = collageManager.outerMargin;
+    double s = 1.0;
+    if (outer > 0) {
+      final double sx = (templateSize.width - 2 * outer) / templateSize.width;
+      final double sy = (templateSize.height - 2 * outer) / templateSize.height;
+      s = math.min(sx, sy);
+    }
+    final double marginX = (templateSize.width - templateSize.width * s) / 2;
+    final double marginY = (templateSize.height - templateSize.height * s) / 2;
 
-    final adjustedWidth = box.size.width - (margin * 2);
-    final adjustedHeight = box.size.height - (margin * 2);
-    final adjustedLeft = box.position.dx + margin;
-    final adjustedTop = box.position.dy + margin;
+    double baseLeft = marginX + box.position.dx * s;
+    double baseTop = marginY + box.position.dy * s;
+    double baseWidth = box.size.width * s;
+    double baseHeight = box.size.height * s;
+
+    // Inner margin same as content (edge-aware)
+    final double inner = collageManager.innerMargin;
+    final double half = inner * 0.5;
+    const double eps = 0.5;
+    final bool isLeftEdge = box.position.dx <= eps;
+    final bool isRightEdge = (box.position.dx + box.size.width) >= (templateSize.width - eps);
+    final bool isTopEdge = box.position.dy <= eps;
+    final bool isBottomEdge = (box.position.dy + box.size.height) >= (templateSize.height - eps);
+
+    final double leftInset = isLeftEdge ? 0.0 : half;
+    final double rightInset = isRightEdge ? 0.0 : half;
+    final double topInset = isTopEdge ? 0.0 : half;
+    final double bottomInset = isBottomEdge ? 0.0 : half;
+
+    double adjustedLeft = baseLeft + leftInset;
+    double adjustedTop = baseTop + topInset;
+    double adjustedWidth = baseWidth - (leftInset + rightInset);
+    double adjustedHeight = baseHeight - (topInset + bottomInset);
+
+    final double dpr = MediaQuery.of(context).devicePixelRatio;
+    double snap(double v) => (v * dpr).round() / dpr;
+    adjustedLeft = snap(adjustedLeft);
+    adjustedTop = snap(adjustedTop);
+    adjustedWidth = snap(adjustedWidth);
+    adjustedHeight = snap(adjustedHeight);
 
     return Positioned(
       left: adjustedLeft,

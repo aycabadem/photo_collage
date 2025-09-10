@@ -17,7 +17,7 @@ class BorderPanel extends StatefulWidget {
 }
 
 class _BorderPanelState extends State<BorderPanel> {
-  String _selectedEffect = 'corner_radius';
+  String _selectedEffect = 'inner';
   bool _showSlider = false;
 
   @override
@@ -131,7 +131,8 @@ class _BorderPanelState extends State<BorderPanel> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         item('shadow', Icons.tonality, 'Shadow'),
-        item('margin', Icons.open_in_full, 'Spacing'),
+        item('inner', Icons.space_bar, 'Inner'),
+        item('outer', Icons.crop_square, 'Outer'),
         item('corner_radius', Icons.rounded_corner, 'Radius'),
       ],
     );
@@ -165,8 +166,10 @@ class _BorderPanelState extends State<BorderPanel> {
     switch (_selectedEffect) {
       case 'shadow':
         return _buildShadowSlider();
-      case 'margin':
-        return _buildMarginSlider();
+      case 'inner':
+        return _buildInnerMarginSlider();
+      case 'outer':
+        return _buildOuterMarginSlider();
       case 'corner_radius':
         return _buildCornerRadiusSlider();
       default:
@@ -189,18 +192,33 @@ class _BorderPanelState extends State<BorderPanel> {
     );
   }
 
-  /// Margin slider (creates space between photos)
-  Widget _buildMarginSlider() {
+  /// Inner margin slider (space between photos)
+  Widget _buildInnerMarginSlider() {
     return _GradientSlider(
-      value: widget.collageManager.photoMargin,
+      value: widget.collageManager.innerMargin,
       min: 0.0,
-      max: 15.0,
+      max: 20.0,
       onChanged: (v) {
-        widget.collageManager.setPhotoMargin(v);
+        widget.collageManager.setInnerMargin(v);
         setState(() {});
       },
       label:
-          'Margin: ${widget.collageManager.photoMargin.toStringAsFixed(1)}px',
+          'Inner: ${widget.collageManager.innerMargin.toStringAsFixed(1)}px',
+    );
+  }
+
+  /// Outer margin slider (frame around collage)
+  Widget _buildOuterMarginSlider() {
+    return _GradientSlider(
+      value: widget.collageManager.outerMargin,
+      min: 0.0,
+      max: 40.0,
+      onChanged: (v) {
+        widget.collageManager.setOuterMargin(v);
+        setState(() {});
+      },
+      label:
+          'Outer: ${widget.collageManager.outerMargin.toStringAsFixed(1)}px',
     );
   }
 
