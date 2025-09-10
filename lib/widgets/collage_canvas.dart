@@ -118,8 +118,9 @@ class CollageCanvas extends StatelessWidget {
           clipBehavior: Clip.hardEdge,
           children: [
             for (var box in photoBoxes) _buildPhotoBox(box, context),
-            if (selectedBox != null) _buildOverlay(selectedBox!, context),
-            if (guidelines.isNotEmpty)
+            if (selectedBox != null && collageManager.isCustomMode)
+              _buildOverlay(selectedBox!, context),
+            if (guidelines.isNotEmpty && collageManager.isCustomMode)
               GuidelinesOverlay(
                 guidelines: guidelines,
                 templateSize: templateSize,
