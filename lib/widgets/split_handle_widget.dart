@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 /// A thin draggable handle rendered along the shared edge between two boxes.
 /// Provides a larger hit area but a subtle visual line centered in it.
 class SplitHandleWidget extends StatelessWidget {
-  final bool isVertical; // true: vertical divider (left/right), false: horizontal (top/bottom)
+  final bool
+  isVertical; // true: vertical divider (left/right), false: horizontal (top/bottom)
   final double thickness; // visual line thickness
   final VoidCallback? onTap;
   final void Function(double delta) onDrag; // delta in screen px along axis
   final bool showIcon; // show a small splitter hint icon
-  final double iconSize; // size of arrow chevrons
+  final double iconSize; // visual icon size inside the badge
   final Color? iconColor;
   final Color? badgeColor; // circular background behind icon
 
@@ -19,7 +20,7 @@ class SplitHandleWidget extends StatelessWidget {
     this.thickness = 2.0,
     this.onTap,
     this.showIcon = true,
-    this.iconSize = 14.0,
+    this.iconSize = 22.0,
     this.iconColor,
     this.badgeColor,
   });
@@ -30,7 +31,8 @@ class SplitHandleWidget extends StatelessWidget {
     final Color lineColor = Colors.white.withValues(alpha: 0.9);
     final Color shadow = Colors.black.withValues(alpha: 0.18);
     final Color badgeBg = (badgeColor ?? Colors.black).withValues(alpha: 0.32);
-    final Color chevronColor = iconColor ?? Colors.white.withValues(alpha: 0.95);
+    final Color chevronColor =
+        iconColor ?? Colors.white.withValues(alpha: 0.95);
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onPanUpdate: (details) =>
@@ -51,29 +53,29 @@ class SplitHandleWidget extends StatelessWidget {
           ),
           if (showIcon)
             Container(
-              width: iconSize + 14,
-              height: iconSize + 14,
+              // Keep badge size fixed so it doesn't jump
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 color: badgeBg,
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Center(
                 child: isVertical
-                    // vertical divider: movement is horizontal → show < >
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.chevron_left, size: iconSize, color: chevronColor),
-                          Icon(Icons.chevron_right, size: iconSize, color: chevronColor),
-                        ],
+                    // Vertical divider → show a single, bold left-right indicator
+                    ? RotatedBox(
+                        quarterTurns: 1,
+                        child: Icon(
+                          Icons.unfold_more, // two chevrons combined, thicker
+                          size: iconSize,
+                          color: chevronColor,
+                        ),
                       )
-                    // horizontal divider: movement is vertical → show ^ v
-                    : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.expand_less, size: iconSize, color: chevronColor),
-                          Icon(Icons.expand_more, size: iconSize, color: chevronColor),
-                        ],
+                    // Horizontal divider → up/down indicator
+                    : Icon(
+                        Icons.unfold_more,
+                        size: iconSize,
+                        color: chevronColor,
                       ),
               ),
             ),
