@@ -455,6 +455,7 @@ class _CollageScreenState extends State<CollageScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
       builder: (context) => BorderPanel(
         collageManager: collageManager,
         onClose: () {
@@ -474,6 +475,7 @@ class _CollageScreenState extends State<CollageScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
       builder: (context) => LayoutPickerModal(
         onLayoutSelected: (layout) {
           collageManager.applyLayoutTemplate(layout);
