@@ -124,38 +124,42 @@ class PhotoBoxWidget extends StatelessWidget {
                   top: 8,
                   left: 0,
                   right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Delete (plain white icon, no background)
-                      GestureDetector(
-                        onTap: onDelete,
-                        behavior: HitTestBehavior.opaque,
-                        child: const Padding(
-                          padding: EdgeInsets.all(6.0),
-                          child: Icon(
-                            Icons.delete_outline,
-                            size: 24,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      // Edit (only when photo exists)
-                      if (box.imageFile != null)
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown, // Prevent overflow on very small boxes
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Delete (plain white icon, no background)
                         GestureDetector(
-                          onTap: () => _showPhotoEditor(context),
+                          onTap: onDelete,
                           behavior: HitTestBehavior.opaque,
                           child: const Padding(
                             padding: EdgeInsets.all(6.0),
                             child: Icon(
-                              Icons.edit,
+                              Icons.delete_outline,
                               size: 24,
                               color: Colors.white,
                             ),
                           ),
                         ),
-                    ],
+                        const SizedBox(width: 20),
+                        // Edit (only when photo exists)
+                        if (box.imageFile != null)
+                          GestureDetector(
+                            onTap: () => _showPhotoEditor(context),
+                            behavior: HitTestBehavior.opaque,
+                            child: const Padding(
+                              padding: EdgeInsets.all(6.0),
+                              child: Icon(
+                                Icons.edit,
+                                size: 24,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
             ],

@@ -251,6 +251,7 @@ class CollageCanvas extends StatelessWidget {
         width: adjustedWidth,
         height: adjustedHeight,
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             // Top-left resize handle
             ResizeHandleWidget(

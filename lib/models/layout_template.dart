@@ -346,6 +346,19 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
       ],
     ),
+    LayoutTemplate(
+      id: '4lu',
+      name: 'Large + Small',
+      description: 'One large, one small photo',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.67, 0.67)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.67, 0.33)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.67)),
+
+        PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
+      ],
+    ),
   ];
 
   /// Get layout by ID

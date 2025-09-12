@@ -25,51 +25,59 @@ class ResizeHandleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Center the handle exactly on the corner: half inside, half outside
-    final double half = size / 2;
+    // Place the handle centered on the corner (half inside, half outside)
+    // Push the visible square mostly outside (about 70%)
+    const double outsideFactor = 0.7; // 0.5 = half outside; >0.5 looks more pronounced
+    final double offset = size * outsideFactor;
     double ox = 0, oy = 0;
     if (alignment == Alignment.topLeft) {
-      ox = -half;
-      oy = -half;
+      ox = -offset;
+      oy = -offset;
     } else if (alignment == Alignment.topRight) {
-      ox = half;
-      oy = -half;
+      ox = offset;
+      oy = -offset;
     } else if (alignment == Alignment.bottomLeft) {
-      ox = -half;
-      oy = half;
+      ox = -offset;
+      oy = offset;
     } else if (alignment == Alignment.bottomRight) {
-      ox = half;
-      oy = half;
+      ox = offset;
+      oy = offset;
     }
 
-    // Direction vector pointing inward from the corner
-    Offset dir;
-    if (alignment == Alignment.topLeft) dir = const Offset(1, 1);
-    else if (alignment == Alignment.topRight) dir = const Offset(-1, 1);
-    else if (alignment == Alignment.bottomLeft) dir = const Offset(1, -1);
-    else dir = const Offset(-1, -1);
+    // Keep a generous hit area while preserving the half-outside look
+    const double hitPad = 16.0;
 
     return Align(
       alignment: alignment,
-      child: Transform.translate(
-        offset: Offset(ox, oy),
-        child: GestureDetector(
-          onPanUpdate: (details) => onDrag(details.delta.dx, details.delta.dy),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: Colors.black, width: 1.4),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 2,
-                  offset: Offset(0, 1),
+      child: GestureDetector(
+        onPanUpdate: (details) => onDrag(details.delta.dx, details.delta.dy),
+        behavior: HitTestBehavior.translucent,
+        child: SizedBox(
+          width: size + hitPad,
+          height: size + hitPad,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              Transform.translate(
+                offset: Offset(ox, oy),
+                child: Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.black, width: 1.4),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x1A000000),
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
