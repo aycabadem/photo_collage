@@ -119,7 +119,9 @@ class CollageCanvas extends StatelessWidget {
   Widget _contentStack(BuildContext context) => Padding(
         padding: EdgeInsets.all(collageManager.outerMargin),
         child: Stack(
-          clipBehavior: Clip.hardEdge,
+          // Allow children (photo shadows, handles) to render into the padded
+          // outer margin area without being clipped.
+          clipBehavior: Clip.none,
           children: [
             for (var box in photoBoxes) _buildPhotoBox(box, context),
             if (selectedBox != null && collageManager.isCustomMode && photoBoxes.contains(selectedBox))

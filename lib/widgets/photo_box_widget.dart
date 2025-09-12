@@ -77,15 +77,22 @@ class PhotoBoxWidget extends StatelessWidget {
             children: [
               // Photo or placeholder
               box.imageFile != null
-                  ? Transform.scale(
-                      scale: box.photoScale,
-                      alignment: box.alignment,
-                      child: Image.file(
-                        box.imageFile!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
+                  ? Transform.translate(
+                      // Subtle lift for 3D feel; increases slightly with shadow intensity
+                      offset: Offset(
+                        0,
+                        -(_liftOffset(collageManager.shadowIntensity)),
+                      ),
+                      child: Transform.scale(
+                        scale: box.photoScale,
                         alignment: box.alignment,
+                        child: Image.file(
+                          box.imageFile!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          alignment: box.alignment,
+                        ),
                       ),
                     )
                   : Container(
@@ -213,33 +220,28 @@ List<BoxShadow>? _shadowLayers(double intensity) {
   // Normalize to 0..1 based on current slider range (0..14)
   final double t = (intensity.clamp(0.0, 14.0)) / 14.0;
 
-  // Key shadow: prominent but tighter to the card
-  final keyShadow = BoxShadow(
-    color: Colors.black.withValues(alpha: 0.22 + 0.18 * t), // 0.22..0.40
-    blurRadius: 10 + 22 * t, // 10..32
-    offset: Offset(0, 6 + 10 * t), // 6..16
-    spreadRadius: 0.2 + 0.8 * t, // 0.2..1.0 (reduced spread to avoid greying)
-  );
-
-  // Ambient shadow: softer, low opacity, minimal spread (reduces background greying)
+  // Cleaner, less smoky shadows: no spread, moderate blur, lower alpha
   final ambientShadow = BoxShadow(
-    color: Colors.black.withValues(alpha: 0.06 + 0.10 * t), // 0.06..0.16
-    blurRadius: 18 + 22 * t, // 18..40
-    offset: Offset(0, 2 + 4 * t), // 2..6
-    spreadRadius: 0.0 + 1.5 * t, // 0..1.5
+    color: Colors.black.withValues(alpha: 0.05 + 0.05 * t), // 0.05..0.10
+    blurRadius: 12 + 8 * t, // 12..20
+    offset: Offset(0, 2 + 2 * t), // 2..4
+    spreadRadius: 0,
   );
 
-  // Deep shadow only at higher intensities, still restrained
-  if (t > 0.7) {
-    final double u = (t - 0.7) / 0.3; // 0..1 for top 30%
-    final deepShadow = BoxShadow(
-      color: Colors.black.withValues(alpha: 0.10 + 0.14 * u), // 0.10..0.24
-      blurRadius: 30 + 24 * u, // 30..54
-      offset: Offset(0, 8 + 8 * u), // 8..16
-      spreadRadius: 0.0 + 1.0 * u, // 0..1.0
-    );
-    return [ambientShadow, keyShadow, deepShadow];
-  }
+  final keyShadow = BoxShadow(
+    color: Colors.black.withValues(alpha: 0.15 + 0.10 * t), // 0.15..0.25
+    blurRadius: 8 + 12 * t, // 8..20
+    offset: Offset(0, 4 + 6 * t), // 4..10
+    spreadRadius: 0,
+  );
 
   return [ambientShadow, keyShadow];
+}
+
+// Compute a subtle lift offset for the image based on shadow intensity
+double _liftOffset(double intensity) {
+  if (intensity <= 0) return 0;
+  final double t = (intensity.clamp(0.0, 14.0)) / 14.0;
+  // 0.0 .. 3.0 px upward
+  return 1.0 + 2.0 * t;
 }
