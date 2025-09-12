@@ -3,6 +3,7 @@ import '../models/photo_box.dart';
 import '../models/alignment_guideline.dart';
 import '../widgets/photo_box_widget.dart';
 import '../widgets/resize_handle_widget.dart';
+import '../widgets/split_handle_widget.dart';
 import '../widgets/guidelines_overlay.dart';
 import '../services/collage_manager.dart';
 import '../models/background.dart';
@@ -41,6 +42,8 @@ class CollageCanvas extends StatelessWidget {
   final List<AlignmentGuideline> guidelines;
 
   final CollageManager collageManager;
+  // Callback to read current zoom scale from parent (InteractiveViewer)
+  final double Function() getCurrentScale;
 
   const CollageCanvas({
     super.key,
@@ -56,6 +59,7 @@ class CollageCanvas extends StatelessWidget {
     this.guidelines = const [],
     required this.collageManager,
     this.animateSize = true,
+    required this.getCurrentScale,
   });
 
   @override
@@ -120,6 +124,8 @@ class CollageCanvas extends StatelessWidget {
             for (var box in photoBoxes) _buildPhotoBox(box, context),
             if (selectedBox != null && collageManager.isCustomMode && photoBoxes.contains(selectedBox))
               _buildOverlay(selectedBox!, context),
+            if (selectedBox != null)
+              ..._buildSplitHandlesForSelected(selectedBox!, context),
             if (guidelines.isNotEmpty && collageManager.isCustomMode)
               GuidelinesOverlay(
                 guidelines: guidelines,
@@ -284,6 +290,169 @@ class CollageCanvas extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Build splitter handles for adjacent pairs that include the selected box
+  List<Widget> _buildSplitHandlesForSelected(PhotoBox selected, BuildContext context) {
+    final List<Widget> handles = [];
+
+    final double outer = collageManager.outerMargin;
+    final double innerW = templateSize.width - 2 * outer;
+    final double innerH = templateSize.height - 2 * outer;
+    final double sX = innerW / templateSize.width;
+    final double sY = innerH / templateSize.height;
+
+    const double eps = 1.0;
+
+    // Build neighbor groups on each side of the selected box
+    List<PhotoBox> leftNeighbors = [];
+    List<PhotoBox> rightNeighbors = [];
+    List<PhotoBox> topNeighbors = [];
+    List<PhotoBox> bottomNeighbors = [];
+
+    for (final other in photoBoxes) {
+      if (other == selected) continue;
+
+      // Overlap checks
+      bool yOverlap = !(
+        (selected.position.dy + selected.size.height) < other.position.dy - eps ||
+        (other.position.dy + other.size.height) < selected.position.dy - eps
+      );
+      bool xOverlap = !(
+        (selected.position.dx + selected.size.width) < other.position.dx - eps ||
+        (other.position.dx + other.size.width) < selected.position.dx - eps
+      );
+
+      // Left neighbors: other.right == selected.left
+      final double selLeft = selected.position.dx;
+      final double selRight = selected.position.dx + selected.size.width;
+      final double selTop = selected.position.dy;
+      final double selBottom = selected.position.dy + selected.size.height;
+      final double otherLeft = other.position.dx;
+      final double otherRight = other.position.dx + other.size.width;
+      final double otherTop = other.position.dy;
+      final double otherBottom = other.position.dy + other.size.height;
+
+      if ((otherRight - selLeft).abs() <= eps && yOverlap) {
+        leftNeighbors.add(other);
+      }
+      if ((otherLeft - selRight).abs() <= eps && yOverlap) {
+        rightNeighbors.add(other);
+      }
+      if ((otherBottom - selTop).abs() <= eps && xOverlap) {
+        topNeighbors.add(other);
+      }
+      if ((otherTop - selBottom).abs() <= eps && xOverlap) {
+        bottomNeighbors.add(other);
+      }
+    }
+
+    // Create handles for each non-empty group
+    if (leftNeighbors.isNotEmpty) {
+      final double x = selected.position.dx * sX;
+      final double y = selected.position.dy * sY;
+      final double h = selected.size.height * sY;
+      handles.add(Positioned(
+        left: x - 14,
+        top: y,
+        width: 28,
+        height: h,
+        child: SplitHandleWidget(
+          isVertical: true,
+          onDrag: (dxScreen) {
+            final double scale = getCurrentScale();
+            final double deltaTemplate = (dxScreen / scale) / sX;
+            collageManager.resizeGroupAlongEdge(
+              selected,
+              leftNeighbors,
+              true,
+              true, // group on negative side (left)
+              deltaTemplate,
+            );
+          },
+        ),
+      ));
+    }
+
+    if (rightNeighbors.isNotEmpty) {
+      final double x = (selected.position.dx + selected.size.width) * sX;
+      final double y = selected.position.dy * sY;
+      final double h = selected.size.height * sY;
+      handles.add(Positioned(
+        left: x - 14,
+        top: y,
+        width: 28,
+        height: h,
+        child: SplitHandleWidget(
+          isVertical: true,
+          onDrag: (dxScreen) {
+            final double scale = getCurrentScale();
+            final double deltaTemplate = (dxScreen / scale) / sX;
+            collageManager.resizeGroupAlongEdge(
+              selected,
+              rightNeighbors,
+              true,
+              false, // right side
+              deltaTemplate,
+            );
+          },
+        ),
+      ));
+    }
+
+    if (topNeighbors.isNotEmpty) {
+      final double x = selected.position.dx * sX;
+      final double y = selected.position.dy * sY;
+      final double w = selected.size.width * sX;
+      handles.add(Positioned(
+        left: x,
+        top: y - 14,
+        width: w,
+        height: 28,
+        child: SplitHandleWidget(
+          isVertical: false,
+          onDrag: (dyScreen) {
+            final double scale = getCurrentScale();
+            final double deltaTemplate = (dyScreen / scale) / sY;
+            collageManager.resizeGroupAlongEdge(
+              selected,
+              topNeighbors,
+              false,
+              true, // top side (negative)
+              deltaTemplate,
+            );
+          },
+        ),
+      ));
+    }
+
+    if (bottomNeighbors.isNotEmpty) {
+      final double x = selected.position.dx * sX;
+      final double y = (selected.position.dy + selected.size.height) * sY;
+      final double w = selected.size.width * sX;
+      handles.add(Positioned(
+        left: x,
+        top: y - 14,
+        width: w,
+        height: 28,
+        child: SplitHandleWidget(
+          isVertical: false,
+          onDrag: (dyScreen) {
+            final double scale = getCurrentScale();
+            final double deltaTemplate = (dyScreen / scale) / sY;
+            collageManager.resizeGroupAlongEdge(
+              selected,
+              bottomNeighbors,
+              false,
+              false, // bottom side
+              deltaTemplate,
+            );
+          },
+        ),
+      ));
+    }
+
+    return handles;
   }
 
   // Map angle to begin/end alignments (-1..1)

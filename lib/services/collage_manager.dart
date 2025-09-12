@@ -955,6 +955,151 @@ class CollageManager extends ChangeNotifier {
     }
   }
 
+  /// Resize a pair of adjacent boxes along their shared edge.
+  /// If [isVertical] is true, adjust widths at x-edge (a is left, b is right).
+  /// Otherwise, adjust heights at y-edge (a is top, b is bottom).
+  void resizePairAlongEdge(PhotoBox a, PhotoBox b, bool isVertical, double delta) {
+    // Order boxes consistently
+    if (isVertical) {
+      // left-right
+      PhotoBox left = a.position.dx <= b.position.dx ? a : b;
+      PhotoBox right = left == a ? b : a;
+
+      const double minSize = 50.0;
+      // Clamp delta so both remain >= minSize
+      final double minDelta = - (left.size.width - minSize);
+      final double maxDelta = (right.size.width - minSize);
+      final double clampedDelta = delta.clamp(minDelta, maxDelta);
+
+      final double newLeftWidth = left.size.width + clampedDelta;
+      final double newRightWidth = right.size.width - clampedDelta;
+
+      left.size = Size(newLeftWidth, left.size.height);
+      right.position = Offset(right.position.dx + clampedDelta, right.position.dy);
+      right.size = Size(newRightWidth, right.size.height);
+      notifyListeners();
+    } else {
+      // top-bottom
+      PhotoBox top = a.position.dy <= b.position.dy ? a : b;
+      PhotoBox bottom = top == a ? b : a;
+
+      const double minSize = 50.0;
+      final double minDelta = - (top.size.height - minSize);
+      final double maxDelta = (bottom.size.height - minSize);
+      final double clampedDelta = delta.clamp(minDelta, maxDelta);
+
+      final double newTopHeight = top.size.height + clampedDelta;
+      final double newBottomHeight = bottom.size.height - clampedDelta;
+
+      top.size = Size(top.size.width, newTopHeight);
+      bottom.position = Offset(bottom.position.dx, bottom.position.dy + clampedDelta);
+      bottom.size = Size(bottom.size.width, newBottomHeight);
+      notifyListeners();
+    }
+  }
+
+  /// Resize an anchor box against a group of neighbors along a shared edge.
+  /// groupOnNegativeSide: true for left/top neighbors, false for right/bottom neighbors.
+  void resizeGroupAlongEdge(
+    PhotoBox anchor,
+    List<PhotoBox> group,
+    bool isVertical,
+    bool groupOnNegativeSide,
+    double delta,
+  ) {
+    if (group.isEmpty) return;
+    const double minSize = 50.0;
+
+    if (isVertical) {
+      // Moving a vertical edge along X
+      // Left/top neighbors (negative side) sit at anchor.left; Right/bottom neighbors at anchor.right
+      // Positive delta moves edge to the right
+      double minDelta = -double.infinity;
+      double maxDelta = double.infinity;
+
+      if (groupOnNegativeSide) {
+        // Edge is anchor.left; new anchor.left = anchor.position.dx + delta
+        // Constraints:
+        // - Anchor new width: anchor.size.width - delta >= minSize -> delta <= anchor.size.width - minSize
+        maxDelta = anchor.size.width - minSize;
+        // - Each neighbor new width: n.size.width + delta >= minSize -> delta >= -(n.size.width - minSize)
+        for (final n in group) {
+          final double nd = - (n.size.width - minSize);
+          if (nd > minDelta) minDelta = nd;
+        }
+      } else {
+        // Edge is anchor.right; new anchor.width = anchor.size.width + delta
+        // Anchor: anchor.size.width + delta >= minSize -> delta >= -(anchor.size.width - minSize)
+        minDelta = - (anchor.size.width - minSize);
+        // Neighbors shrink: n.size.width - delta >= minSize -> delta <= (n.size.width - minSize)
+        for (final n in group) {
+          final double nd = (n.size.width - minSize);
+          if (nd < maxDelta) maxDelta = nd;
+        }
+      }
+
+      final double clamped = delta.clamp(minDelta, maxDelta);
+
+      if (groupOnNegativeSide) {
+        // Grow neighbors, shrink anchor, move anchor.x by +clamped
+        for (final n in group) {
+          n.size = Size(n.size.width + clamped, n.size.height);
+        }
+        anchor.position = Offset(anchor.position.dx + clamped, anchor.position.dy);
+        anchor.size = Size(anchor.size.width - clamped, anchor.size.height);
+      } else {
+        // Shrink neighbors, grow anchor, move neighbors.x by +clamped
+        for (final n in group) {
+          n.position = Offset(n.position.dx + clamped, n.position.dy);
+          n.size = Size(n.size.width - clamped, n.size.height);
+        }
+        anchor.size = Size(anchor.size.width + clamped, anchor.size.height);
+      }
+
+      notifyListeners();
+    } else {
+      // Horizontal edge movement along Y
+      double minDelta = -double.infinity;
+      double maxDelta = double.infinity;
+
+      if (groupOnNegativeSide) {
+        // Edge is anchor.top; new anchor.height = anchor.size.height - delta; new top = +delta
+        maxDelta = anchor.size.height - minSize; // delta <= maxDelta
+        for (final n in group) {
+          final double nd = - (n.size.height - minSize); // delta >= nd
+          if (nd > minDelta) minDelta = nd;
+        }
+      } else {
+        // Edge is anchor.bottom; anchor.height + delta >= minSize -> delta >= -(anchor.height - minSize)
+        minDelta = - (anchor.size.height - minSize);
+        for (final n in group) {
+          final double nd = (n.size.height - minSize); // delta <= nd
+          if (nd < maxDelta) maxDelta = nd;
+        }
+      }
+
+      final double clamped = delta.clamp(minDelta, maxDelta);
+
+      if (groupOnNegativeSide) {
+        // Grow neighbors upward, shrink anchor, move anchor.y by +clamped
+        for (final n in group) {
+          n.size = Size(n.size.width, n.size.height + clamped);
+        }
+        anchor.position = Offset(anchor.position.dx, anchor.position.dy + clamped);
+        anchor.size = Size(anchor.size.width, anchor.size.height - clamped);
+      } else {
+        // Shrink neighbors, grow anchor downward, move neighbors.y by +clamped
+        for (final n in group) {
+          n.position = Offset(n.position.dx, n.position.dy + clamped);
+          n.size = Size(n.size.width, n.size.height - clamped);
+        }
+        anchor.size = Size(anchor.size.width, anchor.size.height + clamped);
+      }
+
+      notifyListeners();
+    }
+  }
+
   /// Update available canvas area from LayoutBuilder and recompute size
   void updateAvailableArea(Size area) {
     _availableArea = area;

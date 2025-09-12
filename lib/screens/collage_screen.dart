@@ -103,6 +103,7 @@ class _CollageScreenState extends State<CollageScreen> {
                                 photoBoxes: collageManager.photoBoxes,
                                 selectedBox: collageManager.selectedBox,
                                 animateSize: !_isAspectDragging,
+                                getCurrentScale: _getCurrentScale,
                                 onBoxSelected: (box) =>
                                     collageManager.selectBox(box),
                                 onBoxDragged: (box, details) {
