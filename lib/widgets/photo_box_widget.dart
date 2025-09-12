@@ -125,7 +125,8 @@ class PhotoBoxWidget extends StatelessWidget {
                   left: 0,
                   right: 0,
                   child: FittedBox(
-                    fit: BoxFit.scaleDown, // Prevent overflow on very small boxes
+                    fit: BoxFit
+                        .scaleDown, // Prevent overflow on very small boxes
                     alignment: Alignment.center,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -134,11 +135,17 @@ class PhotoBoxWidget extends StatelessWidget {
                         GestureDetector(
                           onTap: onDelete,
                           behavior: HitTestBehavior.opaque,
-                          child: const Padding(
-                            padding: EdgeInsets.all(6.0),
-                            child: Icon(
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Icon(
                               Icons.delete_outline,
-                              size: 24,
+                              size: 25,
                               color: Colors.white,
                             ),
                           ),
@@ -149,11 +156,17 @@ class PhotoBoxWidget extends StatelessWidget {
                           GestureDetector(
                             onTap: () => _showPhotoEditor(context),
                             behavior: HitTestBehavior.opaque,
-                            child: const Padding(
-                              padding: EdgeInsets.all(6.0),
-                              child: Icon(
+                            child: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.7),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
                                 Icons.edit,
-                                size: 24,
+                                size: 25,
                                 color: Colors.white,
                               ),
                             ),
