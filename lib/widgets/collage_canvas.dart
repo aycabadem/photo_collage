@@ -304,50 +304,13 @@ class CollageCanvas extends StatelessWidget {
     final double sX = innerW / templateSize.width;
     final double sY = innerH / templateSize.height;
 
-    const double eps = 1.0;
+    final double eps = _edgeEps();
 
-    // Build neighbor groups on each side of the selected box
-    List<PhotoBox> leftNeighbors = [];
-    List<PhotoBox> rightNeighbors = [];
-    List<PhotoBox> topNeighbors = [];
-    List<PhotoBox> bottomNeighbors = [];
-
-    for (final other in photoBoxes) {
-      if (other == selected) continue;
-
-      // Overlap checks
-      bool yOverlap = !(
-        (selected.position.dy + selected.size.height) < other.position.dy - eps ||
-        (other.position.dy + other.size.height) < selected.position.dy - eps
-      );
-      bool xOverlap = !(
-        (selected.position.dx + selected.size.width) < other.position.dx - eps ||
-        (other.position.dx + other.size.width) < selected.position.dx - eps
-      );
-
-      // Left neighbors: other.right == selected.left
-      final double selLeft = selected.position.dx;
-      final double selRight = selected.position.dx + selected.size.width;
-      final double selTop = selected.position.dy;
-      final double selBottom = selected.position.dy + selected.size.height;
-      final double otherLeft = other.position.dx;
-      final double otherRight = other.position.dx + other.size.width;
-      final double otherTop = other.position.dy;
-      final double otherBottom = other.position.dy + other.size.height;
-
-      if ((otherRight - selLeft).abs() <= eps && yOverlap) {
-        leftNeighbors.add(other);
-      }
-      if ((otherLeft - selRight).abs() <= eps && yOverlap) {
-        rightNeighbors.add(other);
-      }
-      if ((otherBottom - selTop).abs() <= eps && xOverlap) {
-        topNeighbors.add(other);
-      }
-      if ((otherTop - selBottom).abs() <= eps && xOverlap) {
-        bottomNeighbors.add(other);
-      }
-    }
+    // Build neighbor groups on each side of the selected box (with tolerant overlap)
+    final leftNeighbors = _leftNeighborsFor(selected, eps);
+    final rightNeighbors = _rightNeighborsFor(selected, eps);
+    final topNeighbors = _topNeighborsFor(selected, eps);
+    final bottomNeighbors = _bottomNeighborsFor(selected, eps);
 
     // Create handles for each non-empty group
     if (leftNeighbors.isNotEmpty) {
@@ -364,12 +327,20 @@ class CollageCanvas extends StatelessWidget {
           onDrag: (dxScreen) {
             final double scale = getCurrentScale();
             final double deltaTemplate = (dxScreen / scale) / sX;
-            collageManager.resizeGroupAlongEdge(
-              selected,
-              leftNeighbors,
+            final double edgeX = selected.position.dx;
+            final negativeGroup = _boxesWithRightEdgeAt(edgeX, eps);
+            final positiveGroup = _boxesWithLeftEdgeAt(edgeX, eps);
+            final applied = collageManager.resizeTwoGroupsAlongEdge(
+              negativeGroup,
+              positiveGroup,
               true,
-              true, // group on negative side (left)
               deltaTemplate,
+            );
+            // Snap all to the new divider line
+            collageManager.snapGroupsToVerticalLine(
+              negativeGroup,
+              positiveGroup,
+              edgeX + applied,
             );
           },
         ),
@@ -390,12 +361,19 @@ class CollageCanvas extends StatelessWidget {
           onDrag: (dxScreen) {
             final double scale = getCurrentScale();
             final double deltaTemplate = (dxScreen / scale) / sX;
-            collageManager.resizeGroupAlongEdge(
-              selected,
-              rightNeighbors,
+            final double edgeX = selected.position.dx + selected.size.width;
+            final negativeGroup = _boxesWithRightEdgeAt(edgeX, eps);
+            final positiveGroup = _boxesWithLeftEdgeAt(edgeX, eps);
+            final applied = collageManager.resizeTwoGroupsAlongEdge(
+              negativeGroup,
+              positiveGroup,
               true,
-              false, // right side
               deltaTemplate,
+            );
+            collageManager.snapGroupsToVerticalLine(
+              negativeGroup,
+              positiveGroup,
+              edgeX + applied,
             );
           },
         ),
@@ -416,12 +394,19 @@ class CollageCanvas extends StatelessWidget {
           onDrag: (dyScreen) {
             final double scale = getCurrentScale();
             final double deltaTemplate = (dyScreen / scale) / sY;
-            collageManager.resizeGroupAlongEdge(
-              selected,
-              topNeighbors,
+            final double edgeY = selected.position.dy;
+            final negativeGroup = _boxesWithBottomEdgeAt(edgeY, eps);
+            final positiveGroup = _boxesWithTopEdgeAt(edgeY, eps);
+            final applied = collageManager.resizeTwoGroupsAlongEdge(
+              negativeGroup,
+              positiveGroup,
               false,
-              true, // top side (negative)
               deltaTemplate,
+            );
+            collageManager.snapGroupsToHorizontalLine(
+              negativeGroup,
+              positiveGroup,
+              edgeY + applied,
             );
           },
         ),
@@ -442,12 +427,19 @@ class CollageCanvas extends StatelessWidget {
           onDrag: (dyScreen) {
             final double scale = getCurrentScale();
             final double deltaTemplate = (dyScreen / scale) / sY;
-            collageManager.resizeGroupAlongEdge(
-              selected,
-              bottomNeighbors,
+            final double edgeY = selected.position.dy + selected.size.height;
+            final negativeGroup = _boxesWithBottomEdgeAt(edgeY, eps);
+            final positiveGroup = _boxesWithTopEdgeAt(edgeY, eps);
+            final applied = collageManager.resizeTwoGroupsAlongEdge(
+              negativeGroup,
+              positiveGroup,
               false,
-              false, // bottom side
               deltaTemplate,
+            );
+            collageManager.snapGroupsToHorizontalLine(
+              negativeGroup,
+              positiveGroup,
+              edgeY + applied,
             );
           },
         ),
@@ -455,6 +447,127 @@ class CollageCanvas extends StatelessWidget {
     }
 
     return handles;
+  }
+
+  double _edgeEps() => math.max(3.0, collageManager.innerMargin * 0.5);
+
+  bool _yOverlapEnough(PhotoBox a, PhotoBox b, double eps) {
+    final double aTop = a.position.dy;
+    final double aBottom = a.position.dy + a.size.height;
+    final double bTop = b.position.dy;
+    final double bBottom = b.position.dy + b.size.height;
+    final double top = math.max(aTop, bTop);
+    final double bottom = math.min(aBottom, bBottom);
+    final double overlap = bottom - top;
+    if (overlap <= 0) return false;
+    final double minH = math.max(6.0, 0.3 * math.min(a.size.height, b.size.height));
+    return overlap + eps >= minH;
+  }
+
+  bool _xOverlapEnough(PhotoBox a, PhotoBox b, double eps) {
+    final double aLeft = a.position.dx;
+    final double aRight = a.position.dx + a.size.width;
+    final double bLeft = b.position.dx;
+    final double bRight = b.position.dx + b.size.width;
+    final double left = math.max(aLeft, bLeft);
+    final double right = math.min(aRight, bRight);
+    final double overlap = right - left;
+    if (overlap <= 0) return false;
+    final double minW = math.max(6.0, 0.3 * math.min(a.size.width, b.size.width));
+    return overlap + eps >= minW;
+  }
+
+  List<PhotoBox> _leftNeighborsFor(PhotoBox selected, double eps) {
+    final double selLeft = selected.position.dx;
+    final res = <PhotoBox>[];
+    for (final other in photoBoxes) {
+      if (other == selected) continue;
+      final double otherRight = other.position.dx + other.size.width;
+      if ((otherRight - selLeft).abs() <= eps && _yOverlapEnough(selected, other, eps)) {
+        res.add(other);
+      }
+    }
+    return res;
+  }
+
+  List<PhotoBox> _rightNeighborsFor(PhotoBox selected, double eps) {
+    final double selRight = selected.position.dx + selected.size.width;
+    final res = <PhotoBox>[];
+    for (final other in photoBoxes) {
+      if (other == selected) continue;
+      if ((other.position.dx - selRight).abs() <= eps && _yOverlapEnough(selected, other, eps)) {
+        res.add(other);
+      }
+    }
+    return res;
+  }
+
+  List<PhotoBox> _topNeighborsFor(PhotoBox selected, double eps) {
+    final double selTop = selected.position.dy;
+    final res = <PhotoBox>[];
+    for (final other in photoBoxes) {
+      if (other == selected) continue;
+      final double otherBottom = other.position.dy + other.size.height;
+      if ((otherBottom - selTop).abs() <= eps && _xOverlapEnough(selected, other, eps)) {
+        res.add(other);
+      }
+    }
+    return res;
+  }
+
+  List<PhotoBox> _bottomNeighborsFor(PhotoBox selected, double eps) {
+    final double selBottom = selected.position.dy + selected.size.height;
+    final res = <PhotoBox>[];
+    for (final other in photoBoxes) {
+      if (other == selected) continue;
+      if ((other.position.dy - selBottom).abs() <= eps && _xOverlapEnough(selected, other, eps)) {
+        res.add(other);
+      }
+    }
+    return res;
+  }
+
+  // Edge-based group helpers filtered by overlap with selected's span
+  List<PhotoBox> _boxesWithRightEdgeAt(double x, double eps) {
+    final res = <PhotoBox>[];
+    for (final b in photoBoxes) {
+      final double right = b.position.dx + b.size.width;
+      if ((right - x).abs() <= eps) {
+        res.add(b);
+      }
+    }
+    return res;
+  }
+
+  List<PhotoBox> _boxesWithLeftEdgeAt(double x, double eps) {
+    final res = <PhotoBox>[];
+    for (final b in photoBoxes) {
+      if ((b.position.dx - x).abs() <= eps) {
+        res.add(b);
+      }
+    }
+    return res;
+  }
+
+  List<PhotoBox> _boxesWithBottomEdgeAt(double y, double eps) {
+    final res = <PhotoBox>[];
+    for (final b in photoBoxes) {
+      final double bottom = b.position.dy + b.size.height;
+      if ((bottom - y).abs() <= eps) {
+        res.add(b);
+      }
+    }
+    return res;
+  }
+
+  List<PhotoBox> _boxesWithTopEdgeAt(double y, double eps) {
+    final res = <PhotoBox>[];
+    for (final b in photoBoxes) {
+      if ((b.position.dy - y).abs() <= eps) {
+        res.add(b);
+      }
+    }
+    return res;
   }
 
   // Map angle to begin/end alignments (-1..1)

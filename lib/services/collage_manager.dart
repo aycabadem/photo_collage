@@ -1100,6 +1100,156 @@ class CollageManager extends ChangeNotifier {
     }
   }
 
+  /// Resize two groups that share a divider edge.
+  /// negativeGroup: boxes on the negative side (left for vertical, top for horizontal) whose
+  ///                 right/bottom edge lies on the divider.
+  /// positiveGroup: boxes on the positive side (right/bottom) whose left/top edge lies on the divider.
+  /// delta: movement of the divider in template units (>
+  /// 0 moves right/down).
+  double resizeTwoGroupsAlongEdge(
+    List<PhotoBox> negativeGroup,
+    List<PhotoBox> positiveGroup,
+    bool isVertical,
+    double delta,
+  ) {
+    if (negativeGroup.isEmpty && positiveGroup.isEmpty) return 0.0;
+    const double minSize = 50.0;
+
+    if (isVertical) {
+      // Bounds for delta so all boxes remain >= minSize
+      double minDelta = double.negativeInfinity;
+      double maxDelta = double.infinity;
+
+      // Negative side grows with +delta, shrinks with -delta: w + delta >= min
+      for (final n in negativeGroup) {
+        final double nd = minSize - n.size.width; // lower bound
+        if (nd > minDelta) minDelta = nd;
+      }
+      // Positive side shrinks with +delta, grows with -delta: w - delta >= min -> delta <= w - min
+      for (final p in positiveGroup) {
+        final double pd = p.size.width - minSize; // upper bound
+        if (pd < maxDelta) maxDelta = pd;
+      }
+
+      final double clamped = delta.clamp(minDelta, maxDelta);
+
+      // Apply
+      for (final n in negativeGroup) {
+        n.size = Size(n.size.width + clamped, n.size.height);
+      }
+      for (final p in positiveGroup) {
+        p.position = Offset(p.position.dx + clamped, p.position.dy);
+        p.size = Size(p.size.width - clamped, p.size.height);
+      }
+      notifyListeners();
+      return clamped;
+    } else {
+      // Horizontal divider (y-axis movement)
+      double minDelta = double.negativeInfinity;
+      double maxDelta = double.infinity;
+
+      // Negative side (top) grows with +delta: h + delta >= min
+      for (final n in negativeGroup) {
+        final double nd = minSize - n.size.height; // lower bound
+        if (nd > minDelta) minDelta = nd;
+      }
+      // Positive side (bottom) shrinks with +delta: h - delta >= min -> delta <= h - min
+      for (final p in positiveGroup) {
+        final double pd = p.size.height - minSize; // upper bound
+        if (pd < maxDelta) maxDelta = pd;
+      }
+
+      final double clamped = delta.clamp(minDelta, maxDelta);
+
+      for (final n in negativeGroup) {
+        n.size = Size(n.size.width, n.size.height + clamped);
+      }
+      for (final p in positiveGroup) {
+        p.position = Offset(p.position.dx, p.position.dy + clamped);
+        p.size = Size(p.size.width, p.size.height - clamped);
+      }
+      notifyListeners();
+      return clamped;
+    }
+  }
+
+  /// Snap two groups to a precise vertical divider X (template coords)
+  void snapGroupsToVerticalLine(
+    List<PhotoBox> negativeGroup,
+    List<PhotoBox> positiveGroup,
+    double x,
+  ) {
+    for (final n in negativeGroup) {
+      n.position = Offset(x - n.size.width, n.position.dy);
+    }
+    for (final p in positiveGroup) {
+      p.position = Offset(x, p.position.dy);
+    }
+    notifyListeners();
+  }
+
+  /// Snap two groups to a precise horizontal divider Y (template coords)
+  void snapGroupsToHorizontalLine(
+    List<PhotoBox> negativeGroup,
+    List<PhotoBox> positiveGroup,
+    double y,
+  ) {
+    for (final n in negativeGroup) {
+      n.position = Offset(n.position.dx, y - n.size.height);
+    }
+    for (final p in positiveGroup) {
+      p.position = Offset(p.position.dx, y);
+    }
+    notifyListeners();
+  }
+
+  /// Snap neighbors to sit exactly on anchor's edge (fix tiny drift/rounding)
+  void snapNeighborsToAnchorEdge(
+    PhotoBox anchor,
+    List<PhotoBox> group,
+    bool isVertical,
+    bool groupOnNegativeSide,
+  ) {
+    const double eps = 0.5;
+    if (group.isEmpty) return;
+    if (isVertical) {
+      final double anchorLeft = anchor.position.dx;
+      final double anchorRight = anchor.position.dx + anchor.size.width;
+      if (groupOnNegativeSide) {
+        for (final n in group) {
+          final double nRight = n.position.dx + n.size.width;
+          if ((nRight - anchorLeft).abs() <= eps) {
+            n.position = Offset(anchorLeft - n.size.width, n.position.dy);
+          }
+        }
+      } else {
+        for (final n in group) {
+          if ((n.position.dx - anchorRight).abs() <= eps) {
+            n.position = Offset(anchorRight, n.position.dy);
+          }
+        }
+      }
+    } else {
+      final double anchorTop = anchor.position.dy;
+      final double anchorBottom = anchor.position.dy + anchor.size.height;
+      if (groupOnNegativeSide) {
+        for (final n in group) {
+          final double nBottom = n.position.dy + n.size.height;
+          if ((nBottom - anchorTop).abs() <= eps) {
+            n.position = Offset(n.position.dx, anchorTop - n.size.height);
+          }
+        }
+      } else {
+        for (final n in group) {
+          if ((n.position.dy - anchorBottom).abs() <= eps) {
+            n.position = Offset(n.position.dx, anchorBottom);
+          }
+        }
+      }
+    }
+    notifyListeners();
+  }
+
   /// Update available canvas area from LayoutBuilder and recompute size
   void updateAvailableArea(Size area) {
     _availableArea = area;
