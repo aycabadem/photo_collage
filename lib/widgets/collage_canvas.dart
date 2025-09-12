@@ -131,21 +131,17 @@ class CollageCanvas extends StatelessWidget {
 
   /// Build individual photo box widget with inner/outer margins applied
   Widget _buildPhotoBox(PhotoBox box, BuildContext context) {
-    // Outer margin: uniformly scale (preserve aspect) then center to create equal frame on all sides
+    // Map template coordinates into the padded inner area (equal px margin on all sides)
     final double outer = collageManager.outerMargin;
-    double s = 1.0;
-    if (outer > 0) {
-      final double sx = (templateSize.width - 2 * outer) / templateSize.width;
-      final double sy = (templateSize.height - 2 * outer) / templateSize.height;
-      s = math.min(sx, sy);
-    }
-    final double marginX = (templateSize.width - templateSize.width * s) / 2;
-    final double marginY = (templateSize.height - templateSize.height * s) / 2;
+    final double innerW = templateSize.width - 2 * outer;
+    final double innerH = templateSize.height - 2 * outer;
+    final double sX = innerW / templateSize.width;
+    final double sY = innerH / templateSize.height;
 
-    double baseLeft = marginX + box.position.dx * s;
-    double baseTop = marginY + box.position.dy * s;
-    double baseWidth = box.size.width * s;
-    double baseHeight = box.size.height * s;
+    double baseLeft = box.position.dx * sX;
+    double baseTop = box.position.dy * sY;
+    double baseWidth = box.size.width * sX;
+    double baseHeight = box.size.height * sY;
 
     // Inner margin: apply only between photos (edge-aware), not on outer edges
     final double inner = collageManager.innerMargin;
@@ -202,21 +198,17 @@ class CollageCanvas extends StatelessWidget {
 
   /// Build overlay for selected box with inner/outer margins applied
   Widget _buildOverlay(PhotoBox box, BuildContext context) {
-    // Outer scaling same as for the box (uniform scale + centered)
+    // Use same mapping as content: template -> padded inner area (equal px margins)
     final double outer = collageManager.outerMargin;
-    double s = 1.0;
-    if (outer > 0) {
-      final double sx = (templateSize.width - 2 * outer) / templateSize.width;
-      final double sy = (templateSize.height - 2 * outer) / templateSize.height;
-      s = math.min(sx, sy);
-    }
-    final double marginX = (templateSize.width - templateSize.width * s) / 2;
-    final double marginY = (templateSize.height - templateSize.height * s) / 2;
+    final double innerW = templateSize.width - 2 * outer;
+    final double innerH = templateSize.height - 2 * outer;
+    final double sX = innerW / templateSize.width;
+    final double sY = innerH / templateSize.height;
 
-    double baseLeft = marginX + box.position.dx * s;
-    double baseTop = marginY + box.position.dy * s;
-    double baseWidth = box.size.width * s;
-    double baseHeight = box.size.height * s;
+    double baseLeft = box.position.dx * sX;
+    double baseTop = box.position.dy * sY;
+    double baseWidth = box.size.width * sX;
+    double baseHeight = box.size.height * sY;
 
     // Inner margin same as content (edge-aware)
     final double inner = collageManager.innerMargin;
