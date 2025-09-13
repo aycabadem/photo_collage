@@ -1308,32 +1308,46 @@ class CollageManager extends ChangeNotifier {
         canvas.drawRect(rect, paint);
       }
 
-      // Draw photo boxes with proper scaling
+      // Draw photo boxes with proper scaling, including outer/inner margins
       final double scaleX = targetWidth / _templateSize.width;
       final double scaleY = targetHeight / _templateSize.height;
+      final double outerX = _outerMargin * scaleX;
+      final double outerY = _outerMargin * scaleY;
+      // Map template coordinates into the padded inner area (same as runtime canvas)
+      final double sX = (targetWidth - 2 * outerX) / _templateSize.width;
+      final double sY = (targetHeight - 2 * outerY) / _templateSize.height;
+      // Inner margin (edge-aware, applied between photos only)
+      final double innerHalfX = (_innerMargin * 0.5) * sX;
+      final double innerHalfY = (_innerMargin * 0.5) * sY;
 
       for (final box in _photoBoxes) {
         if (box.imageFile != null && box.imageFile!.existsSync()) {
           try {
             final image = await _loadImage(box.imageFile!);
             if (image != null) {
-              final scaledPosition = Offset(
-                box.position.dx * scaleX,
-                box.position.dy * scaleY,
-              );
-              final scaledSize = Size(
-                box.size.width * scaleX,
-                box.size.height * scaleY,
-              );
+              // Base mapping with outer padding + inner scaling
+              double baseLeft = outerX + box.position.dx * sX;
+              double baseTop = outerY + box.position.dy * sY;
+              double baseW = box.size.width * sX;
+              double baseH = box.size.height * sY;
 
-              // Apply photo margin
-              final double mX = photoMargin * scaleX;
-              final double mY = photoMargin * scaleY;
+              // Edge-aware inner spacing
+              const double eps = 0.5; // template-space tolerance
+              final bool isLeftEdge = box.position.dx <= eps;
+              final bool isRightEdge = (box.position.dx + box.size.width) >= (_templateSize.width - eps);
+              final bool isTopEdge = box.position.dy <= eps;
+              final bool isBottomEdge = (box.position.dy + box.size.height) >= (_templateSize.height - eps);
+
+              final double leftInset = isLeftEdge ? 0.0 : innerHalfX;
+              final double rightInset = isRightEdge ? 0.0 : innerHalfX;
+              final double topInset = isTopEdge ? 0.0 : innerHalfY;
+              final double bottomInset = isBottomEdge ? 0.0 : innerHalfY;
+
               final Rect dstRect = Rect.fromLTWH(
-                scaledPosition.dx + mX,
-                scaledPosition.dy + mY,
-                math.max(1, scaledSize.width - 2 * mX),
-                math.max(1, scaledSize.height - 2 * mY),
+                baseLeft + leftInset,
+                baseTop + topInset,
+                math.max(1, baseW - (leftInset + rightInset)),
+                math.max(1, baseH - (topInset + bottomInset)),
               );
 
               // Compute source rect according to fit and alignment (cover by default)
@@ -1345,8 +1359,24 @@ class CollageManager extends ChangeNotifier {
                 box.photoScale,
               );
 
-              // Clip for corner radius
-              final double r = cornerRadius * ((scaleX + scaleY) / 2);
+              // Optional: draw a soft drop shadow if enabled
+              if (_shadowIntensity > 0) {
+                final double t = (_shadowIntensity.clamp(0.0, 14.0)) / 14.0;
+                final double blur = 8 + 12 * t; // 8..20
+                final double yOff = 4 + 6 * t; // 4..10
+                final double a = 0.15 + 0.10 * t; // 0.15..0.25
+                final Paint shadowPaint = Paint()
+                  ..color = Colors.black.withValues(alpha: a)
+                  ..maskFilter = ui.MaskFilter.blur(ui.BlurStyle.normal, blur);
+                final RRect shadowRRect = RRect.fromRectAndRadius(
+                  dstRect.translate(0, yOff),
+                  Radius.circular(cornerRadius * ((sX + sY) / 2)),
+                );
+                canvas.drawRRect(shadowRRect, shadowPaint);
+              }
+
+              // Clip for corner radius and draw image
+              final double r = cornerRadius * ((sX + sY) / 2);
               canvas.save();
               if (r > 0) {
                 canvas.clipRRect(RRect.fromRectAndRadius(dstRect, Radius.circular(r)));
@@ -1366,8 +1396,8 @@ class CollageManager extends ChangeNotifier {
                   canvas,
                   Offset(dstRect.left, dstRect.top),
                   Size(dstRect.width, dstRect.height),
-                  scaleX,
-                  scaleY,
+                  sX,
+                  sY,
                 );
               }
             }
