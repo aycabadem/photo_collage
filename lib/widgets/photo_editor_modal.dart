@@ -56,30 +56,38 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                 ),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Crop Photo',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(color: const Color(0xFFA5B68D)),
+                  Expanded(
+                    child: Text(
+                      'Crop Photo',
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(color: const Color(0xFFA5B68D)),
+                    ),
                   ),
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: _resetToOriginal,
-                        child: const Text('Reset'),
-                      ),
-                      TextButton(
-                        onPressed: _saveChanges,
-                        child: const Text('Save'),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
+                  const SizedBox(width: 8),
+                  // Trailing actions shrink to fit on narrow screens
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(
+                          onPressed: _resetToOriginal,
+                          child: const Text('Reset'),
+                        ),
+                        TextButton(
+                          onPressed: _saveChanges,
+                          child: const Text('Save'),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

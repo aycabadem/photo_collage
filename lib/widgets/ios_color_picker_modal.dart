@@ -88,9 +88,14 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         children: [
           _buildModeTabs(),
           const SizedBox(height: 4),
-          _mode == BackgroundMode.solid
-              ? _buildHslControls()
-              : _buildGradientTwoColorCompact(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 28),
+              child: _mode == BackgroundMode.solid
+                  ? _buildHslControls()
+                  : _buildGradientTwoColorCompact(),
+            ),
+          ),
         ],
       ),
     );
@@ -176,6 +181,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
               label: const Text('Reset'),
             ),
           ),
+          const SizedBox(height: 24),
         ],
       ),
     );
@@ -419,6 +425,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           child: _angleSlider(),
         ),
+        const SizedBox(height: 24),
       ],
     );
   }
