@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_appflutter/screens/photo_editor_page.dart';
 import '../models/photo_box.dart';
 import '../widgets/smart_border_overlay.dart';
 import '../widgets/photo_editor_modal.dart';
@@ -198,15 +199,11 @@ class PhotoBoxWidget extends StatelessWidget {
 
   /// Show photo editor modal
   void _showPhotoEditor(BuildContext context) {
-    // Update alignment based on current photo display
-
-    // Debug: Print photo state BEFORE opening modal
-    // Debug prints removed
-
-    showDialog(
-      context: context,
-      builder: (context) =>
-          PhotoEditorModal(photoBox: box, onPhotoChanged: onPhotoModified),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            PhotoEditorPage(photoBox: box, onPhotoChanged: onPhotoModified),
+      ),
     );
   }
 
