@@ -21,6 +21,7 @@ class CollageScreen extends StatefulWidget {
 class _CollageScreenState extends State<CollageScreen> {
   final TransformationController _transformationController =
       TransformationController();
+  bool _ivGesturesEnabled = true; // lock pan/zoom during two‑finger rotate
 
   double _aspectScalar = 1.0; // width/height ratio in [0.5, 2.0]
   bool _isAspectDragging = false;
@@ -91,8 +92,8 @@ class _CollageScreenState extends State<CollageScreen> {
                           transformationController: _transformationController,
                           minScale: 0.3,
                           maxScale: 3.0,
-                          panEnabled: true, // Always allow panning
-                          scaleEnabled: true, // Zoom active
+                          panEnabled: _ivGesturesEnabled,
+                          scaleEnabled: _ivGesturesEnabled,
                           boundaryMargin: EdgeInsets.zero,
                           child: SizedBox(
                             width: constraints.maxWidth,
@@ -104,6 +105,11 @@ class _CollageScreenState extends State<CollageScreen> {
                                 selectedBox: collageManager.selectedBox,
                                 animateSize: !_isAspectDragging,
                                 getCurrentScale: _getCurrentScale,
+                                onRotateActive: (active) {
+                                  setState(() {
+                                    _ivGesturesEnabled = !active;
+                                  });
+                                },
                                 onBoxSelected: (box) =>
                                     collageManager.selectBox(box),
                                 onBoxDragged: (box, details) {

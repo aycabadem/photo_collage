@@ -30,6 +30,11 @@ class PhotoBox {
   /// How the photo is aligned within the box
   Alignment alignment;
 
+  /// Rotation (radians, CCW) for full‑box rotation in custom mode
+  double rotationRadians;
+  /// Rotation baseline captured at gesture start (not persisted)
+  double rotationBaseRadians;
+
   PhotoBox({
     required this.position,
     required this.size,
@@ -40,5 +45,7 @@ class PhotoBox {
     this.photoScale = 1.0,
     this.cropRect = const Rect.fromLTWH(0, 0, 1, 1),
     this.alignment = Alignment.center,
+    this.rotationRadians = 0.0,
+    this.rotationBaseRadians = 0.0,
   });
 }

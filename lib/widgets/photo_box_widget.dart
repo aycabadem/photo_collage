@@ -1,12 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:my_appflutter/screens/photo_editor_page.dart';
 import '../models/photo_box.dart';
 import '../widgets/smart_border_overlay.dart';
-import '../widgets/photo_editor_modal.dart';
 import '../services/collage_manager.dart';
 
 /// Widget for displaying a single photo box in the collage
-class PhotoBoxWidget extends StatelessWidget {
+class PhotoBoxWidget extends StatefulWidget {
   /// The photo box data to display
   final PhotoBox box;
 
@@ -39,6 +40,9 @@ class PhotoBoxWidget extends StatelessWidget {
   /// CollageManager for accessing new border effects
   final CollageManager collageManager;
 
+  /// Notify parent when a rotation gesture becomes active/inactive
+  final void Function(bool active)? onRotateActive;
+
   const PhotoBoxWidget({
     super.key,
     required this.box,
@@ -53,27 +57,35 @@ class PhotoBoxWidget extends StatelessWidget {
     required this.hasGlobalBorder,
     required this.otherBoxes,
     required this.collageManager,
+    this.onRotateActive,
   });
 
   @override
+  State<PhotoBoxWidget> createState() => _PhotoBoxWidgetState();
+}
+
+class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
+  double _rotationGestureBase = 0.0;
+  bool _rotationActive = false;
+
+  @override
   Widget build(BuildContext context) {
-    // Debug: Print current photo box values
-    // Debug prints removed for production cleanliness
+    final box = widget.box;
 
     return GestureDetector(
-      onDoubleTap: onTap, // Double tap to select
-      onPanUpdate: isSelected
-          ? onPanUpdate
-          : null, // Only allow dragging when selected
+      onDoubleTap: widget.onTap, // Double tap to select
+      onScaleStart: widget.isSelected ? _handleScaleStart : null,
+      onScaleUpdate: widget.isSelected ? _handleScaleUpdate : null,
+      onScaleEnd: widget.isSelected ? _handleScaleEnd : null,
       behavior: HitTestBehavior.opaque, // Prevent background taps
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(collageManager.cornerRadius),
+          borderRadius: BorderRadius.circular(widget.collageManager.cornerRadius),
           // Layered shadows for stronger 3D effect
-          boxShadow: _shadowLayers(collageManager.shadowIntensity),
+          boxShadow: _shadowLayers(widget.collageManager.shadowIntensity),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(collageManager.cornerRadius),
+          borderRadius: BorderRadius.circular(widget.collageManager.cornerRadius),
           child: Stack(
             children: [
               // Photo or placeholder
@@ -82,7 +94,7 @@ class PhotoBoxWidget extends StatelessWidget {
                       // Subtle lift for 3D feel; increases slightly with shadow intensity
                       offset: Offset(
                         0,
-                        -(_liftOffset(collageManager.shadowIntensity)),
+                        -(_liftOffset(widget.collageManager.shadowIntensity)),
                       ),
                       child: Transform.scale(
                         scale: box.photoScale,
@@ -111,37 +123,36 @@ class PhotoBoxWidget extends StatelessWidget {
                     ),
 
               // Smart border overlay (ignore pointer so it doesn't block interactions)
-              if (hasGlobalBorder && globalBorderWidth > 0)
+              if (widget.hasGlobalBorder && widget.globalBorderWidth > 0)
                 IgnorePointer(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(
-                      collageManager.cornerRadius,
+                      widget.collageManager.cornerRadius,
                     ),
                     child: SmartBorderOverlay(
                       box: box,
-                      borderWidth: globalBorderWidth,
-                      borderColor: globalBorderColor,
-                      otherBoxes: otherBoxes,
+                      borderWidth: widget.globalBorderWidth,
+                      borderColor: widget.globalBorderColor,
+                      otherBoxes: widget.otherBoxes,
                     ),
                   ),
                 ),
 
               // Action buttons (only for selected boxes)
-              if (isSelected)
+              if (widget.isSelected)
                 Positioned(
                   top: 8,
                   left: 0,
                   right: 0,
                   child: FittedBox(
-                    fit: BoxFit
-                        .scaleDown, // Prevent overflow on very small boxes
+                    fit: BoxFit.scaleDown, // Prevent overflow on very small boxes
                     alignment: Alignment.center,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Delete (plain white icon, no background)
                         GestureDetector(
-                          onTap: onDelete,
+                          onTap: widget.onDelete,
                           behavior: HitTestBehavior.opaque,
                           child: Container(
                             width: 40,
@@ -190,10 +201,71 @@ class PhotoBoxWidget extends StatelessWidget {
     );
   }
 
+  void _handleScaleStart(ScaleStartDetails details) {
+    _rotationGestureBase = widget.box.rotationRadians;
+    widget.box.rotationBaseRadians = widget.box.rotationRadians;
+    _rotationActive = false;
+  }
+
+  void _handleScaleUpdate(ScaleUpdateDetails details) {
+    if (!widget.isSelected) return;
+
+    final pointerCount = details.pointerCount;
+    if (pointerCount >= 2) {
+      if (!_rotationActive) {
+        _rotationActive = true;
+        _rotationGestureBase = widget.box.rotationRadians;
+        widget.box.rotationBaseRadians = widget.box.rotationRadians;
+        widget.onRotateActive?.call(true);
+      }
+      final newAngle = _normalizeAngle(_rotationGestureBase + details.rotation);
+      if (widget.box.rotationRadians != newAngle) {
+        widget.box.rotationRadians = newAngle;
+        widget.collageManager.refresh();
+      }
+    } else if (pointerCount == 1) {
+      if (_rotationActive) {
+        _rotationActive = false;
+        widget.onRotateActive?.call(false);
+      }
+      widget.onPanUpdate(
+        DragUpdateDetails(
+          delta: details.focalPointDelta,
+          globalPosition: details.focalPoint,
+          localPosition: details.localFocalPoint,
+        ),
+      );
+    } else {
+      if (_rotationActive) {
+        _rotationActive = false;
+        widget.onRotateActive?.call(false);
+      }
+    }
+  }
+
+  void _handleScaleEnd(ScaleEndDetails details) {
+    if (_rotationActive) {
+      _rotationActive = false;
+      widget.onRotateActive?.call(false);
+    }
+    widget.box.rotationBaseRadians = widget.box.rotationRadians;
+  }
+
+  double _normalizeAngle(double angle) {
+    const double twoPi = 2 * math.pi;
+    angle = angle % twoPi;
+    if (angle <= -math.pi) {
+      angle += twoPi;
+    } else if (angle > math.pi) {
+      angle -= twoPi;
+    }
+    return angle;
+  }
+
   /// Add photo to this specific box
   void _addPhotoToBox(BuildContext context) async {
-    if (onAddPhoto != null) {
-      await onAddPhoto!();
+    if (widget.onAddPhoto != null) {
+      await widget.onAddPhoto!();
     }
   }
 
@@ -202,12 +274,10 @@ class PhotoBoxWidget extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) =>
-            PhotoEditorPage(photoBox: box, onPhotoChanged: onPhotoModified),
+            PhotoEditorPage(photoBox: widget.box, onPhotoChanged: widget.onPhotoModified),
       ),
     );
   }
-
-  /// Update photo alignment to show the current visible part
 }
 
 /// Build layered shadows for a stronger, more 3D-like effect

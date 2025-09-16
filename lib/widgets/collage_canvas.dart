@@ -44,6 +44,8 @@ class CollageCanvas extends StatelessWidget {
   final CollageManager collageManager;
   // Callback to read current zoom scale from parent (InteractiveViewer)
   final double Function() getCurrentScale;
+  // Notify parent when a box rotation gesture becomes active/inactive
+  final void Function(bool active)? onRotateActive;
 
   const CollageCanvas({
     super.key,
@@ -60,6 +62,7 @@ class CollageCanvas extends StatelessWidget {
     required this.collageManager,
     this.animateSize = true,
     required this.getCurrentScale,
+    this.onRotateActive,
   });
 
   @override
@@ -94,48 +97,46 @@ class CollageCanvas extends StatelessWidget {
   final bool animateSize;
 
   BoxDecoration _decoration() => BoxDecoration(
-        gradient: collageManager.backgroundMode == BackgroundMode.gradient
-            ? LinearGradient(
-                begin:
-                    _beginFromAngle(collageManager.backgroundGradient.angleDeg),
-                end: _endFromAngle(collageManager.backgroundGradient.angleDeg),
-                colors: collageManager.gradientColorsWithOpacity,
-                stops: collageManager.gradientStops,
-              )
-            : null,
-        color: collageManager.backgroundMode == BackgroundMode.solid
-            ? collageManager.backgroundColorWithOpacity
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-            spreadRadius: 2,
-          ),
-        ],
-      );
+    gradient: collageManager.backgroundMode == BackgroundMode.gradient
+        ? LinearGradient(
+            begin: _beginFromAngle(collageManager.backgroundGradient.angleDeg),
+            end: _endFromAngle(collageManager.backgroundGradient.angleDeg),
+            colors: collageManager.gradientColorsWithOpacity,
+            stops: collageManager.gradientStops,
+          )
+        : null,
+    color: collageManager.backgroundMode == BackgroundMode.solid
+        ? collageManager.backgroundColorWithOpacity
+        : null,
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.1),
+        blurRadius: 10,
+        offset: const Offset(0, 5),
+        spreadRadius: 2,
+      ),
+    ],
+  );
 
   Widget _contentStack(BuildContext context) => Padding(
-        padding: EdgeInsets.all(collageManager.outerMargin),
-        child: Stack(
-          // Allow children (photo shadows, handles) to render into the padded
-          // outer margin area without being clipped.
-          clipBehavior: Clip.none,
-          children: [
-            for (var box in photoBoxes) _buildPhotoBox(box, context),
-            if (selectedBox != null && collageManager.isCustomMode && photoBoxes.contains(selectedBox))
-              _buildOverlay(selectedBox!, context),
-            if (selectedBox != null)
-              ..._buildSplitHandlesForSelected(selectedBox!, context),
-            if (guidelines.isNotEmpty && collageManager.isCustomMode)
-              GuidelinesOverlay(
-                guidelines: guidelines,
-                templateSize: templateSize,
-              ),
-          ],
-        ),
-      );
+    padding: EdgeInsets.all(collageManager.outerMargin),
+    child: Stack(
+      // Allow children (photo shadows, handles) to render into the padded
+      // outer margin area without being clipped.
+      clipBehavior: Clip.none,
+      children: [
+        for (var box in photoBoxes) _buildPhotoBox(box, context),
+        if (selectedBox != null &&
+            collageManager.isCustomMode &&
+            photoBoxes.contains(selectedBox))
+          _buildOverlay(selectedBox!, context),
+        if (selectedBox != null)
+          ..._buildSplitHandlesForSelected(selectedBox!, context),
+        if (guidelines.isNotEmpty && collageManager.isCustomMode)
+          GuidelinesOverlay(guidelines: guidelines, templateSize: templateSize),
+      ],
+    ),
+  );
 
   /// Build individual photo box widget with inner/outer margins applied
   Widget _buildPhotoBox(PhotoBox box, BuildContext context) {
@@ -156,9 +157,11 @@ class CollageCanvas extends StatelessWidget {
     final double half = inner * 0.5;
     const double eps = 0.5; // edge tolerance in logical px
     final bool isLeftEdge = box.position.dx <= eps;
-    final bool isRightEdge = (box.position.dx + box.size.width) >= (templateSize.width - eps);
+    final bool isRightEdge =
+        (box.position.dx + box.size.width) >= (templateSize.width - eps);
     final bool isTopEdge = box.position.dy <= eps;
-    final bool isBottomEdge = (box.position.dy + box.size.height) >= (templateSize.height - eps);
+    final bool isBottomEdge =
+        (box.position.dy + box.size.height) >= (templateSize.height - eps);
 
     final double leftInset = isLeftEdge ? 0.0 : half;
     final double rightInset = isRightEdge ? 0.0 : half;
@@ -184,21 +187,26 @@ class CollageCanvas extends StatelessWidget {
       child: SizedBox(
         width: adjustedWidth,
         height: adjustedHeight,
-        child: PhotoBoxWidget(
-          box: box,
-          isSelected: selectedBox == box,
-          onTap: () => onBoxSelected(box),
-          onPanUpdate: (details) => onBoxDragged(box, details),
-          onDelete: () => onBoxDeleted(box),
-          onAddPhoto: () async => await onAddPhotoToBox(box),
-          onPhotoModified: () {
-            collageManager.refresh();
-          },
-          globalBorderWidth: collageManager.globalBorderWidth,
-          globalBorderColor: collageManager.globalBorderColor,
-          hasGlobalBorder: collageManager.hasGlobalBorder,
-          otherBoxes: photoBoxes.where((b) => b != box).toList(),
-          collageManager: collageManager,
+        child: Transform.rotate(
+          alignment: Alignment.center,
+          angle: box.rotationRadians,
+          child: PhotoBoxWidget(
+            box: box,
+            isSelected: selectedBox == box,
+            onTap: () => onBoxSelected(box),
+            onPanUpdate: (details) => onBoxDragged(box, details),
+            onDelete: () => onBoxDeleted(box),
+            onAddPhoto: () async => await onAddPhotoToBox(box),
+            onPhotoModified: () {
+              collageManager.refresh();
+            },
+            globalBorderWidth: collageManager.globalBorderWidth,
+            globalBorderColor: collageManager.globalBorderColor,
+            hasGlobalBorder: collageManager.hasGlobalBorder,
+            otherBoxes: photoBoxes.where((b) => b != box).toList(),
+            collageManager: collageManager,
+            onRotateActive: onRotateActive,
+          ),
         ),
       ),
     );
@@ -223,9 +231,11 @@ class CollageCanvas extends StatelessWidget {
     final double half = inner * 0.5;
     const double eps = 0.5;
     final bool isLeftEdge = box.position.dx <= eps;
-    final bool isRightEdge = (box.position.dx + box.size.width) >= (templateSize.width - eps);
+    final bool isRightEdge =
+        (box.position.dx + box.size.width) >= (templateSize.width - eps);
     final bool isTopEdge = box.position.dy <= eps;
-    final bool isBottomEdge = (box.position.dy + box.size.height) >= (templateSize.height - eps);
+    final bool isBottomEdge =
+        (box.position.dy + box.size.height) >= (templateSize.height - eps);
 
     final double leftInset = isLeftEdge ? 0.0 : half;
     final double rightInset = isRightEdge ? 0.0 : half;
@@ -250,52 +260,59 @@ class CollageCanvas extends StatelessWidget {
       child: SizedBox(
         width: adjustedWidth,
         height: adjustedHeight,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // Top-left resize handle
-            ResizeHandleWidget(
-              box: box,
-              alignment: Alignment.topLeft,
-              size: 12.0,
-              onDrag: (dx, dy) =>
-                  onResizeHandleDragged(box, dx, dy, Alignment.topLeft),
-            ),
+        child: Transform.rotate(
+          alignment: Alignment.center,
+          angle: box.rotationRadians,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Top-left resize handle
+              ResizeHandleWidget(
+                box: box,
+                alignment: Alignment.topLeft,
+                size: 12.0,
+                onDrag: (dx, dy) =>
+                    onResizeHandleDragged(box, dx, dy, Alignment.topLeft),
+              ),
 
-            // Top-right resize handle
-            ResizeHandleWidget(
-              box: box,
-              alignment: Alignment.topRight,
-              size: 12.0,
-              onDrag: (dx, dy) =>
-                  onResizeHandleDragged(box, dx, dy, Alignment.topRight),
-            ),
+              // Top-right resize handle
+              ResizeHandleWidget(
+                box: box,
+                alignment: Alignment.topRight,
+                size: 12.0,
+                onDrag: (dx, dy) =>
+                    onResizeHandleDragged(box, dx, dy, Alignment.topRight),
+              ),
 
-            // Bottom-left resize handle
-            ResizeHandleWidget(
-              box: box,
-              alignment: Alignment.bottomLeft,
-              size: 12.0,
-              onDrag: (dx, dy) =>
-                  onResizeHandleDragged(box, dx, dy, Alignment.bottomLeft),
-            ),
+              // Bottom-left resize handle
+              ResizeHandleWidget(
+                box: box,
+                alignment: Alignment.bottomLeft,
+                size: 12.0,
+                onDrag: (dx, dy) =>
+                    onResizeHandleDragged(box, dx, dy, Alignment.bottomLeft),
+              ),
 
-            // Bottom-right resize handle
-            ResizeHandleWidget(
-              box: box,
-              alignment: Alignment.bottomRight,
-              size: 12.0,
-              onDrag: (dx, dy) =>
-                  onResizeHandleDragged(box, dx, dy, Alignment.bottomRight),
-            ),
-          ],
+              // Bottom-right resize handle
+              ResizeHandleWidget(
+                box: box,
+                alignment: Alignment.bottomRight,
+                size: 12.0,
+                onDrag: (dx, dy) =>
+                    onResizeHandleDragged(box, dx, dy, Alignment.bottomRight),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   // Build splitter handles for adjacent pairs that include the selected box
-  List<Widget> _buildSplitHandlesForSelected(PhotoBox selected, BuildContext context) {
+  List<Widget> _buildSplitHandlesForSelected(
+    PhotoBox selected,
+    BuildContext context,
+  ) {
     final List<Widget> handles = [];
 
     final double outer = collageManager.outerMargin;
@@ -317,133 +334,141 @@ class CollageCanvas extends StatelessWidget {
       final double x = selected.position.dx * sX;
       final double y = selected.position.dy * sY;
       final double h = selected.size.height * sY;
-      handles.add(Positioned(
-        left: x - 14,
-        top: y,
-        width: 28,
-        height: h,
-        child: SplitHandleWidget(
-          isVertical: true,
-          onDrag: (dxScreen) {
-            final double scale = getCurrentScale();
-            final double deltaTemplate = (dxScreen / scale) / sX;
-            final double edgeX = selected.position.dx;
-            final negativeGroup = _boxesWithRightEdgeAt(edgeX, eps);
-            final positiveGroup = _boxesWithLeftEdgeAt(edgeX, eps);
-            final applied = collageManager.resizeTwoGroupsAlongEdge(
-              negativeGroup,
-              positiveGroup,
-              true,
-              deltaTemplate,
-            );
-            // Snap all to the new divider line
-            collageManager.snapGroupsToVerticalLine(
-              negativeGroup,
-              positiveGroup,
-              edgeX + applied,
-            );
-          },
+      handles.add(
+        Positioned(
+          left: x - 14,
+          top: y,
+          width: 28,
+          height: h,
+          child: SplitHandleWidget(
+            isVertical: true,
+            onDrag: (dxScreen) {
+              final double scale = getCurrentScale();
+              final double deltaTemplate = (dxScreen / scale) / sX;
+              final double edgeX = selected.position.dx;
+              final negativeGroup = _boxesWithRightEdgeAt(edgeX, eps);
+              final positiveGroup = _boxesWithLeftEdgeAt(edgeX, eps);
+              final applied = collageManager.resizeTwoGroupsAlongEdge(
+                negativeGroup,
+                positiveGroup,
+                true,
+                deltaTemplate,
+              );
+              // Snap all to the new divider line
+              collageManager.snapGroupsToVerticalLine(
+                negativeGroup,
+                positiveGroup,
+                edgeX + applied,
+              );
+            },
+          ),
         ),
-      ));
+      );
     }
 
     if (rightNeighbors.isNotEmpty) {
       final double x = (selected.position.dx + selected.size.width) * sX;
       final double y = selected.position.dy * sY;
       final double h = selected.size.height * sY;
-      handles.add(Positioned(
-        left: x - 14,
-        top: y,
-        width: 28,
-        height: h,
-        child: SplitHandleWidget(
-          isVertical: true,
-          onDrag: (dxScreen) {
-            final double scale = getCurrentScale();
-            final double deltaTemplate = (dxScreen / scale) / sX;
-            final double edgeX = selected.position.dx + selected.size.width;
-            final negativeGroup = _boxesWithRightEdgeAt(edgeX, eps);
-            final positiveGroup = _boxesWithLeftEdgeAt(edgeX, eps);
-            final applied = collageManager.resizeTwoGroupsAlongEdge(
-              negativeGroup,
-              positiveGroup,
-              true,
-              deltaTemplate,
-            );
-            collageManager.snapGroupsToVerticalLine(
-              negativeGroup,
-              positiveGroup,
-              edgeX + applied,
-            );
-          },
+      handles.add(
+        Positioned(
+          left: x - 14,
+          top: y,
+          width: 28,
+          height: h,
+          child: SplitHandleWidget(
+            isVertical: true,
+            onDrag: (dxScreen) {
+              final double scale = getCurrentScale();
+              final double deltaTemplate = (dxScreen / scale) / sX;
+              final double edgeX = selected.position.dx + selected.size.width;
+              final negativeGroup = _boxesWithRightEdgeAt(edgeX, eps);
+              final positiveGroup = _boxesWithLeftEdgeAt(edgeX, eps);
+              final applied = collageManager.resizeTwoGroupsAlongEdge(
+                negativeGroup,
+                positiveGroup,
+                true,
+                deltaTemplate,
+              );
+              collageManager.snapGroupsToVerticalLine(
+                negativeGroup,
+                positiveGroup,
+                edgeX + applied,
+              );
+            },
+          ),
         ),
-      ));
+      );
     }
 
     if (topNeighbors.isNotEmpty) {
       final double x = selected.position.dx * sX;
       final double y = selected.position.dy * sY;
       final double w = selected.size.width * sX;
-      handles.add(Positioned(
-        left: x,
-        top: y - 14,
-        width: w,
-        height: 28,
-        child: SplitHandleWidget(
-          isVertical: false,
-          onDrag: (dyScreen) {
-            final double scale = getCurrentScale();
-            final double deltaTemplate = (dyScreen / scale) / sY;
-            final double edgeY = selected.position.dy;
-            final negativeGroup = _boxesWithBottomEdgeAt(edgeY, eps);
-            final positiveGroup = _boxesWithTopEdgeAt(edgeY, eps);
-            final applied = collageManager.resizeTwoGroupsAlongEdge(
-              negativeGroup,
-              positiveGroup,
-              false,
-              deltaTemplate,
-            );
-            collageManager.snapGroupsToHorizontalLine(
-              negativeGroup,
-              positiveGroup,
-              edgeY + applied,
-            );
-          },
+      handles.add(
+        Positioned(
+          left: x,
+          top: y - 14,
+          width: w,
+          height: 28,
+          child: SplitHandleWidget(
+            isVertical: false,
+            onDrag: (dyScreen) {
+              final double scale = getCurrentScale();
+              final double deltaTemplate = (dyScreen / scale) / sY;
+              final double edgeY = selected.position.dy;
+              final negativeGroup = _boxesWithBottomEdgeAt(edgeY, eps);
+              final positiveGroup = _boxesWithTopEdgeAt(edgeY, eps);
+              final applied = collageManager.resizeTwoGroupsAlongEdge(
+                negativeGroup,
+                positiveGroup,
+                false,
+                deltaTemplate,
+              );
+              collageManager.snapGroupsToHorizontalLine(
+                negativeGroup,
+                positiveGroup,
+                edgeY + applied,
+              );
+            },
+          ),
         ),
-      ));
+      );
     }
 
     if (bottomNeighbors.isNotEmpty) {
       final double x = selected.position.dx * sX;
       final double y = (selected.position.dy + selected.size.height) * sY;
       final double w = selected.size.width * sX;
-      handles.add(Positioned(
-        left: x,
-        top: y - 14,
-        width: w,
-        height: 28,
-        child: SplitHandleWidget(
-          isVertical: false,
-          onDrag: (dyScreen) {
-            final double scale = getCurrentScale();
-            final double deltaTemplate = (dyScreen / scale) / sY;
-            final double edgeY = selected.position.dy + selected.size.height;
-            final negativeGroup = _boxesWithBottomEdgeAt(edgeY, eps);
-            final positiveGroup = _boxesWithTopEdgeAt(edgeY, eps);
-            final applied = collageManager.resizeTwoGroupsAlongEdge(
-              negativeGroup,
-              positiveGroup,
-              false,
-              deltaTemplate,
-            );
-            collageManager.snapGroupsToHorizontalLine(
-              negativeGroup,
-              positiveGroup,
-              edgeY + applied,
-            );
-          },
+      handles.add(
+        Positioned(
+          left: x,
+          top: y - 14,
+          width: w,
+          height: 28,
+          child: SplitHandleWidget(
+            isVertical: false,
+            onDrag: (dyScreen) {
+              final double scale = getCurrentScale();
+              final double deltaTemplate = (dyScreen / scale) / sY;
+              final double edgeY = selected.position.dy + selected.size.height;
+              final negativeGroup = _boxesWithBottomEdgeAt(edgeY, eps);
+              final positiveGroup = _boxesWithTopEdgeAt(edgeY, eps);
+              final applied = collageManager.resizeTwoGroupsAlongEdge(
+                negativeGroup,
+                positiveGroup,
+                false,
+                deltaTemplate,
+              );
+              collageManager.snapGroupsToHorizontalLine(
+                negativeGroup,
+                positiveGroup,
+                edgeY + applied,
+              );
+            },
+          ),
         ),
-      ));
+      );
     }
 
     return handles;
@@ -460,7 +485,10 @@ class CollageCanvas extends StatelessWidget {
     final double bottom = math.min(aBottom, bBottom);
     final double overlap = bottom - top;
     if (overlap <= 0) return false;
-    final double minH = math.max(6.0, 0.3 * math.min(a.size.height, b.size.height));
+    final double minH = math.max(
+      6.0,
+      0.3 * math.min(a.size.height, b.size.height),
+    );
     return overlap + eps >= minH;
   }
 
@@ -473,7 +501,10 @@ class CollageCanvas extends StatelessWidget {
     final double right = math.min(aRight, bRight);
     final double overlap = right - left;
     if (overlap <= 0) return false;
-    final double minW = math.max(6.0, 0.3 * math.min(a.size.width, b.size.width));
+    final double minW = math.max(
+      6.0,
+      0.3 * math.min(a.size.width, b.size.width),
+    );
     return overlap + eps >= minW;
   }
 
@@ -483,7 +514,8 @@ class CollageCanvas extends StatelessWidget {
     for (final other in photoBoxes) {
       if (other == selected) continue;
       final double otherRight = other.position.dx + other.size.width;
-      if ((otherRight - selLeft).abs() <= eps && _yOverlapEnough(selected, other, eps)) {
+      if ((otherRight - selLeft).abs() <= eps &&
+          _yOverlapEnough(selected, other, eps)) {
         res.add(other);
       }
     }
@@ -495,7 +527,8 @@ class CollageCanvas extends StatelessWidget {
     final res = <PhotoBox>[];
     for (final other in photoBoxes) {
       if (other == selected) continue;
-      if ((other.position.dx - selRight).abs() <= eps && _yOverlapEnough(selected, other, eps)) {
+      if ((other.position.dx - selRight).abs() <= eps &&
+          _yOverlapEnough(selected, other, eps)) {
         res.add(other);
       }
     }
@@ -508,7 +541,8 @@ class CollageCanvas extends StatelessWidget {
     for (final other in photoBoxes) {
       if (other == selected) continue;
       final double otherBottom = other.position.dy + other.size.height;
-      if ((otherBottom - selTop).abs() <= eps && _xOverlapEnough(selected, other, eps)) {
+      if ((otherBottom - selTop).abs() <= eps &&
+          _xOverlapEnough(selected, other, eps)) {
         res.add(other);
       }
     }
@@ -520,7 +554,8 @@ class CollageCanvas extends StatelessWidget {
     final res = <PhotoBox>[];
     for (final other in photoBoxes) {
       if (other == selected) continue;
-      if ((other.position.dy - selBottom).abs() <= eps && _xOverlapEnough(selected, other, eps)) {
+      if ((other.position.dy - selBottom).abs() <= eps &&
+          _xOverlapEnough(selected, other, eps)) {
         res.add(other);
       }
     }

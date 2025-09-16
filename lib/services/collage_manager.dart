@@ -1375,31 +1375,40 @@ class CollageManager extends ChangeNotifier {
                 canvas.drawRRect(shadowRRect, shadowPaint);
               }
 
-              // Clip for corner radius and draw image
+              // Clip + rotate around center, then draw image and borders
               final double r = cornerRadius * ((sX + sY) / 2);
+              final double cx = dstRect.center.dx;
+              final double cy = dstRect.center.dy;
+              final double w = dstRect.width;
+              final double h = dstRect.height;
+              final Rect localDst = Rect.fromLTWH(-w / 2, -h / 2, w, h);
+
               canvas.save();
+              canvas.translate(cx, cy);
               if (r > 0) {
-                canvas.clipRRect(RRect.fromRectAndRadius(dstRect, Radius.circular(r)));
+                canvas.clipRRect(RRect.fromRectAndRadius(localDst, Radius.circular(r)));
               } else {
-                canvas.clipRect(dstRect);
+                canvas.clipRect(localDst);
               }
+              // Apply box rotation
+              canvas.rotate(box.rotationRadians);
 
               final paintImg = Paint()
                 ..isAntiAlias = true
                 ..filterQuality = FilterQuality.high;
-              canvas.drawImageRect(image, srcRect, dstRect, paintImg);
-              canvas.restore();
+              canvas.drawImageRect(image, srcRect, localDst, paintImg);
 
-              // Draw borders if enabled
+              // Draw borders if enabled (in rotated local space)
               if (_hasGlobalBorder && _globalBorderWidth > 0) {
                 _drawSimpleBorders(
                   canvas,
-                  Offset(dstRect.left, dstRect.top),
-                  Size(dstRect.width, dstRect.height),
+                  Offset(localDst.left, localDst.top),
+                  Size(localDst.width, localDst.height),
                   sX,
                   sY,
                 );
               }
+              canvas.restore();
             }
           } catch (e) {
             // Error loading image - skip this image
