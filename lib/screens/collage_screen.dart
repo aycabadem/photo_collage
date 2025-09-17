@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/aspect_spec.dart';
 import '../models/background.dart';
 import '../services/collage_manager.dart';
@@ -384,46 +387,164 @@ class _CollageScreenState extends State<CollageScreen> {
     );
 
     try {
-      final success = await manager.saveCollage();
+      final savedPath = await manager.saveCollage();
 
-      // Hide loading indicator
+      if (!context.mounted) return;
+      Navigator.of(context).pop();
+
+      if (!context.mounted) return;
+
+      if (savedPath != null) {
+        await _showSaveSuccessDialog(context, savedPath);
+      } else {
+        await _showSaveErrorDialog(context);
+      }
+    } catch (_) {
       if (context.mounted) {
         Navigator.of(context).pop();
-
-        if (success) {
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Collage saved successfully to gallery!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        } else {
-          // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to save collage. Please try again.'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
+        if (context.mounted) {
+          await _showSaveErrorDialog(context);
         }
       }
-    } catch (e) {
-      // Hide loading indicator
-      if (context.mounted) {
-        Navigator.of(context).pop();
+    }
+  }
 
-        // Show error message
+  Future<void> _showSaveSuccessDialog(
+    BuildContext context,
+    String savedPath,
+  ) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 60,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Photo Saved!',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Your collage is in the gallery.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  await _openPhotosApp(context, savedPath);
+                },
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Text('Open Photos'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(44),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showSaveErrorDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 60,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Save Failed',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "We couldn't save your collage. Please try again.",
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openPhotosApp(BuildContext context, String maybePath) async {
+    Uri? uri;
+
+    if (maybePath.isNotEmpty) {
+      try {
+        final parsed = Uri.parse(maybePath);
+        uri = parsed.scheme.isEmpty ? Uri.file(maybePath) : parsed;
+      } catch (_) {
+        uri = Uri.file(maybePath);
+      }
+    }
+
+    uri ??= () {
+      if (Platform.isIOS) {
+        return Uri.parse('photos-redirect://');
+      }
+      if (Platform.isAndroid) {
+        return Uri.parse('content://media/internal/images/media');
+      }
+      return null;
+    }();
+
+    if (uri == null || !await canLaunchUrl(uri)) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
+          const SnackBar(
+            content: Text('Could not open gallery.'),
+            duration: Duration(seconds: 3),
           ),
         );
       }
+      return;
+    }
+
+    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open gallery.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
   }
 

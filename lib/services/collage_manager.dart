@@ -1322,7 +1322,7 @@ class CollageManager extends ChangeNotifier {
   }
 
   /// Save the current collage as an image
-  Future<bool> saveCollage() async {
+  Future<String?> saveCollage() async {
     try {
       // Create a high-quality image with the selected aspect ratio
       final double aspectRatio = _selectedAspect.ratio;
@@ -1473,20 +1473,27 @@ class CollageManager extends ChangeNotifier {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
       if (byteData != null) {
-        // Save to gallery
         final result = await ImageGallerySaver.saveImage(
           byteData.buffer.asUint8List(),
           quality: 100,
           name: 'collage_${DateTime.now().millisecondsSinceEpoch}',
         );
 
-        return result['isSuccess'] == true;
+        if (result['isSuccess'] == true) {
+          final dynamic filePath =
+              result['filePath'] ?? result['filepath'] ?? result['path'];
+          if (filePath is String && filePath.isNotEmpty) {
+            return filePath;
+          }
+          // Some platforms may not provide a path but still report success
+          return '';
+        }
       }
 
-      return false;
+      return null;
     } catch (e) {
       // Error saving collage - return false
-      return false;
+      return null;
     }
   }
 
