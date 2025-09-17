@@ -217,6 +217,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
         _rotationGestureBase = widget.box.rotationRadians;
         widget.box.rotationBaseRadians = widget.box.rotationRadians;
         widget.onRotateActive?.call(true);
+        widget.collageManager.setSnappingSuspended(true);
       }
       final newAngle = _normalizeAngle(_rotationGestureBase + details.rotation);
       if (widget.box.rotationRadians != newAngle) {
@@ -227,6 +228,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
       if (_rotationActive) {
         _rotationActive = false;
         widget.onRotateActive?.call(false);
+        widget.collageManager.setSnappingSuspended(false);
       }
       widget.onPanUpdate(
         DragUpdateDetails(
@@ -247,6 +249,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     if (_rotationActive) {
       _rotationActive = false;
       widget.onRotateActive?.call(false);
+      widget.collageManager.setSnappingSuspended(false);
     }
     widget.box.rotationBaseRadians = widget.box.rotationRadians;
   }

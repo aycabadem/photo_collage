@@ -54,6 +54,7 @@ class CollageManager extends ChangeNotifier {
   Size? _availableArea; // last known canvas available area from LayoutBuilder
   final List<PhotoBox> _photoBoxes = [];
   PhotoBox? _selectedBox;
+  bool _snappingSuspended = false;
 
   // Background color and opacity (canvas default stays white; user can change)
   Color _backgroundColor = Colors.white;
@@ -199,6 +200,13 @@ class CollageManager extends ChangeNotifier {
 
   /// Public method to trigger UI updates safely from widgets
   void refresh() {
+    notifyListeners();
+  }
+
+  /// Temporarily suspend snapping/guideline behaviour (e.g., during rotation)
+  void setSnappingSuspended(bool value) {
+    if (_snappingSuspended == value) return;
+    _snappingSuspended = value;
     notifyListeners();
   }
 
@@ -641,20 +649,60 @@ class CollageManager extends ChangeNotifier {
     final newX = box.position.dx + delta.dx;
     final newY = box.position.dy + delta.dy;
 
-    // Apply snapping to the new position
-    final snappedPosition = _applySnapping(Offset(newX, newY), box);
+    final Offset basePosition = Offset(newX, newY);
 
-    // Apply inner margin spacing between photos
-    final adjustedPosition = _applyInnerMarginSpacing(snappedPosition, box);
+    // Apply snapping only when not suspended (e.g., during rotation)
+    final Offset snappedPosition = _snappingSuspended
+        ? basePosition
+        : _applySnapping(basePosition, box);
 
-    // Ensure the photo doesn't go outside the background boundaries
-    final clampedPosition = Offset(
-      adjustedPosition.dx.clamp(0.0, _templateSize.width - box.size.width),
-      adjustedPosition.dy.clamp(0.0, _templateSize.height - box.size.height),
-    );
+    // Apply inner margin spacing between photos when snapping is active
+    final Offset adjustedPosition = _snappingSuspended
+        ? snappedPosition
+        : _applyInnerMarginSpacing(snappedPosition, box);
+
+    final clampedPosition = _clampBoxWithinTemplate(box, adjustedPosition);
 
     box.position = clampedPosition;
     notifyListeners();
+  }
+
+  Offset _clampBoxWithinTemplate(PhotoBox box, Offset position) {
+    final double width = box.size.width;
+    final double height = box.size.height;
+
+    final double angle = box.rotationRadians;
+    final double absCos = math.cos(angle).abs();
+    final double absSin = math.sin(angle).abs();
+
+    final double boundWidth = (absCos * width) + (absSin * height);
+    final double boundHeight = (absSin * width) + (absCos * height);
+
+    final Offset center = Offset(position.dx + width * 0.5, position.dy + height * 0.5);
+
+    double minCenterX = boundWidth * 0.5;
+    double maxCenterX = _templateSize.width - boundWidth * 0.5;
+    double minCenterY = boundHeight * 0.5;
+    double maxCenterY = _templateSize.height - boundHeight * 0.5;
+
+    if (minCenterX > maxCenterX) {
+      final double cx = _templateSize.width * 0.5;
+      minCenterX = cx;
+      maxCenterX = cx;
+    }
+    if (minCenterY > maxCenterY) {
+      final double cy = _templateSize.height * 0.5;
+      minCenterY = cy;
+      maxCenterY = cy;
+    }
+
+    final double clampedCenterX = center.dx.clamp(minCenterX, maxCenterX);
+    final double clampedCenterY = center.dy.clamp(minCenterY, maxCenterY);
+
+    return Offset(
+      clampedCenterX - width * 0.5,
+      clampedCenterY - height * 0.5,
+    );
   }
 
   /// Apply snapping to align with other photo boxes
@@ -1534,6 +1582,9 @@ class CollageManager extends ChangeNotifier {
 
   /// Get alignment guidelines for the selected photo box
   List<AlignmentGuideline> getAlignmentGuidelines(PhotoBox selectedBox) {
+    if (_snappingSuspended) {
+      return const [];
+    }
     try {
       final List<AlignmentGuideline> guidelines = [];
 
