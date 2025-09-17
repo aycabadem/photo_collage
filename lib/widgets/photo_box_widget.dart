@@ -222,6 +222,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
       final newAngle = _normalizeAngle(_rotationGestureBase + details.rotation);
       if (widget.box.rotationRadians != newAngle) {
         widget.box.rotationRadians = newAngle;
+        widget.collageManager.clampBoxToTemplate(widget.box);
         widget.collageManager.refresh();
       }
     } else if (pointerCount == 1) {

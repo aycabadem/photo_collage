@@ -676,17 +676,34 @@ class CollageManager extends ChangeNotifier {
   }
 
   Offset _clampBoxWithinTemplate(PhotoBox box, Offset position) {
-    final double width = box.size.width;
-    final double height = box.size.height;
+    const double minSize = 50.0;
+    double width = box.size.width;
+    double height = box.size.height;
+
+    final Offset desiredCenter =
+        Offset(position.dx + width * 0.5, position.dy + height * 0.5);
 
     final double angle = box.rotationRadians;
     final double absCos = math.cos(angle).abs();
     final double absSin = math.sin(angle).abs();
 
-    final double boundWidth = (absCos * width) + (absSin * height);
-    final double boundHeight = (absSin * width) + (absCos * height);
+    double boundWidth = (absCos * width) + (absSin * height);
+    double boundHeight = (absSin * width) + (absCos * height);
 
-    final Offset center = Offset(position.dx + width * 0.5, position.dy + height * 0.5);
+    double scale = 1.0;
+    if (boundWidth > _templateSize.width || boundHeight > _templateSize.height) {
+      final double sx = _templateSize.width / boundWidth;
+      final double sy = _templateSize.height / boundHeight;
+      scale = math.min(math.min(sx, sy), 1.0);
+      if (scale < 1.0 && scale.isFinite && scale > 0) {
+        width = math.max(minSize, width * scale);
+        height = math.max(minSize, height * scale);
+        box.size = Size(width, height);
+
+        boundWidth = (absCos * width) + (absSin * height);
+        boundHeight = (absSin * width) + (absCos * height);
+      }
+    }
 
     double minCenterX = boundWidth * 0.5;
     double maxCenterX = _templateSize.width - boundWidth * 0.5;
@@ -704,13 +721,23 @@ class CollageManager extends ChangeNotifier {
       maxCenterY = cy;
     }
 
-    final double clampedCenterX = center.dx.clamp(minCenterX, maxCenterX);
-    final double clampedCenterY = center.dy.clamp(minCenterY, maxCenterY);
+    final double clampedCenterX = desiredCenter.dx.clamp(minCenterX, maxCenterX);
+    final double clampedCenterY = desiredCenter.dy.clamp(minCenterY, maxCenterY);
 
     return Offset(
       clampedCenterX - width * 0.5,
       clampedCenterY - height * 0.5,
     );
+  }
+
+  void clampBoxToTemplate(PhotoBox box, {bool notify = false}) {
+    final Offset originalPosition = box.position;
+    final Size originalSize = box.size;
+    final Offset clamped = _clampBoxWithinTemplate(box, originalPosition);
+    if (clamped != originalPosition || box.size != originalSize) {
+      box.position = clamped;
+      if (notify) notifyListeners();
+    }
   }
 
   /// Apply snapping to align with other photo boxes
@@ -934,81 +961,47 @@ class CollageManager extends ChangeNotifier {
     double deltaWidth,
     double deltaHeight,
   ) {
-    double newWidth = box.size.width;
-    double newHeight = box.size.height;
-    double newX = box.position.dx;
-    double newY = box.position.dy;
+    const double minSize = 50.0;
+    final double oldWidth = box.size.width;
+    final double oldHeight = box.size.height;
+    final double oldX = box.position.dx;
+    final double oldY = box.position.dy;
 
-    // Apply changes based on handle position
+    double newWidth = oldWidth;
+    double newHeight = oldHeight;
+    double newX = oldX;
+    double newY = oldY;
+
     if (handleAlignment == Alignment.topLeft) {
-      // Top-left: adjust width and height, move position
-      newWidth = CollageUtils.safeClamp(
-        box.size.width - deltaWidth,
-        50.0,
-        box.position.dx + box.size.width,
-      );
-      newHeight = CollageUtils.safeClamp(
-        box.size.height - deltaHeight,
-        50.0,
-        box.position.dy + box.size.height,
-      );
-      newX = box.position.dx + (box.size.width - newWidth);
-      newY = box.position.dy + (box.size.height - newHeight);
+      newWidth = math.max(minSize, oldWidth - deltaWidth);
+      newHeight = math.max(minSize, oldHeight - deltaHeight);
+      newX = oldX + (oldWidth - newWidth);
+      newY = oldY + (oldHeight - newHeight);
     } else if (handleAlignment == Alignment.topRight) {
-      // Top-right: adjust width and height, move Y position
-      newWidth = CollageUtils.safeClamp(
-        box.size.width + deltaWidth,
-        50.0,
-        _templateSize.width - box.position.dx,
-      );
-      newHeight = CollageUtils.safeClamp(
-        box.size.height - deltaHeight,
-        50.0,
-        box.position.dy + box.size.height,
-      );
-      newY = box.position.dy + (box.size.height - newHeight);
+      newWidth = math.max(minSize, oldWidth + deltaWidth);
+      newHeight = math.max(minSize, oldHeight - deltaHeight);
+      newY = oldY + (oldHeight - newHeight);
     } else if (handleAlignment == Alignment.bottomLeft) {
-      // Bottom-left: adjust width and height, move X position
-      newWidth = CollageUtils.safeClamp(
-        box.size.width - deltaWidth,
-        50.0,
-        box.position.dx + box.size.width,
-      );
-      newHeight = CollageUtils.safeClamp(
-        box.size.height + deltaHeight,
-        50.0,
-        _templateSize.height - box.position.dy,
-      );
-      newX = box.position.dx + (box.size.width - newWidth);
+      newWidth = math.max(minSize, oldWidth - deltaWidth);
+      newHeight = math.max(minSize, oldHeight + deltaHeight);
+      newX = oldX + (oldWidth - newWidth);
     } else if (handleAlignment == Alignment.bottomRight) {
-      // Bottom-right: adjust width and height, keep position
-      newWidth = CollageUtils.safeClamp(
-        box.size.width + deltaWidth,
-        50.0,
-        _templateSize.width - box.position.dx,
-      );
-      newHeight = CollageUtils.safeClamp(
-        box.size.height + deltaHeight,
-        50.0,
-        _templateSize.height - box.position.dy,
-      );
+      newWidth = math.max(minSize, oldWidth + deltaWidth);
+      newHeight = math.max(minSize, oldHeight + deltaHeight);
     }
 
-    // Apply changes if valid
-    if (newWidth >= 50 && newHeight >= 50) {
-      box.size = Size(newWidth, newHeight);
-      box.position = Offset(newX, newY);
-
-      // Update alignment to maintain the same visible part of the photo
-      // This ensures the photo shows the same content after resize
-      if (box.imageFile != null) {
-        // Keep the same alignment to show the same part of the photo
-        // The photo will automatically adjust to fit the new size
-        box.alignment = box.alignment; // Keep current alignment
-      }
-
-      notifyListeners();
+    if (newWidth < minSize || newHeight < minSize) {
+      return;
     }
+
+    box.size = Size(newWidth, newHeight);
+    box.position = Offset(newX, newY);
+
+    // Ensure rotated bounds stay inside the template after resizing
+    final Offset clamped = _clampBoxWithinTemplate(box, box.position);
+    box.position = clamped;
+
+    notifyListeners();
   }
 
   /// Resize a pair of adjacent boxes along their shared edge.

@@ -271,8 +271,16 @@ class CollageCanvas extends StatelessWidget {
                 box: box,
                 alignment: Alignment.topLeft,
                 size: 12.0,
-                onDrag: (dx, dy) =>
-                    onResizeHandleDragged(box, dx, dy, Alignment.topLeft),
+                onDrag: (dx, dy) {
+                  final Offset rotated =
+                      _rotateOffset(Offset(dx, dy), -box.rotationRadians);
+                  onResizeHandleDragged(
+                    box,
+                    rotated.dx,
+                    rotated.dy,
+                    Alignment.topLeft,
+                  );
+                },
               ),
 
               // Top-right resize handle
@@ -280,8 +288,16 @@ class CollageCanvas extends StatelessWidget {
                 box: box,
                 alignment: Alignment.topRight,
                 size: 12.0,
-                onDrag: (dx, dy) =>
-                    onResizeHandleDragged(box, dx, dy, Alignment.topRight),
+                onDrag: (dx, dy) {
+                  final Offset rotated =
+                      _rotateOffset(Offset(dx, dy), -box.rotationRadians);
+                  onResizeHandleDragged(
+                    box,
+                    rotated.dx,
+                    rotated.dy,
+                    Alignment.topRight,
+                  );
+                },
               ),
 
               // Bottom-left resize handle
@@ -289,8 +305,16 @@ class CollageCanvas extends StatelessWidget {
                 box: box,
                 alignment: Alignment.bottomLeft,
                 size: 12.0,
-                onDrag: (dx, dy) =>
-                    onResizeHandleDragged(box, dx, dy, Alignment.bottomLeft),
+                onDrag: (dx, dy) {
+                  final Offset rotated =
+                      _rotateOffset(Offset(dx, dy), -box.rotationRadians);
+                  onResizeHandleDragged(
+                    box,
+                    rotated.dx,
+                    rotated.dy,
+                    Alignment.bottomLeft,
+                  );
+                },
               ),
 
               // Bottom-right resize handle
@@ -298,8 +322,16 @@ class CollageCanvas extends StatelessWidget {
                 box: box,
                 alignment: Alignment.bottomRight,
                 size: 12.0,
-                onDrag: (dx, dy) =>
-                    onResizeHandleDragged(box, dx, dy, Alignment.bottomRight),
+                onDrag: (dx, dy) {
+                  final Offset rotated =
+                      _rotateOffset(Offset(dx, dy), -box.rotationRadians);
+                  onResizeHandleDragged(
+                    box,
+                    rotated.dx,
+                    rotated.dy,
+                    Alignment.bottomRight,
+                  );
+                },
               ),
             ],
           ),
@@ -475,6 +507,15 @@ class CollageCanvas extends StatelessWidget {
   }
 
   double _edgeEps() => math.max(3.0, collageManager.innerMargin * 0.5);
+
+  Offset _rotateOffset(Offset offset, double angle) {
+    final double sinA = math.sin(angle);
+    final double cosA = math.cos(angle);
+    return Offset(
+      offset.dx * cosA - offset.dy * sinA,
+      offset.dx * sinA + offset.dy * cosA,
+    );
+  }
 
   bool _yOverlapEnough(PhotoBox a, PhotoBox b, double eps) {
     final double aTop = a.position.dy;
