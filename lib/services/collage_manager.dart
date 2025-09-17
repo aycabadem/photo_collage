@@ -19,6 +19,8 @@ class CustomLayoutSnapshot {
   final Map<int, BoxFit> photoFitsMap; // Store photo fits by index
   final Map<int, Alignment> photoAlignsMap; // Store alignment by index
   final Map<int, double> photoScalesMap; // Store scale by index
+  final Map<int, double> photoRotationsMap; // Store rotation (radians)
+  final Map<int, double> photoRotationBasesMap; // Store rotation base (gesture)
 
   CustomLayoutSnapshot({
     required this.photoLayouts,
@@ -27,6 +29,8 @@ class CustomLayoutSnapshot {
     required this.photoFitsMap,
     required this.photoAlignsMap,
     required this.photoScalesMap,
+    required this.photoRotationsMap,
+    required this.photoRotationBasesMap,
   });
 }
 
@@ -420,6 +424,7 @@ class CollageManager extends ChangeNotifier {
   void applyAspect(AspectSpec newAspect, {Size? screenSize}) {
     if (newAspect.w <= 0 || newAspect.h <= 0) return;
 
+    final Size previousTemplateSize = _templateSize;
     _selectedAspect = newAspect;
     // Prefer last known available area from LayoutBuilder
     final area = _availableArea ?? screenSize;
@@ -432,7 +437,7 @@ class CollageManager extends ChangeNotifier {
       // Custom mode - use layout snapshot approach
       if (_photoBoxes.isNotEmpty) {
         // Create snapshot before changing aspect ratio
-        _createCustomLayoutSnapshot();
+        _createCustomLayoutSnapshot(templateSizeOverride: previousTemplateSize);
         // Apply snapshot to new aspect ratio (like preset layouts)
         _applyCustomLayoutSnapshot(newAspect);
       }
@@ -448,23 +453,27 @@ class CollageManager extends ChangeNotifier {
   }
 
   /// Create a snapshot of current custom layout
-  void _createCustomLayoutSnapshot() {
+  void _createCustomLayoutSnapshot({Size? templateSizeOverride}) {
     if (!_isCustomMode || _photoBoxes.isEmpty) return;
+
+    final Size templateSize = templateSizeOverride ?? _templateSize;
 
     final photoLayouts = <PhotoLayout>[];
     final photoPathsMap = <int, String>{};
     final photoFitsMap = <int, BoxFit>{};
     final photoAlignsMap = <int, Alignment>{};
     final photoScalesMap = <int, double>{};
+    final photoRotationsMap = <int, double>{};
+    final photoRotationBasesMap = <int, double>{};
 
     for (int i = 0; i < _photoBoxes.length; i++) {
       final box = _photoBoxes[i];
 
       // Normalize position and size (0-1 range)
-      final normalizedX = box.position.dx / _templateSize.width;
-      final normalizedY = box.position.dy / _templateSize.height;
-      final normalizedWidth = box.size.width / _templateSize.width;
-      final normalizedHeight = box.size.height / _templateSize.height;
+      final normalizedX = box.position.dx / templateSize.width;
+      final normalizedY = box.position.dy / templateSize.height;
+      final normalizedWidth = box.size.width / templateSize.width;
+      final normalizedHeight = box.size.height / templateSize.height;
 
       // Create PhotoLayout (like preset layouts)
       photoLayouts.add(
@@ -483,6 +492,9 @@ class CollageManager extends ChangeNotifier {
         photoAlignsMap[i] = box.alignment;
         photoScalesMap[i] = box.photoScale;
       }
+
+      photoRotationsMap[i] = box.rotationRadians;
+      photoRotationBasesMap[i] = box.rotationBaseRadians;
     }
 
     // Save snapshot
@@ -493,6 +505,8 @@ class CollageManager extends ChangeNotifier {
       photoFitsMap: photoFitsMap,
       photoAlignsMap: photoAlignsMap,
       photoScalesMap: photoScalesMap,
+      photoRotationsMap: photoRotationsMap,
+      photoRotationBasesMap: photoRotationBasesMap,
     );
   }
 
@@ -506,34 +520,21 @@ class CollageManager extends ChangeNotifier {
     // Normalized layouts (0..1) from snapshot
     final layouts = _customLayoutSnapshot!.photoLayouts;
 
-    // Compute normalized bounds of the group
-    double minNX = double.infinity, minNY = double.infinity;
-    double maxNX = -double.infinity, maxNY = -double.infinity;
-    for (final l in layouts) {
-      minNX = math.min(minNX, l.position.dx);
-      minNY = math.min(minNY, l.position.dy);
-      maxNX = math.max(maxNX, l.position.dx + l.size.width);
-      maxNY = math.max(maxNY, l.position.dy + l.size.height);
-    }
-    if (!minNX.isFinite || !minNY.isFinite) return;
-
-    final groupNW = maxNX - minNX;
-    final groupNH = maxNY - minNY;
-
-    // Normalize positions to start at 0,0 then scale anisotropically
-    // so that the group's bounds exactly fit 0..1 in both axes (no white gaps)
-    final double sX = groupNW > 0 ? 1.0 / groupNW : 1.0;
-    final double sY = groupNH > 0 ? 1.0 / groupNH : 1.0;
-
     for (int i = 0; i < layouts.length; i++) {
       final l = layouts[i];
-      final nx = (l.position.dx - minNX) * sX;
-      final ny = (l.position.dy - minNY) * sY;
-      final nw = l.size.width * sX;
-      final nh = l.size.height * sY;
+      final actualPosition = Offset(
+        l.position.dx * _templateSize.width,
+        l.position.dy * _templateSize.height,
+      );
+      final actualSize = Size(
+        l.size.width * _templateSize.width,
+        l.size.height * _templateSize.height,
+      );
 
-      final actualPosition = Offset(nx * _templateSize.width, ny * _templateSize.height);
-      final actualSize = Size(nw * _templateSize.width, nh * _templateSize.height);
+      final double rotation =
+          _customLayoutSnapshot!.photoRotationsMap[i] ?? 0.0;
+      final double rotationBase =
+          _customLayoutSnapshot!.photoRotationBasesMap[i] ?? rotation;
 
       // Restore photo if it existed
       PhotoBox photoBox;
@@ -551,6 +552,8 @@ class CollageManager extends ChangeNotifier {
           imageFit: imageFit,
           alignment: align,
           photoScale: pScale,
+          rotationRadians: rotation,
+          rotationBaseRadians: rotationBase,
         );
       } else {
         // Create placeholder
@@ -558,8 +561,13 @@ class CollageManager extends ChangeNotifier {
           position: actualPosition,
           size: actualSize,
           imagePath: '',
+          rotationRadians: rotation,
+          rotationBaseRadians: rotationBase,
         );
       }
+
+      // Clamp to ensure rotated bounds stay within template after aspect change
+      photoBox.position = _clampBoxWithinTemplate(photoBox, actualPosition);
 
       _photoBoxes.add(photoBox);
     }
@@ -1433,13 +1441,15 @@ class CollageManager extends ChangeNotifier {
 
               canvas.save();
               canvas.translate(cx, cy);
+              // Apply box rotation before clipping so radius follows the rotation
+              canvas.rotate(box.rotationRadians);
               if (r > 0) {
-                canvas.clipRRect(RRect.fromRectAndRadius(localDst, Radius.circular(r)));
+                canvas.clipRRect(
+                  RRect.fromRectAndRadius(localDst, Radius.circular(r)),
+                );
               } else {
                 canvas.clipRect(localDst);
               }
-              // Apply box rotation
-              canvas.rotate(box.rotationRadians);
 
               final paintImg = Paint()
                 ..isAntiAlias = true
