@@ -37,18 +37,20 @@ class LayoutPickerModal extends StatelessWidget {
             child: Row(
               children: [
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: () => Navigator.pop(context),
                   child: Container(
-                    width: 40,
-                    height: 40,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                     ),
+                    alignment: Alignment.center,
                     child: const Icon(
                       Icons.arrow_back,
                       color: Colors.white,
-                      size: 20,
+                      size: 22,
                     ),
                   ),
                 ),
@@ -82,6 +84,7 @@ class LayoutPickerModal extends StatelessWidget {
 
   Widget _buildCustomOption(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         onLayoutSelected(null); // null means custom mode
         Navigator.pop(context);
@@ -181,6 +184,7 @@ class LayoutPickerModal extends StatelessWidget {
 
   Widget _buildModernLayoutTile(LayoutTemplate layout, BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         onLayoutSelected(layout);
         Navigator.pop(context);

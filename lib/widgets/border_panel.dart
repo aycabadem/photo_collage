@@ -67,6 +67,7 @@ class _BorderPanelState extends State<BorderPanel> {
       final bool active = _selectedEffect == key;
       final primary = Theme.of(context).colorScheme.primary;
       return GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           setState(() {
             if (_selectedEffect == key) {
@@ -78,13 +79,13 @@ class _BorderPanelState extends State<BorderPanel> {
           });
         },
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                size: 22,
+                size: 24,
                 color: active ? primary : primary.withValues(alpha: 0.6),
                 semanticLabel: label,
               ),
