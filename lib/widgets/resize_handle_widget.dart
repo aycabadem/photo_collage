@@ -27,7 +27,8 @@ class ResizeHandleWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     // Place the handle centered on the corner (half inside, half outside)
     // Push the visible square mostly outside (about 70%)
-    const double outsideFactor = 0.7; // 0.5 = half outside; >0.5 looks more pronounced
+    const double outsideFactor =
+        0.7; // 0.5 = half outside; >0.5 looks more pronounced
     final double offset = size * outsideFactor;
     double ox = 0, oy = 0;
     if (alignment == Alignment.topLeft) {

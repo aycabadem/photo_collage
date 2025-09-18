@@ -71,6 +71,10 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   @override
   Widget build(BuildContext context) {
     final box = widget.box;
+    final bool hasImage = box.imageFile != null;
+    final theme = Theme.of(context);
+    final Color placeholderBorderColor =
+        theme.colorScheme.primary.withValues(alpha: 0.65);
 
     return GestureDetector(
       onDoubleTap: widget.onTap, // Double tap to select
@@ -80,47 +84,63 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
       behavior: HitTestBehavior.opaque, // Prevent background taps
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(widget.collageManager.cornerRadius),
+          borderRadius: BorderRadius.circular(
+            widget.collageManager.cornerRadius,
+          ),
           // Layered shadows for stronger 3D effect
           boxShadow: _shadowLayers(widget.collageManager.shadowIntensity),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(widget.collageManager.cornerRadius),
+          borderRadius: BorderRadius.circular(
+            widget.collageManager.cornerRadius,
+          ),
           child: Stack(
             children: [
               // Photo or placeholder
-              box.imageFile != null
-                  ? Transform.translate(
-                      // Subtle lift for 3D feel; increases slightly with shadow intensity
-                      offset: Offset(
-                        0,
-                        -(_liftOffset(widget.collageManager.shadowIntensity)),
+              if (hasImage)
+                Transform.translate(
+                  // Subtle lift for 3D feel; increases slightly with shadow intensity
+                  offset: Offset(
+                    0,
+                    -(_liftOffset(widget.collageManager.shadowIntensity)),
+                  ),
+                  child: Transform.scale(
+                    scale: box.photoScale,
+                    alignment: box.alignment,
+                    child: Image.file(
+                      box.imageFile!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      alignment: box.alignment,
+                    ),
+                  ),
+                ),
+              if (!hasImage)
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        widget.collageManager.cornerRadius,
                       ),
-                      child: Transform.scale(
-                        scale: box.photoScale,
-                        alignment: box.alignment,
-                        child: Image.file(
-                          box.imageFile!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          alignment: box.alignment,
-                        ),
-                      ),
-                    )
-                  : Container(
-                      color: Colors.transparent,
-                      child: Center(
-                        child: GestureDetector(
-                          onTap: () => _addPhotoToBox(context),
-                          child: Icon(
-                            Icons.add_a_photo,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 32,
-                          ),
-                        ),
+                      border: Border.all(
+                        color: placeholderBorderColor,
+                        width: 1.5,
                       ),
                     ),
+                  ),
+                ),
+              if (!hasImage)
+                Center(
+                  child: GestureDetector(
+                    onTap: () => _addPhotoToBox(context),
+                    child: Icon(
+                      Icons.add_a_photo,
+                      color: theme.colorScheme.primary,
+                      size: 32,
+                    ),
+                  ),
+                ),
 
               // Smart border overlay (ignore pointer so it doesn't block interactions)
               if (widget.hasGlobalBorder && widget.globalBorderWidth > 0)
@@ -145,7 +165,8 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                   left: 0,
                   right: 0,
                   child: FittedBox(
-                    fit: BoxFit.scaleDown, // Prevent overflow on very small boxes
+                    fit: BoxFit
+                        .scaleDown, // Prevent overflow on very small boxes
                     alignment: Alignment.center,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -277,8 +298,10 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   void _showPhotoEditor(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            PhotoEditorPage(photoBox: widget.box, onPhotoChanged: widget.onPhotoModified),
+        builder: (_) => PhotoEditorPage(
+          photoBox: widget.box,
+          onPhotoChanged: widget.onPhotoModified,
+        ),
       ),
     );
   }
