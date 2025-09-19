@@ -425,44 +425,78 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           child: _angleSlider(),
         ),
-        const SizedBox(height: 24),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: FilledButton.tonalIcon(
+              onPressed: _resetGradientStops,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Reset'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
       ],
     );
   }
 
-  Widget _colorChip(Color c, bool active, String label, VoidCallback onTap) {
+  Widget _colorChip(Color color, bool active, String label, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    final Color borderColor = active
+        ? theme.colorScheme.primary.withValues(alpha: 0.6)
+        : theme.colorScheme.primary.withValues(alpha: 0.25);
+    final Color labelColor = theme.colorScheme.primary.withValues(
+      alpha: active ? 0.9 : 0.6,
+    );
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 28,
-        height: 28,
+        width: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        constraints: const BoxConstraints(minHeight: 44),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFFA5B68D) : const Color(0xFFFCFAEE),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: active
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.50)
-                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
-          ),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor),
           boxShadow: active
               ? [
                   BoxShadow(
                     color: const Color(0x26000000),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ]
               : null,
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: active ? const Color(0xFFFCFAEE) : const Color(0xFFA5B68D),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: color.computeLuminance() > 0.7
+                      ? Colors.black.withOpacity(0.12)
+                      : Colors.white.withOpacity(0.35),
+                  width: 1,
+                ),
+              ),
             ),
-          ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: labelColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -584,6 +618,19 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     );
     if (widget.onGradientChanged != null) {
       widget.onGradientChanged!(_gradient, _selectedOpacity);
+    }
+  }
+
+  void _resetGradientStops() {
+    final stops = widget.initialGradient?.stops ?? GradientSpec.presetPinkPurple().stops;
+    if (stops.length >= 2) {
+      setState(() {
+        _gA = stops.first.color;
+        _gB = stops.last.color;
+        _activeA = true;
+      });
+      _loadActiveStopHsl(fromA: true);
+      _applyGradientLive();
     }
   }
 
