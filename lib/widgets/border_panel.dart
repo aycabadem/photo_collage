@@ -175,7 +175,7 @@ class _BorderPanelState extends State<BorderPanel> {
     return _GradientSlider(
       value: widget.collageManager.innerMargin,
       min: 0.0,
-      max: 20.0,
+      max: 60.0,
       onChanged: (v) {
         widget.collageManager.setInnerMargin(v);
         setState(() {});
@@ -190,7 +190,7 @@ class _BorderPanelState extends State<BorderPanel> {
     return _GradientSlider(
       value: widget.collageManager.outerMargin,
       min: 0.0,
-      max: 40.0,
+      max: 120.0,
       onChanged: (v) {
         widget.collageManager.setOuterMargin(v);
         setState(() {});
@@ -205,7 +205,7 @@ class _BorderPanelState extends State<BorderPanel> {
     return _GradientSlider(
       value: widget.collageManager.cornerRadius,
       min: 0.0,
-      max: 40.0,
+      max: 80.0,
       onChanged: (v) {
         widget.collageManager.setCornerRadius(v);
         setState(() {});

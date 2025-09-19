@@ -186,19 +186,19 @@ class CollageManager extends ChangeNotifier {
 
   /// Set inner margin
   void setInnerMargin(double margin) {
-    _innerMargin = margin;
+    _innerMargin = margin.clamp(0.0, 60.0);
     notifyListeners();
   }
 
   /// Set outer margin
   void setOuterMargin(double margin) {
-    _outerMargin = margin;
+    _outerMargin = margin.clamp(0.0, 120.0);
     notifyListeners();
   }
 
   /// Set corner radius
   void setCornerRadius(double radius) {
-    _cornerRadius = radius.clamp(0.0, 40.0); // Reduced max to 40px
+    _cornerRadius = radius.clamp(0.0, 80.0);
     notifyListeners();
   }
 
