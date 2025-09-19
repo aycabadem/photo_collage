@@ -127,26 +127,40 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   Widget _tab(String label, bool active, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    final Color primary = theme.colorScheme.primary;
+    final Color background = Colors.white;
+    final Color borderColor = active
+        ? primary.withValues(alpha: 0.45)
+        : primary.withValues(alpha: 0.25);
+    final Color textColor = primary.withValues(alpha: active ? 0.95 : 0.75);
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: active
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.10)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: active
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.30)
-                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.20),
-          ),
+          color: background,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor, width: 1.2),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: primary.withValues(alpha: 0.25),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w700,
+            fontSize: 13.5,
+            letterSpacing: 0.3,
+            color: textColor,
           ),
         ),
       ),
@@ -167,19 +181,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           const SizedBox(height: 8),
           _lightnessSlider(),
           const SizedBox(height: 12),
-          Center(
-            child: OutlinedButton.icon(
-              onPressed: _resetToWhite,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
-                side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Reset'),
-            ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _buildResetButton(onPressed: _resetToWhite),
           ),
           const SizedBox(height: 24),
         ],
@@ -429,11 +433,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Align(
             alignment: Alignment.centerRight,
-            child: FilledButton.tonalIcon(
-              onPressed: _resetGradientStops,
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Reset'),
-            ),
+            child: _buildResetButton(onPressed: _resetGradientStops),
           ),
         ),
         const SizedBox(height: 16),
@@ -619,6 +619,24 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     if (widget.onGradientChanged != null) {
       widget.onGradientChanged!(_gradient, _selectedOpacity);
     }
+  }
+
+  Widget _buildResetButton({required VoidCallback onPressed}) {
+    final theme = Theme.of(context);
+    final Color primary = theme.colorScheme.primary;
+    return FilledButton(
+      onPressed: onPressed,
+      style: FilledButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: primary,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        side: BorderSide(color: primary.withValues(alpha: 0.45), width: 1.1),
+        elevation: 0,
+      ),
+      child: const Text('Reset'),
+    );
   }
 
   void _resetGradientStops() {
