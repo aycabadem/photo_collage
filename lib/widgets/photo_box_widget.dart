@@ -65,8 +65,11 @@ class PhotoBoxWidget extends StatefulWidget {
 }
 
 class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
-  double _rotationGestureBase = 0.0;
   bool _rotationActive = false;
+  double _rotationStartAngle = 0.0;
+  double? _rotationStartPointerAngle;
+  Offset? _boxCenterGlobal;
+  Offset? _rotationHandleStartGlobal;
 
   @override
   Widget build(BuildContext context) {
@@ -171,46 +174,28 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Delete (plain white icon, no background)
                         GestureDetector(
                           onTap: widget.onDelete,
                           behavior: HitTestBehavior.opaque,
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(
-                              Icons.delete_outline,
-                              size: 25,
-                              color: Colors.white,
-                            ),
-                          ),
+                          child: _buildActionIcon(Icons.delete_outline),
                         ),
-                        const SizedBox(width: 20),
-                        // Edit (only when photo exists)
-                        if (box.imageFile != null)
+                        const SizedBox(width: 12),
+                        GestureDetector(
+                          onPanStart: _onRotationHandleStart,
+                          onPanUpdate: _onRotationHandleUpdate,
+                          onPanEnd: _onRotationHandleEnd,
+                          onPanCancel: _onRotationHandleCancel,
+                          behavior: HitTestBehavior.opaque,
+                          child: _buildActionIcon(Icons.rotate_right),
+                        ),
+                        if (box.imageFile != null) ...[
+                          const SizedBox(width: 12),
                           GestureDetector(
                             onTap: () => _showPhotoEditor(context),
                             behavior: HitTestBehavior.opaque,
-                            child: Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.7),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              alignment: Alignment.center,
-                              child: const Icon(
-                                Icons.edit,
-                                size: 25,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: _buildActionIcon(Icons.edit),
                           ),
+                        ],
                       ],
                     ),
                   ),
@@ -223,35 +208,16 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   }
 
   void _handleScaleStart(ScaleStartDetails details) {
-    _rotationGestureBase = widget.box.rotationRadians;
     widget.box.rotationBaseRadians = widget.box.rotationRadians;
     _rotationActive = false;
+    _resetRotationTracking();
   }
 
   void _handleScaleUpdate(ScaleUpdateDetails details) {
     if (!widget.isSelected) return;
 
     final pointerCount = details.pointerCount;
-    if (pointerCount >= 2) {
-      if (!_rotationActive) {
-        _rotationActive = true;
-        _rotationGestureBase = widget.box.rotationRadians;
-        widget.box.rotationBaseRadians = widget.box.rotationRadians;
-        widget.onRotateActive?.call(true);
-        widget.collageManager.setSnappingSuspended(true);
-      }
-      final newAngle = _normalizeAngle(_rotationGestureBase + details.rotation);
-      if (widget.box.rotationRadians != newAngle) {
-        widget.box.rotationRadians = newAngle;
-        widget.collageManager.clampBoxToTemplate(widget.box);
-        widget.collageManager.refresh();
-      }
-    } else if (pointerCount == 1) {
-      if (_rotationActive) {
-        _rotationActive = false;
-        widget.onRotateActive?.call(false);
-        widget.collageManager.setSnappingSuspended(false);
-      }
+    if (pointerCount == 1 && !_rotationActive) {
       widget.onPanUpdate(
         DragUpdateDetails(
           delta: details.focalPointDelta,
@@ -259,21 +225,116 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
           localPosition: details.localFocalPoint,
         ),
       );
-    } else {
-      if (_rotationActive) {
-        _rotationActive = false;
-        widget.onRotateActive?.call(false);
-      }
     }
   }
 
   void _handleScaleEnd(ScaleEndDetails details) {
     if (_rotationActive) {
-      _rotationActive = false;
-      widget.onRotateActive?.call(false);
-      widget.collageManager.setSnappingSuspended(false);
+      // Rotation handle will manage cleanup when gesture ends.
+      return;
     }
     widget.box.rotationBaseRadians = widget.box.rotationRadians;
+  }
+
+  void _onRotationHandleStart(DragStartDetails details) {
+    _rotationActive = true;
+    _rotationStartAngle = widget.box.rotationRadians;
+    _rotationHandleStartGlobal = details.globalPosition;
+    widget.box.rotationBaseRadians = widget.box.rotationRadians;
+    widget.onRotateActive?.call(true);
+    widget.collageManager.setSnappingSuspended(true);
+
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      final Offset centerLocal = renderBox.size.center(Offset.zero);
+      _boxCenterGlobal = renderBox.localToGlobal(centerLocal);
+      _rotationStartPointerAngle = _pointerAngle(details.globalPosition);
+    } else {
+      _boxCenterGlobal = null;
+      _rotationStartPointerAngle = null;
+    }
+  }
+
+  void _onRotationHandleUpdate(DragUpdateDetails details) {
+    if (!_rotationActive) {
+      return;
+    }
+    final double newAngle = _computeRotationFromDrag(details.globalPosition);
+    if (newAngle != widget.box.rotationRadians) {
+      widget.box.rotationRadians = newAngle;
+      widget.collageManager.clampBoxToTemplate(widget.box);
+      widget.collageManager.refresh();
+    }
+  }
+
+  void _onRotationHandleEnd(DragEndDetails details) {
+    _finishRotationHandleGesture();
+  }
+
+  void _onRotationHandleCancel() {
+    _finishRotationHandleGesture();
+  }
+
+  void _finishRotationHandleGesture() {
+    if (!_rotationActive) {
+      return;
+    }
+    _rotationActive = false;
+    widget.onRotateActive?.call(false);
+    widget.collageManager.setSnappingSuspended(false);
+    widget.box.rotationBaseRadians = widget.box.rotationRadians;
+    _resetRotationTracking();
+  }
+
+  Widget _buildActionIcon(IconData icon) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        icon,
+        size: 25,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  double _computeRotationFromDrag(Offset globalPosition) {
+    final double? startPointerAngle = _rotationStartPointerAngle;
+    final Offset? center = _boxCenterGlobal;
+    if (startPointerAngle != null && center != null) {
+      final double currentPointerAngle = _pointerAngle(globalPosition);
+      final double angleDelta =
+          _normalizeAngle(currentPointerAngle - startPointerAngle);
+      return _normalizeAngle(_rotationStartAngle + angleDelta);
+    }
+
+    const double fallbackSensitivity = 0.006; // radians per logical pixel
+    final Offset? startGlobal = _rotationHandleStartGlobal;
+    final double displacementX = startGlobal != null
+        ? globalPosition.dx - startGlobal.dx
+        : 0.0;
+    return _normalizeAngle(
+      _rotationStartAngle + displacementX * fallbackSensitivity,
+    );
+  }
+
+  double _pointerAngle(Offset globalPosition) {
+    final Offset? center = _boxCenterGlobal;
+    if (center == null) return 0.0;
+    final Offset vector = globalPosition - center;
+    return math.atan2(vector.dy, vector.dx);
+  }
+
+  void _resetRotationTracking() {
+    _rotationStartPointerAngle = null;
+    _boxCenterGlobal = null;
+    _rotationHandleStartGlobal = null;
+    _rotationStartAngle = widget.box.rotationRadians;
   }
 
   double _normalizeAngle(double angle) {
