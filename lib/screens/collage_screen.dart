@@ -58,7 +58,7 @@ class _CollageScreenState extends State<CollageScreen> {
                   icon: const Icon(Icons.save),
                   onPressed: () => _saveCollage(context, collageManager),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 16),
               ],
             ),
             body: Stack(

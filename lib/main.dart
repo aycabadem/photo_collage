@@ -47,6 +47,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Custom Collage',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: scheme,
         scaffoldBackgroundColor: surface,
