@@ -168,6 +168,24 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                   left: 0,
                   right: 0,
                   child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: GestureDetector(
+                      onPanStart: _onRotationHandleStart,
+                      onPanUpdate: _onRotationHandleUpdate,
+                      onPanEnd: _onRotationHandleEnd,
+                      onPanCancel: _onRotationHandleCancel,
+                      behavior: HitTestBehavior.opaque,
+                      child: _buildActionIcon(Icons.rotate_right),
+                    ),
+                  ),
+                ),
+              if (widget.isSelected)
+                Positioned(
+                  bottom: 8,
+                  left: 0,
+                  right: 0,
+                  child: FittedBox(
                     fit: BoxFit
                         .scaleDown, // Prevent overflow on very small boxes
                     alignment: Alignment.center,
@@ -178,15 +196,6 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                           onTap: widget.onDelete,
                           behavior: HitTestBehavior.opaque,
                           child: _buildActionIcon(Icons.delete_outline),
-                        ),
-                        const SizedBox(width: 12),
-                        GestureDetector(
-                          onPanStart: _onRotationHandleStart,
-                          onPanUpdate: _onRotationHandleUpdate,
-                          onPanEnd: _onRotationHandleEnd,
-                          onPanCancel: _onRotationHandleCancel,
-                          behavior: HitTestBehavior.opaque,
-                          child: _buildActionIcon(Icons.rotate_right),
                         ),
                         if (box.imageFile != null) ...[
                           const SizedBox(width: 12),

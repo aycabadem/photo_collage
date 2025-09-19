@@ -590,7 +590,7 @@ class CollageManager extends ChangeNotifier {
     );
 
     if (pickedFile != null) {
-      Size boxSize = const Size(180, 180);
+      Size boxSize = const Size(220, 220);
       Offset pos = CollageUtils.findNonOverlappingPosition(
         _photoBoxes,
         _templateSize,
