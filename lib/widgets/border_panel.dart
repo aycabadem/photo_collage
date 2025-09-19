@@ -250,39 +250,30 @@ class _GradientSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final start = Theme.of(context).colorScheme.primary;
-    final end = Theme.of(context).colorScheme.secondary;
+    final theme = Theme.of(context);
+    final Color primary = theme.colorScheme.primary;
+    final Color inactive = primary.withValues(alpha: 0.25);
 
     return SizedBox(
       height: 36,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Gradient bar behind the track
-          Container(
-            height: 4,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(2)),
-              gradient: LinearGradient(colors: [start, end]),
-            ),
-          ),
-          // Transparent track slider on top
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 4,
-              activeTrackColor: Colors.transparent,
-              inactiveTrackColor: Colors.transparent,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-              overlayShape: SliderComponentShape.noOverlay,
-            ),
-            child: Slider(
-              value: value,
-              min: min,
-              max: max,
-              onChanged: onChanged,
-            ),
-          ),
-        ],
+      child: SliderTheme(
+        data: SliderTheme.of(context).copyWith(
+          trackHeight: 4,
+          activeTrackColor: primary,
+          inactiveTrackColor: inactive,
+          thumbColor: primary,
+          overlayColor: primary.withValues(alpha: 0.12),
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+          overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+          valueIndicatorColor: primary,
+        ),
+        child: Slider(
+          value: value,
+          min: min,
+          max: max,
+          label: label,
+          onChanged: onChanged,
+        ),
       ),
     );
   }
