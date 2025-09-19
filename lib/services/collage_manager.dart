@@ -925,6 +925,105 @@ class CollageManager extends ChangeNotifier {
     return Offset(adjustedX, adjustedY);
   }
 
+  (double left, double top, double right, double bottom) _snapResizedEdges(
+    PhotoBox box,
+    double left,
+    double top,
+    double right,
+    double bottom,
+    bool moveLeftEdge,
+    bool moveRightEdge,
+    bool moveTopEdge,
+    bool moveBottomEdge,
+  ) {
+    const double minSize = 50.0;
+    const double snapThreshold = 6.0;
+
+    double snapValue(double value, List<double> targets) {
+      double snapped = value;
+      double smallestDiff = snapThreshold + 1;
+      for (final target in targets) {
+        final double diff = (value - target).abs();
+        if (diff <= snapThreshold && diff < smallestDiff) {
+          smallestDiff = diff;
+          snapped = target;
+        }
+      }
+      return snapped;
+    }
+
+    final List<double> horizontalTargets = [0.0, _templateSize.width];
+    final List<double> verticalTargets = [0.0, _templateSize.height];
+
+    for (final other in _photoBoxes) {
+      if (other == box) continue;
+      final double otherLeft = other.position.dx;
+      final double otherTop = other.position.dy;
+      final double otherRight = otherLeft + other.size.width;
+      final double otherBottom = otherTop + other.size.height;
+
+      horizontalTargets.addAll([otherLeft, otherRight]);
+      verticalTargets.addAll([otherTop, otherBottom]);
+
+      if (_innerMargin > 0) {
+        horizontalTargets.addAll([
+          otherLeft - _innerMargin,
+          otherRight + _innerMargin,
+        ]);
+        verticalTargets.addAll([
+          otherTop - _innerMargin,
+          otherBottom + _innerMargin,
+        ]);
+      }
+    }
+
+    if (moveLeftEdge) {
+      final double snappedLeft = snapValue(left, horizontalTargets);
+      if (snappedLeft != left) {
+        left = snappedLeft;
+      }
+      if (left < 0) left = 0;
+      if (right - left < minSize) {
+        left = right - minSize;
+      }
+    }
+
+    if (moveRightEdge) {
+      final double snappedRight = snapValue(right, horizontalTargets);
+      if (snappedRight != right) {
+        right = snappedRight;
+      }
+      if (right > _templateSize.width) right = _templateSize.width;
+      if (right - left < minSize) {
+        right = left + minSize;
+      }
+    }
+
+    if (moveTopEdge) {
+      final double snappedTop = snapValue(top, verticalTargets);
+      if (snappedTop != top) {
+        top = snappedTop;
+      }
+      if (top < 0) top = 0;
+      if (bottom - top < minSize) {
+        top = bottom - minSize;
+      }
+    }
+
+    if (moveBottomEdge) {
+      final double snappedBottom = snapValue(bottom, verticalTargets);
+      if (snappedBottom != bottom) {
+        bottom = snappedBottom;
+      }
+      if (bottom > _templateSize.height) bottom = _templateSize.height;
+      if (bottom - top < minSize) {
+        bottom = top + minSize;
+      }
+    }
+
+    return (left, top, right, bottom);
+  }
+
   /// Get adjusted position for photo box with inner margin
   Offset getAdjustedPosition(PhotoBox box) {
     if (_innerMargin <= 0) return box.position;
@@ -993,6 +1092,32 @@ class CollageManager extends ChangeNotifier {
     if (newWidth < minSize || newHeight < minSize) {
       return;
     }
+
+    final bool moveLeftEdge = handleAlignment.x < 0;
+    final bool moveRightEdge = handleAlignment.x > 0;
+    final bool moveTopEdge = handleAlignment.y < 0;
+    final bool moveBottomEdge = handleAlignment.y > 0;
+
+    final double initialRight = newX + newWidth;
+    final double initialBottom = newY + newHeight;
+
+    final (snappedLeft, snappedTop, snappedRight, snappedBottom) =
+        _snapResizedEdges(
+      box,
+      newX,
+      newY,
+      initialRight,
+      initialBottom,
+      moveLeftEdge,
+      moveRightEdge,
+      moveTopEdge,
+      moveBottomEdge,
+    );
+
+    newX = snappedLeft;
+    newY = snappedTop;
+    newWidth = snappedRight - snappedLeft;
+    newHeight = snappedBottom - snappedTop;
 
     box.size = Size(newWidth, newHeight);
     box.position = Offset(newX, newY);
