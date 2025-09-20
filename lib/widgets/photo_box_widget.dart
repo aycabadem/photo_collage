@@ -88,6 +88,13 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     final theme = Theme.of(context);
     final Color placeholderBorderColor =
         theme.colorScheme.primary.withValues(alpha: 0.65);
+    final bool isDarkMode = theme.brightness == Brightness.dark;
+    final Color frameColor = Color.alphaBlend(
+      isDarkMode
+          ? Colors.white.withValues(alpha: 0.06)
+          : Colors.white.withValues(alpha: 0.85),
+      theme.colorScheme.surface,
+    );
 
     return GestureDetector(
       onDoubleTap: widget.onTap, // Double tap to select
@@ -96,12 +103,11 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
       onScaleEnd: widget.isSelected ? _handleScaleEnd : null,
       behavior: HitTestBehavior.opaque, // Prevent background taps
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(
-            widget.collageManager.cornerRadius,
-          ),
-          // Layered shadows for stronger 3D effect
-          boxShadow: _shadowLayers(widget.collageManager.shadowIntensity),
+        decoration: _frameDecoration(
+          cornerRadius: widget.collageManager.cornerRadius,
+          intensity: widget.collageManager.shadowIntensity,
+          frameColor: frameColor,
+          isDarkMode: isDarkMode,
         ),
         child: Stack(
           clipBehavior: Clip.none,
@@ -110,17 +116,13 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
               borderRadius: BorderRadius.circular(
                 widget.collageManager.cornerRadius,
               ),
-              child: Stack(
-                children: [
-                  // Photo or placeholder
-                  if (hasImage)
-                    Transform.translate(
-                      // Subtle lift for 3D feel; increases slightly with shadow intensity
-                      offset: Offset(
-                        0,
-                        -(_liftOffset(widget.collageManager.shadowIntensity)),
-                      ),
-                      child: Transform.scale(
+              child: ColoredBox(
+                color: frameColor,
+                child: Stack(
+                  children: [
+                    // Photo or placeholder
+                    if (hasImage)
+                      Transform.scale(
                         scale: box.photoScale,
                         alignment: box.alignment,
                         child: Image.file(
@@ -131,98 +133,98 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                           alignment: box.alignment,
                         ),
                       ),
-                    ),
-                  if (!hasImage)
-                    Positioned.fill(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
+                    if (!hasImage)
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              widget.collageManager.cornerRadius,
+                            ),
+                            border: Border.all(
+                              color: placeholderBorderColor,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (!hasImage)
+                      Center(
+                        child: GestureDetector(
+                          onTap: () => _addPhotoToBox(context),
+                          child: Icon(
+                            Icons.add_a_photo,
+                            color: theme.colorScheme.primary,
+                            size: 32,
+                          ),
+                        ),
+                      ),
+
+                    // Smart border overlay (ignore pointer so it doesn't block interactions)
+                    if (widget.hasGlobalBorder && widget.globalBorderWidth > 0)
+                      IgnorePointer(
+                        child: ClipRRect(
                           borderRadius: BorderRadius.circular(
                             widget.collageManager.cornerRadius,
                           ),
-                          border: Border.all(
-                            color: placeholderBorderColor,
-                            width: 1.5,
+                          child: SmartBorderOverlay(
+                            box: box,
+                            borderWidth: widget.globalBorderWidth,
+                            borderColor: widget.globalBorderColor,
+                            otherBoxes: widget.otherBoxes,
                           ),
                         ),
                       ),
-                    ),
-                  if (!hasImage)
-                    Center(
-                      child: GestureDetector(
-                        onTap: () => _addPhotoToBox(context),
-                        child: Icon(
-                          Icons.add_a_photo,
-                          color: theme.colorScheme.primary,
-                          size: 32,
-                        ),
-                      ),
-                    ),
 
-                  // Smart border overlay (ignore pointer so it doesn't block interactions)
-                  if (widget.hasGlobalBorder && widget.globalBorderWidth > 0)
-                    IgnorePointer(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          widget.collageManager.cornerRadius,
-                        ),
-                        child: SmartBorderOverlay(
-                          box: box,
-                          borderWidth: widget.globalBorderWidth,
-                          borderColor: widget.globalBorderColor,
-                          otherBoxes: widget.otherBoxes,
-                        ),
-                      ),
-                    ),
-
-                  // Action buttons (only for selected boxes)
-                  if (widget.isSelected)
-                    Positioned(
-                      top: 8,
-                      left: 0,
-                      right: 0,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.center,
-                        child: GestureDetector(
-                          onPanStart: _onRotationHandleStart,
-                          onPanUpdate: _onRotationHandleUpdate,
-                          onPanEnd: _onRotationHandleEnd,
-                          onPanCancel: _onRotationHandleCancel,
-                          behavior: HitTestBehavior.opaque,
-                          child: _buildActionIcon(Icons.rotate_right),
+                    // Action buttons (only for selected boxes)
+                    if (widget.isSelected)
+                      Positioned(
+                        top: 8,
+                        left: 0,
+                        right: 0,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.center,
+                          child: GestureDetector(
+                            onPanStart: _onRotationHandleStart,
+                            onPanUpdate: _onRotationHandleUpdate,
+                            onPanEnd: _onRotationHandleEnd,
+                            onPanCancel: _onRotationHandleCancel,
+                            behavior: HitTestBehavior.opaque,
+                            child: _buildActionIcon(Icons.rotate_right),
+                          ),
                         ),
                       ),
-                    ),
-                  if (widget.isSelected)
-                    Positioned(
-                      bottom: 8,
-                      left: 0,
-                      right: 0,
-                      child: FittedBox(
-                        fit: BoxFit
-                            .scaleDown, // Prevent overflow on very small boxes
-                        alignment: Alignment.center,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: widget.onDelete,
-                              behavior: HitTestBehavior.opaque,
-                              child: _buildActionIcon(Icons.delete_outline),
-                            ),
-                            if (box.imageFile != null) ...[
-                              const SizedBox(width: 12),
+                    if (widget.isSelected)
+                      Positioned(
+                        bottom: 8,
+                        left: 0,
+                        right: 0,
+                        child: FittedBox(
+                          fit: BoxFit
+                              .scaleDown, // Prevent overflow on very small boxes
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                               GestureDetector(
-                                onTap: () => _showPhotoEditor(context),
+                                onTap: widget.onDelete,
                                 behavior: HitTestBehavior.opaque,
-                                child: _buildActionIcon(Icons.edit),
+                                child: _buildActionIcon(Icons.delete_outline),
                               ),
+                              if (box.imageFile != null) ...[
+                                const SizedBox(width: 12),
+                                GestureDetector(
+                                  onTap: () => _showPhotoEditor(context),
+                                  behavior: HitTestBehavior.opaque,
+                                  child: _buildActionIcon(Icons.edit),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
             if (_showRotationSnapGuides)
@@ -440,37 +442,67 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   }
 }
 
-/// Build layered shadows for a stronger, more 3D-like effect
-List<BoxShadow>? _shadowLayers(double intensity) {
+/// Decorates the photo box frame so the outer shadow respects rounded corners.
+BoxDecoration _frameDecoration({
+  required double cornerRadius,
+  required double intensity,
+  required Color frameColor,
+  required bool isDarkMode,
+}) {
+  return BoxDecoration(
+    color: frameColor,
+    borderRadius: BorderRadius.circular(cornerRadius),
+    boxShadow: _shadowLayers(
+      intensity,
+      isDarkMode: isDarkMode,
+    ),
+  );
+}
+
+/// Build layered shadows for a crisper 3D-like effect without a dull halo.
+List<BoxShadow>? _shadowLayers(double intensity, {required bool isDarkMode}) {
   if (intensity <= 0) return null;
 
   // Normalize to 0..1 based on current slider range (0..14)
   final double t = (intensity.clamp(0.0, 14.0)) / 14.0;
 
-  // Cleaner, less smoky shadows: no spread, moderate blur, lower alpha
-  final ambientShadow = BoxShadow(
-    color: Colors.black.withValues(alpha: 0.05 + 0.05 * t), // 0.05..0.10
-    blurRadius: 12 + 8 * t, // 12..20
-    offset: Offset(0, 2 + 2 * t), // 2..4
-    spreadRadius: 0,
-  );
+  final double dropOpacity = isDarkMode
+      ? 0.32 + 0.18 * t
+      : 0.18 + 0.16 * t;
+  final double dropBlur = 18 + 14 * t; // 18..32
+  final double dropOffsetY = 8 + 6 * t; // 8..14
 
-  final keyShadow = BoxShadow(
-    color: Colors.black.withValues(alpha: 0.15 + 0.10 * t), // 0.15..0.25
-    blurRadius: 8 + 12 * t, // 8..20
-    offset: Offset(0, 4 + 6 * t), // 4..10
-    spreadRadius: 0,
-  );
+  final double rimOpacity = isDarkMode
+      ? 0.22 + 0.12 * t
+      : 0.10 + 0.05 * t;
+  final double rimBlur = 10 + 8 * t; // 10..22
+  final double rimOffsetY = 3 + 3 * t; // 3..6
 
-  return [ambientShadow, keyShadow];
-}
+  final double highlightOpacity = isDarkMode
+      ? 0.16 + 0.08 * t
+      : 0.35 + 0.25 * t;
+  final double highlightBlur = 8 + 8 * t; // 8..22
+  final double highlightOffsetY = -(2 + 2 * t); // -2..-4
 
-// Compute a subtle lift offset for the image based on shadow intensity
-double _liftOffset(double intensity) {
-  if (intensity <= 0) return 0;
-  final double t = (intensity.clamp(0.0, 14.0)) / 14.0;
-  // 0.0 .. 3.0 px upward
-  return 1.0 + 2.0 * t;
+  return [
+    BoxShadow(
+      color: Colors.white.withValues(alpha: highlightOpacity),
+      blurRadius: highlightBlur,
+      offset: Offset(0, highlightOffsetY),
+      spreadRadius: -2 - t,
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: rimOpacity),
+      blurRadius: rimBlur,
+      offset: Offset(0, rimOffsetY),
+      spreadRadius: -1.5,
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: dropOpacity),
+      blurRadius: dropBlur,
+      offset: Offset(0, dropOffsetY),
+    ),
+  ];
 }
 
 class _RotationSnapGuides extends StatelessWidget {
