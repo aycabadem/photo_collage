@@ -268,7 +268,8 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     if (!_rotationActive) {
       return;
     }
-    final double newAngle = _computeRotationFromDrag(details.globalPosition);
+    double newAngle = _computeRotationFromDrag(details.globalPosition);
+    newAngle = _applyRotationSnapping(newAngle);
     if (newAngle != widget.box.rotationRadians) {
       widget.box.rotationRadians = newAngle;
       widget.collageManager.clampBoxToTemplate(widget.box);
@@ -344,6 +345,21 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     _boxCenterGlobal = null;
     _rotationHandleStartGlobal = null;
     _rotationStartAngle = widget.box.rotationRadians;
+  }
+
+  double _applyRotationSnapping(double angle) {
+    const double snapIncrement = math.pi / 4; // 45° steps
+    const double snapTolerance = math.pi / 36; // 5° tolerance
+
+    final double normalized = _normalizeAngle(angle);
+    final double snappedMultiple = (normalized / snapIncrement).roundToDouble();
+    final double snappedAngle = snappedMultiple * snapIncrement;
+
+    if ((normalized - snappedAngle).abs() <= snapTolerance) {
+      return _normalizeAngle(snappedAngle);
+    }
+
+    return normalized;
   }
 
   double _normalizeAngle(double angle) {
