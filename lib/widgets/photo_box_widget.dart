@@ -70,6 +70,16 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   double? _rotationStartPointerAngle;
   Offset? _boxCenterGlobal;
   Offset? _rotationHandleStartGlobal;
+  bool _showRotationSnapGuides = false;
+  double _snapGuideAngle = 0.0;
+
+  @override
+  void didUpdateWidget(covariant PhotoBoxWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.isSelected && _showRotationSnapGuides) {
+      _clearRotationSnapGuides();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,124 +103,135 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
           // Layered shadows for stronger 3D effect
           boxShadow: _shadowLayers(widget.collageManager.shadowIntensity),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(
-            widget.collageManager.cornerRadius,
-          ),
-          child: Stack(
-            children: [
-              // Photo or placeholder
-              if (hasImage)
-                Transform.translate(
-                  // Subtle lift for 3D feel; increases slightly with shadow intensity
-                  offset: Offset(
-                    0,
-                    -(_liftOffset(widget.collageManager.shadowIntensity)),
-                  ),
-                  child: Transform.scale(
-                    scale: box.photoScale,
-                    alignment: box.alignment,
-                    child: Image.file(
-                      box.imageFile!,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                      alignment: box.alignment,
-                    ),
-                  ),
-                ),
-              if (!hasImage)
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                        widget.collageManager.cornerRadius,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(
+                widget.collageManager.cornerRadius,
+              ),
+              child: Stack(
+                children: [
+                  // Photo or placeholder
+                  if (hasImage)
+                    Transform.translate(
+                      // Subtle lift for 3D feel; increases slightly with shadow intensity
+                      offset: Offset(
+                        0,
+                        -(_liftOffset(widget.collageManager.shadowIntensity)),
                       ),
-                      border: Border.all(
-                        color: placeholderBorderColor,
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-              if (!hasImage)
-                Center(
-                  child: GestureDetector(
-                    onTap: () => _addPhotoToBox(context),
-                    child: Icon(
-                      Icons.add_a_photo,
-                      color: theme.colorScheme.primary,
-                      size: 32,
-                    ),
-                  ),
-                ),
-
-              // Smart border overlay (ignore pointer so it doesn't block interactions)
-              if (widget.hasGlobalBorder && widget.globalBorderWidth > 0)
-                IgnorePointer(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                      widget.collageManager.cornerRadius,
-                    ),
-                    child: SmartBorderOverlay(
-                      box: box,
-                      borderWidth: widget.globalBorderWidth,
-                      borderColor: widget.globalBorderColor,
-                      otherBoxes: widget.otherBoxes,
-                    ),
-                  ),
-                ),
-
-              // Action buttons (only for selected boxes)
-              if (widget.isSelected)
-                Positioned(
-                  top: 8,
-                  left: 0,
-                  right: 0,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.center,
-                    child: GestureDetector(
-                      onPanStart: _onRotationHandleStart,
-                      onPanUpdate: _onRotationHandleUpdate,
-                      onPanEnd: _onRotationHandleEnd,
-                      onPanCancel: _onRotationHandleCancel,
-                      behavior: HitTestBehavior.opaque,
-                      child: _buildActionIcon(Icons.rotate_right),
-                    ),
-                  ),
-                ),
-              if (widget.isSelected)
-                Positioned(
-                  bottom: 8,
-                  left: 0,
-                  right: 0,
-                  child: FittedBox(
-                    fit: BoxFit
-                        .scaleDown, // Prevent overflow on very small boxes
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: widget.onDelete,
-                          behavior: HitTestBehavior.opaque,
-                          child: _buildActionIcon(Icons.delete_outline),
+                      child: Transform.scale(
+                        scale: box.photoScale,
+                        alignment: box.alignment,
+                        child: Image.file(
+                          box.imageFile!,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          alignment: box.alignment,
                         ),
-                        if (box.imageFile != null) ...[
-                          const SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: () => _showPhotoEditor(context),
-                            behavior: HitTestBehavior.opaque,
-                            child: _buildActionIcon(Icons.edit),
-                          ),
-                        ],
-                      ],
+                      ),
                     ),
-                  ),
+                  if (!hasImage)
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            widget.collageManager.cornerRadius,
+                          ),
+                          border: Border.all(
+                            color: placeholderBorderColor,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (!hasImage)
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => _addPhotoToBox(context),
+                        child: Icon(
+                          Icons.add_a_photo,
+                          color: theme.colorScheme.primary,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+
+                  // Smart border overlay (ignore pointer so it doesn't block interactions)
+                  if (widget.hasGlobalBorder && widget.globalBorderWidth > 0)
+                    IgnorePointer(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                          widget.collageManager.cornerRadius,
+                        ),
+                        child: SmartBorderOverlay(
+                          box: box,
+                          borderWidth: widget.globalBorderWidth,
+                          borderColor: widget.globalBorderColor,
+                          otherBoxes: widget.otherBoxes,
+                        ),
+                      ),
+                    ),
+
+                  // Action buttons (only for selected boxes)
+                  if (widget.isSelected)
+                    Positioned(
+                      top: 8,
+                      left: 0,
+                      right: 0,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.center,
+                        child: GestureDetector(
+                          onPanStart: _onRotationHandleStart,
+                          onPanUpdate: _onRotationHandleUpdate,
+                          onPanEnd: _onRotationHandleEnd,
+                          onPanCancel: _onRotationHandleCancel,
+                          behavior: HitTestBehavior.opaque,
+                          child: _buildActionIcon(Icons.rotate_right),
+                        ),
+                      ),
+                    ),
+                  if (widget.isSelected)
+                    Positioned(
+                      bottom: 8,
+                      left: 0,
+                      right: 0,
+                      child: FittedBox(
+                        fit: BoxFit
+                            .scaleDown, // Prevent overflow on very small boxes
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            GestureDetector(
+                              onTap: widget.onDelete,
+                              behavior: HitTestBehavior.opaque,
+                              child: _buildActionIcon(Icons.delete_outline),
+                            ),
+                            if (box.imageFile != null) ...[
+                              const SizedBox(width: 12),
+                              GestureDetector(
+                                onTap: () => _showPhotoEditor(context),
+                                behavior: HitTestBehavior.opaque,
+                                child: _buildActionIcon(Icons.edit),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (_showRotationSnapGuides)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: _RotationSnapGuides(angle: _snapGuideAngle),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -293,6 +314,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     widget.onRotateActive?.call(false);
     widget.collageManager.setSnappingSuspended(false);
     widget.box.rotationBaseRadians = widget.box.rotationRadians;
+    _clearRotationSnapGuides();
     _resetRotationTracking();
   }
 
@@ -356,9 +378,11 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     final double snappedAngle = snappedMultiple * snapIncrement;
 
     if ((normalized - snappedAngle).abs() <= snapTolerance) {
+      _updateRotationSnapGuides(snappedAngle);
       return _normalizeAngle(snappedAngle);
     }
 
+    _clearRotationSnapGuides();
     return normalized;
   }
 
@@ -371,6 +395,29 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
       angle -= twoPi;
     }
     return angle;
+  }
+
+  void _updateRotationSnapGuides(double targetAngle) {
+    final double normalized = _normalizeAngle(targetAngle);
+    if (_showRotationSnapGuides &&
+        (_snapGuideAngle - normalized).abs() <= 1e-4) {
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _showRotationSnapGuides = true;
+      _snapGuideAngle = normalized;
+    });
+  }
+
+  void _clearRotationSnapGuides() {
+    if (!_showRotationSnapGuides) {
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _showRotationSnapGuides = false;
+    });
   }
 
   /// Add photo to this specific box
@@ -424,4 +471,70 @@ double _liftOffset(double intensity) {
   final double t = (intensity.clamp(0.0, 14.0)) / 14.0;
   // 0.0 .. 3.0 px upward
   return 1.0 + 2.0 * t;
+}
+
+class _RotationSnapGuides extends StatelessWidget {
+  final double angle;
+
+  const _RotationSnapGuides({required this.angle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: FractionallySizedBox(
+        widthFactor: 1.3,
+        heightFactor: 1.3,
+        child: CustomPaint(
+          painter: _RotationSnapGuidesPainter(angle: angle),
+        ),
+      ),
+    );
+  }
+}
+
+class _RotationSnapGuidesPainter extends CustomPainter {
+  final double angle;
+
+  const _RotationSnapGuidesPainter({required this.angle});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Offset center = size.center(Offset.zero);
+    final double length = size.longestSide;
+    final double halfLength = length * 0.5;
+
+    final Offset axis = Offset(math.cos(angle), math.sin(angle));
+    final Offset perp = Offset(-axis.dy, axis.dx);
+
+    final Paint glowPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.18)
+      ..strokeWidth = 6
+      ..strokeCap = StrokeCap.round;
+
+    final Paint mainLinePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.9)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+
+    final Paint secondaryLinePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.6)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+
+    final Offset mainStart = center - axis * halfLength;
+    final Offset mainEnd = center + axis * halfLength;
+    final Offset perpStart = center - perp * halfLength;
+    final Offset perpEnd = center + perp * halfLength;
+
+    canvas.drawLine(mainStart, mainEnd, glowPaint);
+    canvas.drawLine(mainStart, mainEnd, mainLinePaint);
+
+    canvas.drawLine(perpStart, perpEnd, glowPaint);
+    canvas.drawLine(perpStart, perpEnd, secondaryLinePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RotationSnapGuidesPainter oldDelegate) {
+    return oldDelegate.angle != angle;
+  }
 }
