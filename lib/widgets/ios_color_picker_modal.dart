@@ -481,8 +481,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: color.computeLuminance() > 0.7
-                      ? Colors.black.withOpacity(0.12)
-                      : Colors.white.withOpacity(0.35),
+                      ? Colors.black.withValues(alpha: 0.12)
+                      : Colors.white.withValues(alpha: 0.35),
                   width: 1,
                 ),
               ),

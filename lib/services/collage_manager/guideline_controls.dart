@@ -1,4 +1,4 @@
-part of collage_manager_service;
+part of '../collage_manager.dart';
 
 mixin _CollageGuidelineControls on _CollageManagerBase {
   List<AlignmentGuideline> getAlignmentGuidelines(PhotoBox selectedBox) {

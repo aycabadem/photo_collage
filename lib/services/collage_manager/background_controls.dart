@@ -1,4 +1,4 @@
-part of collage_manager_service;
+part of '../collage_manager.dart';
 
 mixin _CollageBackgroundControls on _CollageManagerBase {
   void setPhotoMargin(double margin) {

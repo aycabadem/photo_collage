@@ -1,4 +1,4 @@
-part of collage_manager_service;
+part of '../collage_manager.dart';
 
 mixin _CollagePhotoBoxControls on _CollageManagerBase {
   void selectBox(PhotoBox? box) {

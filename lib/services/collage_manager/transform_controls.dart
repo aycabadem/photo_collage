@@ -1,4 +1,4 @@
-part of collage_manager_service;
+part of '../collage_manager.dart';
 
 mixin _CollageTransformControls on _CollageManagerBase {
   void moveBox(PhotoBox box, Offset delta) {

@@ -1,4 +1,4 @@
-part of collage_manager_service;
+part of '../collage_manager.dart';
 
 /// Snapshot of custom layout for aspect ratio transitions
 class CustomLayoutSnapshot {

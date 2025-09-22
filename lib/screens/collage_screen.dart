@@ -662,20 +662,28 @@ class _CollageScreenState extends State<CollageScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    ...options.map((option) {
-                      final int height = (option.width / aspectRatio).round();
-                      return RadioListTile<int>(
-                        value: option.width,
-                        groupValue: selectedWidth,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text('${option.label} (${option.width}px)'),
-                        subtitle: Text('${option.width} x ${height}px'),
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() => selectedWidth = value);
-                        },
-                      );
-                    }),
+                    RadioGroup<int>(
+                      groupValue: selectedWidth,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() => selectedWidth = value);
+                      },
+                      child: Column(
+                        children: [
+                          for (final option in options)
+                            RadioListTile<int>(
+                              value: option.width,
+                              contentPadding: EdgeInsets.zero,
+                              title:
+                                  Text('${option.label} (${option.width}px)'),
+                              subtitle: Text(
+                                '${option.width} x '
+                                '${(option.width / aspectRatio).round()}px',
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [

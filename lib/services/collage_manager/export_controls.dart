@@ -1,4 +1,4 @@
-part of collage_manager_service;
+part of '../collage_manager.dart';
 
 mixin _CollageExportControls on _CollageManagerBase {
   Future<String?> saveCollage({int? exportWidth}) async {
