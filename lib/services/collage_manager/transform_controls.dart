@@ -325,98 +325,48 @@ mixin _CollageTransformControls on _CollageManagerBase {
     final double oldX = box.position.dx;
     final double oldY = box.position.dy;
 
-    final double angle = box.rotationRadians;
-    final double cosAngle = math.cos(angle);
-    final double sinAngle = math.sin(angle);
-
+    // Simple resize without complex rotation math for now
     double localDx = deltaWidth;
     double localDy = deltaHeight;
-    if (angle.abs() > 1e-4) {
-      final double rotatedDx = (cosAngle * localDx) + (sinAngle * localDy);
-      final double rotatedDy = (-sinAngle * localDx) + (cosAngle * localDy);
-      localDx = rotatedDx;
-      localDy = rotatedDy;
-    }
 
     double newWidth = oldWidth;
     double newHeight = oldHeight;
+    double deltaX = 0.0;
+    double deltaY = 0.0;
 
     if (handleAlignment == Alignment.topLeft) {
       newWidth = math.max(minSize, oldWidth - localDx);
       newHeight = math.max(minSize, oldHeight - localDy);
+      // Move position when resizing from top-left
+      deltaX = oldWidth - newWidth;
+      deltaY = oldHeight - newHeight;
     } else if (handleAlignment == Alignment.topRight) {
       newWidth = math.max(minSize, oldWidth + localDx);
       newHeight = math.max(minSize, oldHeight - localDy);
+      // Only move Y when resizing from top-right
+      deltaY = oldHeight - newHeight;
     } else if (handleAlignment == Alignment.bottomLeft) {
       newWidth = math.max(minSize, oldWidth - localDx);
       newHeight = math.max(minSize, oldHeight + localDy);
+      // Only move X when resizing from bottom-left
+      deltaX = oldWidth - newWidth;
     } else if (handleAlignment == Alignment.bottomRight) {
       newWidth = math.max(minSize, oldWidth + localDx);
       newHeight = math.max(minSize, oldHeight + localDy);
+      // No position change when resizing from bottom-right
     }
 
     if (newWidth < minSize || newHeight < minSize) {
       return;
     }
 
-    final double oldCenterX = oldX + oldWidth * 0.5;
-    final double oldCenterY = oldY + oldHeight * 0.5;
-
-    Offset cornerOffset(Alignment alignment, double width, double height) {
-      return Offset(
-        alignment.x * width * 0.5,
-        alignment.y * height * 0.5,
-      );
-    }
-
-    Offset rotateLocal(Offset local) {
-      return Offset(
-        (local.dx * cosAngle) - (local.dy * sinAngle),
-        (local.dx * sinAngle) + (local.dy * cosAngle),
-      );
-    }
-
-    final Alignment pivotAlignment = Alignment(-handleAlignment.x, -handleAlignment.y);
-    final Offset pivotLocalOld = cornerOffset(pivotAlignment, oldWidth, oldHeight);
-    final Offset pivotWorld = Offset(oldCenterX, oldCenterY) + rotateLocal(pivotLocalOld);
-    final Offset pivotLocalNew = cornerOffset(pivotAlignment, newWidth, newHeight);
-    final Offset rotatedPivotLocalNew = rotateLocal(pivotLocalNew);
-
-    final double newCenterX = pivotWorld.dx - rotatedPivotLocalNew.dx;
-    final double newCenterY = pivotWorld.dy - rotatedPivotLocalNew.dy;
-
-    double newX = newCenterX - newWidth * 0.5;
-    double newY = newCenterY - newHeight * 0.5;
-
-    final bool moveLeftEdge = handleAlignment.x < 0;
-    final bool moveRightEdge = handleAlignment.x > 0;
-    final bool moveTopEdge = handleAlignment.y < 0;
-    final bool moveBottomEdge = handleAlignment.y > 0;
-
-    final double initialRight = newX + newWidth;
-    final double initialBottom = newY + newHeight;
-
-    final (snappedLeft, snappedTop, snappedRight, snappedBottom) =
-        _snapResizedEdges(
-      box,
-      newX,
-      newY,
-      initialRight,
-      initialBottom,
-      moveLeftEdge,
-      moveRightEdge,
-      moveTopEdge,
-      moveBottomEdge,
-    );
-
-    newX = snappedLeft;
-    newY = snappedTop;
-    newWidth = snappedRight - snappedLeft;
-    newHeight = snappedBottom - snappedTop;
-
+    // Apply size change
     box.size = Size(newWidth, newHeight);
-    box.position = Offset(newX, newY);
+    
+    // Apply position change (much simpler)
+    box.position = Offset(oldX + deltaX, oldY + deltaY);
 
+    // Clamp to template bounds
     final Offset clamped = _clampBoxWithinTemplate(box, box.position);
     box.position = clamped;
 

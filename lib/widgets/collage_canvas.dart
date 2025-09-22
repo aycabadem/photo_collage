@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/photo_box.dart';
 import '../models/alignment_guideline.dart';
 import '../widgets/photo_box_widget.dart';
-import '../widgets/resize_handle_widget.dart';
 import '../widgets/split_handle_widget.dart';
 import '../widgets/guidelines_overlay.dart';
 import '../services/collage_manager.dart';
@@ -194,7 +193,23 @@ class CollageCanvas extends StatelessWidget {
             box: box,
             isSelected: selectedBox == box,
             onTap: () => onBoxSelected(box),
-            onPanUpdate: (details) => onBoxDragged(box, details),
+            onPanUpdate: (details) {
+              // Transform drag delta from rotated space to global space
+              final angle = box.rotationRadians;
+              final cosAngle = math.cos(angle);
+              final sinAngle = math.sin(angle);
+              final globalDx = cosAngle * details.delta.dx - sinAngle * details.delta.dy;
+              final globalDy = sinAngle * details.delta.dx + cosAngle * details.delta.dy;
+              
+              final transformedDetails = DragUpdateDetails(
+                sourceTimeStamp: details.sourceTimeStamp,
+                delta: Offset(globalDx, globalDy),
+                primaryDelta: details.primaryDelta,
+                globalPosition: details.globalPosition,
+                localPosition: details.localPosition,
+              );
+              onBoxDragged(box, transformedDetails);
+            },
             onDelete: () => onBoxDeleted(box),
             onAddPhoto: () async => await onAddPhotoToBox(box),
             onPhotoModified: () {
@@ -254,83 +269,162 @@ class CollageCanvas extends StatelessWidget {
     adjustedWidth = snap(adjustedWidth);
     adjustedHeight = snap(adjustedHeight);
 
-    return Positioned(
-      left: adjustedLeft,
-      top: adjustedTop,
-      child: SizedBox(
-        width: adjustedWidth,
-        height: adjustedHeight,
-        child: Transform.rotate(
-          alignment: Alignment.center,
-          angle: box.rotationRadians,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // GestureDetector deltas arrive in the box's local (unrotated) axes
-              // because Transform.rotate already adjusts hit testing.
-              // Top-left resize handle
-              ResizeHandleWidget(
-                box: box,
-                alignment: Alignment.topLeft,
-                size: 12.0,
-                onDrag: (dx, dy) {
-                  onResizeHandleDragged(
-                    box,
-                    dx,
-                    dy,
-                    Alignment.topLeft,
-                  );
-                },
-              ),
+    // Calculate rotated corner positions for handles
+    final double centerX = adjustedLeft + adjustedWidth * 0.5;
+    final double centerY = adjustedTop + adjustedHeight * 0.5;
+    final double angle = box.rotationRadians;
+    final double cosAngle = math.cos(angle);
+    final double sinAngle = math.sin(angle);
 
-              // Top-right resize handle
-              ResizeHandleWidget(
-                box: box,
-                alignment: Alignment.topRight,
-                size: 12.0,
-                onDrag: (dx, dy) {
-                  onResizeHandleDragged(
-                    box,
-                    dx,
-                    dy,
-                    Alignment.topRight,
-                  );
-                },
-              ),
+    Offset rotatedCorner(double localX, double localY) {
+      final double relX = localX - adjustedWidth * 0.5;
+      final double relY = localY - adjustedHeight * 0.5;
+      final double rotX = relX * cosAngle - relY * sinAngle;
+      final double rotY = relX * sinAngle + relY * cosAngle;
+      return Offset(centerX + rotX, centerY + rotY);
+    }
 
-              // Bottom-left resize handle
-              ResizeHandleWidget(
-                box: box,
-                alignment: Alignment.bottomLeft,
-                size: 12.0,
-                onDrag: (dx, dy) {
-                  onResizeHandleDragged(
-                    box,
-                    dx,
-                    dy,
-                    Alignment.bottomLeft,
-                  );
-                },
-              ),
+    final topLeft = rotatedCorner(0, 0);
+    final topRight = rotatedCorner(adjustedWidth, 0);
+    final bottomLeft = rotatedCorner(0, adjustedHeight);
+    final bottomRight = rotatedCorner(adjustedWidth, adjustedHeight);
 
-              // Bottom-right resize handle
-              ResizeHandleWidget(
-                box: box,
-                alignment: Alignment.bottomRight,
-                size: 12.0,
-                onDrag: (dx, dy) {
-                  onResizeHandleDragged(
-                    box,
-                    dx,
-                    dy,
-                    Alignment.bottomRight,
-                  );
-                },
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Top-left resize handle
+        Positioned(
+          left: topLeft.dx - 10,
+          top: topLeft.dy - 10,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanUpdate: (details) {
+              // Transform delta from global space to box's local rotated space
+              final localDx = details.delta.dx * cosAngle + details.delta.dy * sinAngle;
+              final localDy = -details.delta.dx * sinAngle + details.delta.dy * cosAngle;
+              onResizeHandleDragged(box, localDx, localDy, Alignment.topLeft);
+            },
+            child: Container(
+              width: 20,
+              height: 20,
+              padding: const EdgeInsets.all(5),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.black, width: 1.5),
+                  borderRadius: BorderRadius.circular(5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
+
+        // Top-right resize handle  
+        Positioned(
+          left: topRight.dx - 10,
+          top: topRight.dy - 10,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanUpdate: (details) {
+              final localDx = details.delta.dx * cosAngle + details.delta.dy * sinAngle;
+              final localDy = -details.delta.dx * sinAngle + details.delta.dy * cosAngle;
+              onResizeHandleDragged(box, localDx, localDy, Alignment.topRight);
+            },
+            child: Container(
+              width: 20,
+              height: 20,
+              padding: const EdgeInsets.all(5),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.black, width: 1.5),
+                  borderRadius: BorderRadius.circular(5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Bottom-left resize handle
+        Positioned(
+          left: bottomLeft.dx - 10,
+          top: bottomLeft.dy - 10,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanUpdate: (details) {
+              final localDx = details.delta.dx * cosAngle + details.delta.dy * sinAngle;
+              final localDy = -details.delta.dx * sinAngle + details.delta.dy * cosAngle;
+              onResizeHandleDragged(box, localDx, localDy, Alignment.bottomLeft);
+            },
+            child: Container(
+              width: 20,
+              height: 20,
+              padding: const EdgeInsets.all(5),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.black, width: 1.5),
+                  borderRadius: BorderRadius.circular(5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Bottom-right resize handle
+        Positioned(
+          left: bottomRight.dx - 10,
+          top: bottomRight.dy - 10,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onPanUpdate: (details) {
+              final localDx = details.delta.dx * cosAngle + details.delta.dy * sinAngle;
+              final localDy = -details.delta.dx * sinAngle + details.delta.dy * cosAngle;
+              onResizeHandleDragged(box, localDx, localDy, Alignment.bottomRight);
+            },
+            child: Container(
+              width: 20,
+              height: 20,
+              padding: const EdgeInsets.all(5),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.black, width: 1.5),
+                  borderRadius: BorderRadius.circular(5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
