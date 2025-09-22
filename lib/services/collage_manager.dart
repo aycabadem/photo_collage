@@ -85,10 +85,10 @@ class CollageManager extends ChangeNotifier {
   // Keep a default gradient spec available for when user switches to gradient
   GradientSpec _backgroundGradient = GradientSpec(
     stops: [
-      GradientStop(offset: 0.0, color: const Color(0xFFFCFAEE)),
-      GradientStop(offset: 1.0, color: const Color(0xFFA5B68D)),
+      GradientStop(offset: 0.0, color: Colors.white),
+      GradientStop(offset: 1.0, color: Colors.white),
     ],
-    angleDeg: 35,
+    angleDeg: 0,
   );
 
   // Global border settings

@@ -91,12 +91,12 @@ class _BorderPanelState extends State<BorderPanel> {
               ),
               const SizedBox(height: 6),
               Text(
-                label.toUpperCase(),
+                label,
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
                   color: active ? primary : primary.withValues(alpha: 0.8),
-                  letterSpacing: 0.6,
+                  letterSpacing: 0.3,
                 ),
               ),
             ],
@@ -109,8 +109,8 @@ class _BorderPanelState extends State<BorderPanel> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         item('shadow', Icons.tonality, 'Shadow'),
-        item('inner', Icons.space_bar, 'Inner'),
-        item('outer', Icons.crop_square, 'Outer'),
+        item('inner', Icons.border_inner, 'Inner'),
+        item('outer', Icons.border_outer, 'Outer'),
         item('corner_radius', Icons.rounded_corner, 'Radius'),
       ],
     );
@@ -126,8 +126,8 @@ class _BorderPanelState extends State<BorderPanel> {
           Text(
             _getEffectTitle(),
             style: TextStyle(
-              fontSize: 12,
-              letterSpacing: 1.0,
+              fontSize: 14,
+              letterSpacing: 0.3,
               fontWeight: FontWeight.w600,
               color: Theme.of(context).colorScheme.primary,
             ),
@@ -235,15 +235,15 @@ class _BorderPanelState extends State<BorderPanel> {
   String _getEffectTitle() {
     switch (_selectedEffect) {
       case 'shadow':
-        return 'SHADOW';
+        return 'Shadow';
       case 'inner':
-        return 'INNER MARGIN';
+        return 'Inner Margin';
       case 'outer':
-        return 'OUTER MARGIN';
+        return 'Outer Margin';
       case 'margin':
-        return 'MARGIN';
+        return 'Margin';
       case 'corner_radius':
-        return 'RADIUS';
+        return 'Radius';
       default:
         return '';
     }

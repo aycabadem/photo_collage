@@ -43,7 +43,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     _selectedColor = widget.currentColor;
     _selectedOpacity = widget.currentOpacity;
     _mode = widget.initialMode;
-    _gradient = widget.initialGradient ?? GradientSpec.presetPinkPurple();
+    _gradient = widget.initialGradient ?? _defaultGradientSpec();
     final hsl = HSLColor.fromColor(_selectedColor);
     _h = hsl.hue;
     _s = 1.0; // Start Saturation slider at max by default
@@ -55,8 +55,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       _gA = _gradient.stops.first.color;
       _gB = _gradient.stops.last.color;
     } else {
-      _gA = Colors.pink;
-      _gB = Colors.purple;
+      _gA = Colors.white;
+      _gB = Colors.white;
     }
     _loadActiveStopHsl(fromA: _activeA);
   }
@@ -640,17 +640,26 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   void _resetGradientStops() {
-    final stops = widget.initialGradient?.stops ?? GradientSpec.presetPinkPurple().stops;
-    if (stops.length >= 2) {
-      setState(() {
-        _gA = stops.first.color;
-        _gB = stops.last.color;
-        _activeA = true;
-      });
-      _loadActiveStopHsl(fromA: true);
-      _applyGradientLive();
-    }
+    final defaultSpec = _defaultGradientSpec();
+    setState(() {
+      _gradient = defaultSpec;
+      _gA = defaultSpec.stops.first.color;
+      _gB = defaultSpec.stops.last.color;
+      _activeA = true;
+    });
+    _loadActiveStopHsl(fromA: true);
+    _applyGradientLive();
   }
 
   // Removed: _gradientPresetChip (unused)
+
+  GradientSpec _defaultGradientSpec() {
+    return GradientSpec(
+      stops: [
+        GradientStop(offset: 0.0, color: Colors.white),
+        GradientStop(offset: 1.0, color: Colors.white),
+      ],
+      angleDeg: 0,
+    );
+  }
 }
