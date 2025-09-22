@@ -179,7 +179,7 @@ class _CollageScreenState extends State<CollageScreen> {
                       // Margins / Border panel
                       _buildBottomBarButton(
                         icon: Icons.border_all,
-                        label: 'Spacing',
+                        label: 'Style',
                         onPressed: () =>
                             _showBorderPanel(context, collageManager),
                         isActive: false,

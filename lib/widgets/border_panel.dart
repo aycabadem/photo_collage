@@ -119,7 +119,7 @@ class _BorderPanelState extends State<BorderPanel> {
   /// Compact slider area: label + slider stacked
   Widget _buildCompactSliderArea() {
     return SizedBox(
-      height: 60,
+      height: 64,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -172,31 +172,47 @@ class _BorderPanelState extends State<BorderPanel> {
 
   /// Inner margin slider (space between photos)
   Widget _buildInnerMarginSlider() {
-    return _GradientSlider(
-      value: widget.collageManager.innerMargin,
-      min: 0.0,
-      max: 60.0,
-      onChanged: (v) {
-        widget.collageManager.setInnerMargin(v);
-        setState(() {});
-      },
-      label:
-          'Inner: ${widget.collageManager.innerMargin.toStringAsFixed(1)}px',
+    final double value = widget.collageManager.innerMargin;
+    return Row(
+      children: [
+        Expanded(
+          child: _GradientSlider(
+            value: value,
+            min: 0.0,
+            max: 60.0,
+            onChanged: (v) {
+              widget.collageManager.setInnerMargin(v);
+              setState(() {});
+            },
+            label: 'Inner: ${value.toStringAsFixed(1)}px',
+          ),
+        ),
+        const SizedBox(width: 12),
+        _buildValueBadge(value),
+      ],
     );
   }
 
   /// Outer margin slider (frame around collage)
   Widget _buildOuterMarginSlider() {
-    return _GradientSlider(
-      value: widget.collageManager.outerMargin,
-      min: 0.0,
-      max: 120.0,
-      onChanged: (v) {
-        widget.collageManager.setOuterMargin(v);
-        setState(() {});
-      },
-      label:
-          'Outer: ${widget.collageManager.outerMargin.toStringAsFixed(1)}px',
+    final double value = widget.collageManager.outerMargin;
+    return Row(
+      children: [
+        Expanded(
+          child: _GradientSlider(
+            value: value,
+            min: 0.0,
+            max: 120.0,
+            onChanged: (v) {
+              widget.collageManager.setOuterMargin(v);
+              setState(() {});
+            },
+            label: 'Outer: ${value.toStringAsFixed(1)}px',
+          ),
+        ),
+        const SizedBox(width: 12),
+        _buildValueBadge(value),
+      ],
     );
   }
 
@@ -220,6 +236,10 @@ class _BorderPanelState extends State<BorderPanel> {
     switch (_selectedEffect) {
       case 'shadow':
         return 'SHADOW';
+      case 'inner':
+        return 'INNER MARGIN';
+      case 'outer':
+        return 'OUTER MARGIN';
       case 'margin':
         return 'MARGIN';
       case 'corner_radius':
@@ -227,6 +247,29 @@ class _BorderPanelState extends State<BorderPanel> {
       default:
         return '';
     }
+  }
+
+  Widget _buildValueBadge(double value) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.35),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        '${value.round()} px',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: theme.colorScheme.primary,
+        ),
+      ),
+    );
   }
 
   // _selectEffect removed (not used)
