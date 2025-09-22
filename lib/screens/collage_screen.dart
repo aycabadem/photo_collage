@@ -41,7 +41,7 @@ class _CollageScreenState extends State<CollageScreen> {
             appBar: AppBar(
               title: const Text(
                 'Custom Collage',
-                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 24),
               ),
               toolbarHeight: 64,
               backgroundColor: const Color(0xFFFCFAEE),
@@ -52,11 +52,14 @@ class _CollageScreenState extends State<CollageScreen> {
                   tooltip: 'Add Photo Box',
                   onPressed: () => collageManager.addPhotoBox(),
                   icon: const Icon(Icons.add_a_photo),
+                  iconSize: 28,
                 ),
+                const SizedBox(width: 12),
                 IconButton(
                   tooltip: 'Save Collage',
                   icon: const Icon(Icons.save),
                   onPressed: () => _saveCollage(context, collageManager),
+                  iconSize: 28,
                 ),
                 const SizedBox(width: 16),
               ],
@@ -66,9 +69,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 // Gradient outer background (behind white canvas)
                 Positioned.fill(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFCFAEE),
-                    ),
+                    decoration: const BoxDecoration(color: Color(0xFFFCFAEE)),
                   ),
                 ),
                 // Main canvas and interactions
@@ -171,28 +172,38 @@ class _CollageScreenState extends State<CollageScreen> {
                       _buildBottomBarButton(
                         icon: Icons.grid_view,
                         label: 'Layout',
-                        onPressed: () => _showLayoutPicker(context, collageManager),
+                        onPressed: () =>
+                            _showLayoutPicker(context, collageManager),
                         isActive: false,
                       ),
                       // Margins / Border panel
                       _buildBottomBarButton(
                         icon: Icons.border_all,
                         label: 'Spacing',
-                        onPressed: () => _showBorderPanel(context, collageManager),
+                        onPressed: () =>
+                            _showBorderPanel(context, collageManager),
                         isActive: false,
                       ),
                       // Background color
                       _buildBottomBarButton(
                         icon: Icons.format_paint,
                         label: 'Background',
-                        onPressed: () => _toggleTool(context, 'background', () => _showColorPicker(context, collageManager)),
+                        onPressed: () => _toggleTool(
+                          context,
+                          'background',
+                          () => _showColorPicker(context, collageManager),
+                        ),
                         isActive: false,
                       ),
                       // Aspect panel
                       _buildBottomBarButton(
                         icon: Icons.aspect_ratio,
                         label: 'Aspect',
-                        onPressed: () => _toggleTool(context, 'aspect', () => _showAspectPanel(context, collageManager)),
+                        onPressed: () => _toggleTool(
+                          context,
+                          'aspect',
+                          () => _showAspectPanel(context, collageManager),
+                        ),
                         isActive: false,
                       ),
                       // Save was moved to AppBar
@@ -234,7 +245,9 @@ class _CollageScreenState extends State<CollageScreen> {
         bool showSlider = false;
         return StatefulBuilder(
           builder: (context, setLocal) => Container(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewPadding.bottom),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewPadding.bottom,
+            ),
             decoration: const BoxDecoration(
               color: Color(0xFFFCFAEE),
               borderRadius: BorderRadius.only(
@@ -260,7 +273,10 @@ class _CollageScreenState extends State<CollageScreen> {
                         onCustomRatioPressed: () {
                           setLocal(() {
                             showSlider = true;
-                            _aspectScalar = manager.selectedAspect.ratio.clamp(0.5, 2.0);
+                            _aspectScalar = manager.selectedAspect.ratio.clamp(
+                              0.5,
+                              2.0,
+                            );
                           });
                         },
                       ),
@@ -268,7 +284,7 @@ class _CollageScreenState extends State<CollageScreen> {
                       IconButton(
                         icon: const Icon(Icons.close),
                         onPressed: () => Navigator.of(context).pop(),
-                      )
+                      ),
                     ],
                   ),
                   AnimatedSwitcher(
@@ -282,8 +298,8 @@ class _CollageScreenState extends State<CollageScreen> {
                               manager,
                               setLocal,
                               () => setLocal(() {
-                                    showSlider = false;
-                                  }),
+                                showSlider = false;
+                              }),
                             ),
                           )
                         : const SizedBox.shrink(key: ValueKey('empty')),
@@ -310,7 +326,9 @@ class _CollageScreenState extends State<CollageScreen> {
       final s = v.toStringAsFixed(2);
       return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
     }
-    String formatRatio(double r) => r >= 1.0 ? '${fmt2(r)}:1' : '1:${fmt2(1.0 / r)}';
+
+    String formatRatio(double r) =>
+        r >= 1.0 ? '${fmt2(r)}:1' : '1:${fmt2(1.0 / r)}';
 
     return Row(
       children: [
@@ -354,13 +372,21 @@ class _CollageScreenState extends State<CollageScreen> {
               onChangeEnd: (_) {
                 setLocal(() => _isAspectDragging = false);
                 final AspectSpec spec = _aspectScalar >= 1
-                    ? AspectSpec(w: _aspectScalar, h: 1, label: formatRatio(_aspectScalar))
-                    : AspectSpec(w: 1, h: 1 / _aspectScalar, label: formatRatio(_aspectScalar));
+                    ? AspectSpec(
+                        w: _aspectScalar,
+                        h: 1,
+                        label: formatRatio(_aspectScalar),
+                      )
+                    : AspectSpec(
+                        w: 1,
+                        h: 1 / _aspectScalar,
+                        label: formatRatio(_aspectScalar),
+                      );
                 manager.setCustomAspect(spec);
                 // Keep the slider open until the sheet is dismissed
               },
+            ),
           ),
-        ),
         ),
       ],
     );
@@ -439,17 +465,18 @@ class _CollageScreenState extends State<CollageScreen> {
                   gradient: LinearGradient(
                     colors: [
                       Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                      Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.7),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.35),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.35),
                       blurRadius: 12,
                       offset: const Offset(0, 6),
                     ),
@@ -464,9 +491,9 @@ class _CollageScreenState extends State<CollageScreen> {
               const SizedBox(height: 18),
               Text(
                 'Photo Saved!',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -515,9 +542,9 @@ class _CollageScreenState extends State<CollageScreen> {
               const SizedBox(height: 18),
               Text(
                 'Save Failed',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -624,16 +651,15 @@ class _CollageScreenState extends State<CollageScreen> {
                     Text(
                       'Save resolution',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Choose the export size before saving your collage.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: Colors.black.withValues(alpha: 0.6)),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.black.withValues(alpha: 0.6),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ...options.map((option) {
@@ -664,6 +690,11 @@ class _CollageScreenState extends State<CollageScreen> {
                           child: FilledButton(
                             onPressed: () =>
                                 Navigator.of(sheetContext).pop(selectedWidth),
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                             child: const Text('Save'),
                           ),
                         ),
@@ -763,18 +794,14 @@ class _CollageScreenState extends State<CollageScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 28,
-            ),
+            Icon(icon, color: color, size: 28),
             if (label != null) ...[
               const SizedBox(height: 6),
               Text(
                 label,
                 style: TextStyle(
                   color: color,
-                  fontSize: 11,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.3,
                 ),
