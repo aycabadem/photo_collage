@@ -72,9 +72,8 @@ mixin _CollageTransformControls on _CollageManagerBase {
                   otherBox.size.height)
               .abs() <=
           5) {
-        snappedY = otherBox.position.dy +
-            otherBox.size.height -
-            movingBox.size.height;
+        snappedY =
+            otherBox.position.dy + otherBox.size.height - movingBox.size.height;
       }
 
       if ((position.dy - (otherBox.position.dy + otherBox.size.height)).abs() <=
@@ -319,7 +318,7 @@ mixin _CollageTransformControls on _CollageManagerBase {
     double deltaWidth,
     double deltaHeight,
   ) {
-    const double minSize = 50.0;
+    const double minSize = 100.0;
     final double oldWidth = box.size.width;
     final double oldHeight = box.size.height;
     final double oldX = box.position.dx;
@@ -360,20 +359,44 @@ mixin _CollageTransformControls on _CollageManagerBase {
       return;
     }
 
-    // Apply size change
-    box.size = Size(newWidth, newHeight);
-    
-    // Apply position change (much simpler)
-    box.position = Offset(oldX + deltaX, oldY + deltaY);
+    // Calculate new position
+    double newX = oldX + deltaX;
+    double newY = oldY + deltaY;
 
-    // Clamp to template bounds
-    final Offset clamped = _clampBoxWithinTemplate(box, box.position);
-    box.position = clamped;
+    // Ensure the box doesn't go outside template bounds
+    if (newX < 0) {
+      newWidth = newWidth + newX;
+      newX = 0;
+    }
+    if (newY < 0) {
+      newHeight = newHeight + newY;
+      newY = 0;
+    }
+    if (newX + newWidth > _templateSize.width) {
+      newWidth = _templateSize.width - newX;
+    }
+    if (newY + newHeight > _templateSize.height) {
+      newHeight = _templateSize.height - newY;
+    }
+
+    // Ensure minimum size is maintained
+    if (newWidth < minSize || newHeight < minSize) {
+      return;
+    }
+
+    // Apply size and position changes
+    box.size = Size(newWidth, newHeight);
+    box.position = Offset(newX, newY);
 
     notifyListeners();
   }
 
-  void resizePairAlongEdge(PhotoBox a, PhotoBox b, bool isVertical, double delta) {
+  void resizePairAlongEdge(
+    PhotoBox a,
+    PhotoBox b,
+    bool isVertical,
+    double delta,
+  ) {
     if (isVertical) {
       PhotoBox left = a.position.dx <= b.position.dx ? a : b;
       PhotoBox right = left == a ? b : a;
@@ -387,7 +410,10 @@ mixin _CollageTransformControls on _CollageManagerBase {
       final double newRightWidth = right.size.width - clampedDelta;
 
       left.size = Size(newLeftWidth, left.size.height);
-      right.position = Offset(right.position.dx + clampedDelta, right.position.dy);
+      right.position = Offset(
+        right.position.dx + clampedDelta,
+        right.position.dy,
+      );
       right.size = Size(newRightWidth, right.size.height);
       notifyListeners();
     } else {
@@ -403,7 +429,10 @@ mixin _CollageTransformControls on _CollageManagerBase {
       final double newBottomHeight = bottom.size.height - clampedDelta;
 
       top.size = Size(top.size.width, newTopHeight);
-      bottom.position = Offset(bottom.position.dx, bottom.position.dy + clampedDelta);
+      bottom.position = Offset(
+        bottom.position.dx,
+        bottom.position.dy + clampedDelta,
+      );
       bottom.size = Size(bottom.size.width, newBottomHeight);
       notifyListeners();
     }
@@ -443,7 +472,10 @@ mixin _CollageTransformControls on _CollageManagerBase {
         for (final n in group) {
           n.size = Size(n.size.width + clamped, n.size.height);
         }
-        anchor.position = Offset(anchor.position.dx + clamped, anchor.position.dy);
+        anchor.position = Offset(
+          anchor.position.dx + clamped,
+          anchor.position.dy,
+        );
         anchor.size = Size(anchor.size.width - clamped, anchor.size.height);
       } else {
         for (final n in group) {
@@ -478,7 +510,10 @@ mixin _CollageTransformControls on _CollageManagerBase {
         for (final n in group) {
           n.size = Size(n.size.width, n.size.height + clamped);
         }
-        anchor.position = Offset(anchor.position.dx, anchor.position.dy + clamped);
+        anchor.position = Offset(
+          anchor.position.dx,
+          anchor.position.dy + clamped,
+        );
         anchor.size = Size(anchor.size.width, anchor.size.height - clamped);
       } else {
         for (final n in group) {
