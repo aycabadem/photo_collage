@@ -11,6 +11,17 @@ import '../models/alignment_guideline.dart';
 import '../models/layout_template.dart';
 import '../utils/collage_utils.dart';
 
+/// Preset option used when exporting the collage image
+class ResolutionOption {
+  final String label;
+  final int width;
+
+  const ResolutionOption({
+    required this.label,
+    required this.width,
+  });
+}
+
 /// Snapshot of custom layout for aspect ratio transitions
 class CustomLayoutSnapshot {
   final List<PhotoLayout> photoLayouts;
@@ -36,6 +47,13 @@ class CustomLayoutSnapshot {
 
 /// Service class for managing collage operations and state
 class CollageManager extends ChangeNotifier {
+  // Export resolution presets
+  static const List<ResolutionOption> _resolutionOptions = [
+    ResolutionOption(label: 'Standard', width: 2000),
+    ResolutionOption(label: 'High', width: 3000),
+    ResolutionOption(label: 'Ultra', width: 4000),
+  ];
+
   // Aspect ratio presets
   static const List<AspectSpec> _presets = [
     AspectSpec(w: 1.0, h: 1.0, label: '1:1'),
@@ -95,6 +113,9 @@ class CollageManager extends ChangeNotifier {
   // Custom layout snapshot for aspect ratio transitions
   CustomLayoutSnapshot? _customLayoutSnapshot;
 
+  // Export resolution state
+  int _selectedExportWidth = _resolutionOptions[1].width;
+
   // Getters
   AspectSpec get selectedAspect => _selectedAspect;
   Size get templateSize => _templateSize;
@@ -126,12 +147,24 @@ class CollageManager extends ChangeNotifier {
   LayoutTemplate? get currentLayout => _currentLayout;
   bool get isCustomMode => _isCustomMode;
 
+  // Export resolution getters
+  List<ResolutionOption> get resolutionOptions => List.unmodifiable(_resolutionOptions);
+  int get selectedExportWidth => _selectedExportWidth;
+
   // Photo margin getter and setter
   double get photoMargin => _photoMargin;
 
   void setPhotoMargin(double margin) {
     _photoMargin = margin.clamp(0.0, 15.0); // Reduced max to 15px
     notifyListeners();
+  }
+
+  void setSelectedExportWidth(int width) {
+    final int clamped = width.clamp(800, 8000);
+    if (_selectedExportWidth != clamped) {
+      _selectedExportWidth = clamped;
+      notifyListeners();
+    }
   }
 
   // Background color and opacity setters
@@ -1447,26 +1480,26 @@ class CollageManager extends ChangeNotifier {
   }
 
   /// Save the current collage as an image
-  Future<String?> saveCollage() async {
+  Future<String?> saveCollage({int? exportWidth}) async {
     try {
       // Create a high-quality image with the selected aspect ratio
       final double aspectRatio = _selectedAspect.ratio;
-      final int targetWidth = 2000; // Higher quality base width
-      final int targetHeight = (targetWidth / aspectRatio).round();
+      final int resolvedWidth = (exportWidth ?? _selectedExportWidth).clamp(800, 8000);
+      final int resolvedHeight = (resolvedWidth / aspectRatio).round();
 
       // Create a custom painter for the collage
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
 
       // Draw background (solid or gradient)
-      final rect = Rect.fromLTWH(0, 0, targetWidth.toDouble(), targetHeight.toDouble());
+      final rect = Rect.fromLTWH(0, 0, resolvedWidth.toDouble(), resolvedHeight.toDouble());
       if (_backgroundMode == BackgroundMode.gradient) {
         final angle = _backgroundGradient.angleDeg * math.pi / 180.0;
-        final cx = targetWidth / 2.0;
-        final cy = targetHeight / 2.0;
+        final cx = resolvedWidth / 2.0;
+        final cy = resolvedHeight / 2.0;
         final dx = math.cos(angle);
         final dy = math.sin(angle);
-        final halfDiag = 0.5 * math.sqrt(targetWidth * targetWidth + targetHeight * targetHeight);
+        final halfDiag = 0.5 * math.sqrt(resolvedWidth * resolvedWidth + resolvedHeight * resolvedHeight);
         final start = Offset(cx - dx * halfDiag, cy - dy * halfDiag);
         final end = Offset(cx + dx * halfDiag, cy + dy * halfDiag);
 
@@ -1483,13 +1516,13 @@ class CollageManager extends ChangeNotifier {
       }
 
       // Draw photo boxes with proper scaling, including outer/inner margins
-      final double scaleX = targetWidth / _templateSize.width;
-      final double scaleY = targetHeight / _templateSize.height;
+      final double scaleX = resolvedWidth / _templateSize.width;
+      final double scaleY = resolvedHeight / _templateSize.height;
       final double outerX = _outerMargin * scaleX;
       final double outerY = _outerMargin * scaleY;
       // Map template coordinates into the padded inner area (same as runtime canvas)
-      final double sX = (targetWidth - 2 * outerX) / _templateSize.width;
-      final double sY = (targetHeight - 2 * outerY) / _templateSize.height;
+      final double sX = (resolvedWidth - 2 * outerX) / _templateSize.width;
+      final double sY = (resolvedHeight - 2 * outerY) / _templateSize.height;
       // Inner margin (edge-aware, applied between photos only)
       final double innerHalfX = (_innerMargin * 0.5) * sX;
       final double innerHalfY = (_innerMargin * 0.5) * sY;
@@ -1594,7 +1627,7 @@ class CollageManager extends ChangeNotifier {
 
       // Convert to image
       final picture = recorder.endRecording();
-      final image = await picture.toImage(targetWidth, targetHeight);
+      final image = await picture.toImage(resolvedWidth, resolvedHeight);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
       if (byteData != null) {

@@ -379,6 +379,14 @@ class _CollageScreenState extends State<CollageScreen> {
     BuildContext context,
     CollageManager manager,
   ) async {
+    final selectedWidth = await _showResolutionPicker(context, manager);
+
+    if (!context.mounted || selectedWidth == null) {
+      return;
+    }
+
+    manager.setSelectedExportWidth(selectedWidth);
+
     // Show loading indicator
     showDialog(
       context: context,
@@ -387,7 +395,7 @@ class _CollageScreenState extends State<CollageScreen> {
     );
 
     try {
-      final savedPath = await manager.saveCollage();
+      final savedPath = await manager.saveCollage(exportWidth: selectedWidth);
 
       if (!context.mounted) return;
       Navigator.of(context).pop();
@@ -571,6 +579,104 @@ class _CollageScreenState extends State<CollageScreen> {
         ),
       );
     }
+  }
+
+  Future<int?> _showResolutionPicker(
+    BuildContext context,
+    CollageManager manager,
+  ) {
+    final options = manager.resolutionOptions;
+    if (options.isEmpty) {
+      return Future.value(manager.selectedExportWidth);
+    }
+
+    int selectedWidth = manager.selectedExportWidth;
+    final double aspectRatio = manager.selectedAspect.ratio;
+
+    return showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'Save resolution',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Choose the export size before saving your collage.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: Colors.black.withValues(alpha: 0.6)),
+                    ),
+                    const SizedBox(height: 16),
+                    ...options.map((option) {
+                      final int height = (option.width / aspectRatio).round();
+                      return RadioListTile<int>(
+                        value: option.width,
+                        groupValue: selectedWidth,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('${option.label} (${option.width}px)'),
+                        subtitle: Text('${option.width} x ${height}px'),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() => selectedWidth = value);
+                        },
+                      );
+                    }),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.of(sheetContext).pop(),
+                            child: const Text('Cancel'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () =>
+                                Navigator.of(sheetContext).pop(selectedWidth),
+                            child: const Text('Save'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   // Show color picker modal

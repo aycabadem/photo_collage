@@ -266,18 +266,18 @@ class CollageCanvas extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
+              // GestureDetector deltas arrive in the box's local (unrotated) axes
+              // because Transform.rotate already adjusts hit testing.
               // Top-left resize handle
               ResizeHandleWidget(
                 box: box,
                 alignment: Alignment.topLeft,
                 size: 12.0,
                 onDrag: (dx, dy) {
-                  final Offset rotated =
-                      _rotateOffset(Offset(dx, dy), -box.rotationRadians);
                   onResizeHandleDragged(
                     box,
-                    rotated.dx,
-                    rotated.dy,
+                    dx,
+                    dy,
                     Alignment.topLeft,
                   );
                 },
@@ -289,12 +289,10 @@ class CollageCanvas extends StatelessWidget {
                 alignment: Alignment.topRight,
                 size: 12.0,
                 onDrag: (dx, dy) {
-                  final Offset rotated =
-                      _rotateOffset(Offset(dx, dy), -box.rotationRadians);
                   onResizeHandleDragged(
                     box,
-                    rotated.dx,
-                    rotated.dy,
+                    dx,
+                    dy,
                     Alignment.topRight,
                   );
                 },
@@ -306,12 +304,10 @@ class CollageCanvas extends StatelessWidget {
                 alignment: Alignment.bottomLeft,
                 size: 12.0,
                 onDrag: (dx, dy) {
-                  final Offset rotated =
-                      _rotateOffset(Offset(dx, dy), -box.rotationRadians);
                   onResizeHandleDragged(
                     box,
-                    rotated.dx,
-                    rotated.dy,
+                    dx,
+                    dy,
                     Alignment.bottomLeft,
                   );
                 },
@@ -323,12 +319,10 @@ class CollageCanvas extends StatelessWidget {
                 alignment: Alignment.bottomRight,
                 size: 12.0,
                 onDrag: (dx, dy) {
-                  final Offset rotated =
-                      _rotateOffset(Offset(dx, dy), -box.rotationRadians);
                   onResizeHandleDragged(
                     box,
-                    rotated.dx,
-                    rotated.dy,
+                    dx,
+                    dy,
                     Alignment.bottomRight,
                   );
                 },
@@ -507,15 +501,6 @@ class CollageCanvas extends StatelessWidget {
   }
 
   double _edgeEps() => math.max(3.0, collageManager.innerMargin * 0.5);
-
-  Offset _rotateOffset(Offset offset, double angle) {
-    final double sinA = math.sin(angle);
-    final double cosA = math.cos(angle);
-    return Offset(
-      offset.dx * cosA - offset.dy * sinA,
-      offset.dx * sinA + offset.dy * cosA,
-    );
-  }
 
   bool _yOverlapEnough(PhotoBox a, PhotoBox b, double eps) {
     final double aTop = a.position.dy;
