@@ -294,8 +294,8 @@ class CollageCanvas extends StatelessWidget {
       children: [
         // Top-left resize handle
         Positioned(
-          left: topLeft.dx - 10,
-          top: topLeft.dy - 10,
+          left: topLeft.dx - 16, // Centered for 32px container
+          top: topLeft.dy - 16,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onPanUpdate: (details) {
@@ -305,9 +305,9 @@ class CollageCanvas extends StatelessWidget {
               onResizeHandleDragged(box, localDx, localDy, Alignment.topLeft);
             },
             child: Container(
-              width: 20,
-              height: 20,
-              padding: const EdgeInsets.all(5),
+              width: 32, // Bigger hit area
+              height: 32, // Bigger hit area
+              padding: const EdgeInsets.all(11), // Bigger padding to center the visual part
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -328,8 +328,8 @@ class CollageCanvas extends StatelessWidget {
 
         // Top-right resize handle  
         Positioned(
-          left: topRight.dx - 10,
-          top: topRight.dy - 10,
+          left: topRight.dx - 16,
+          top: topRight.dy - 16,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onPanUpdate: (details) {
@@ -338,9 +338,9 @@ class CollageCanvas extends StatelessWidget {
               onResizeHandleDragged(box, localDx, localDy, Alignment.topRight);
             },
             child: Container(
-              width: 20,
-              height: 20,
-              padding: const EdgeInsets.all(5),
+              width: 32, // Bigger hit area
+              height: 32, // Bigger hit area
+              padding: const EdgeInsets.all(11), // Bigger padding to center the visual part
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -361,8 +361,8 @@ class CollageCanvas extends StatelessWidget {
 
         // Bottom-left resize handle
         Positioned(
-          left: bottomLeft.dx - 10,
-          top: bottomLeft.dy - 10,
+          left: bottomLeft.dx - 16,
+          top: bottomLeft.dy - 16,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onPanUpdate: (details) {
@@ -371,9 +371,9 @@ class CollageCanvas extends StatelessWidget {
               onResizeHandleDragged(box, localDx, localDy, Alignment.bottomLeft);
             },
             child: Container(
-              width: 20,
-              height: 20,
-              padding: const EdgeInsets.all(5),
+              width: 32, // Bigger hit area
+              height: 32, // Bigger hit area
+              padding: const EdgeInsets.all(11), // Bigger padding to center the visual part
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -394,8 +394,8 @@ class CollageCanvas extends StatelessWidget {
 
         // Bottom-right resize handle
         Positioned(
-          left: bottomRight.dx - 10,
-          top: bottomRight.dy - 10,
+          left: bottomRight.dx - 16,
+          top: bottomRight.dy - 16,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onPanUpdate: (details) {
@@ -404,9 +404,9 @@ class CollageCanvas extends StatelessWidget {
               onResizeHandleDragged(box, localDx, localDy, Alignment.bottomRight);
             },
             child: Container(
-              width: 20,
-              height: 20,
-              padding: const EdgeInsets.all(5),
+              width: 32, // Bigger hit area
+              height: 32, // Bigger hit area
+              padding: const EdgeInsets.all(11), // Bigger padding to center the visual part
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
