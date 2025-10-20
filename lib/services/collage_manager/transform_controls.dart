@@ -21,6 +21,31 @@ mixin _CollageTransformControls on _CollageManagerBase {
     notifyListeners();
   }
 
+  void rotateSelectedBox({double deltaRadians = math.pi / 12}) {
+    final PhotoBox? box = _selectedBox;
+    if (box == null) return;
+
+    final double normalized = _normalizeAngle(
+      box.rotationRadians + deltaRadians,
+    );
+
+    box.rotationRadians = normalized;
+    box.rotationBaseRadians = normalized;
+    clampBoxToTemplate(box);
+    notifyListeners();
+  }
+
+  double _normalizeAngle(double angle) {
+    const double twoPi = 2 * math.pi;
+    angle = angle % twoPi;
+    if (angle <= -math.pi) {
+      angle += twoPi;
+    } else if (angle > math.pi) {
+      angle -= twoPi;
+    }
+    return angle;
+  }
+
   void clampBoxToTemplate(PhotoBox box, {bool notify = false}) {
     final Offset originalPosition = box.position;
     final Size originalSize = box.size;

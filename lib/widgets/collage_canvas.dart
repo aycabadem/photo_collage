@@ -210,11 +210,7 @@ class CollageCanvas extends StatelessWidget {
               );
               onBoxDragged(box, transformedDetails);
             },
-            onDelete: () => onBoxDeleted(box),
             onAddPhoto: () async => await onAddPhotoToBox(box),
-            onPhotoModified: () {
-              collageManager.refresh();
-            },
             globalBorderWidth: collageManager.globalBorderWidth,
             globalBorderColor: collageManager.globalBorderColor,
             hasGlobalBorder: collageManager.hasGlobalBorder,

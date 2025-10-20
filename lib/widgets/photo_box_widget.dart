@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:my_appflutter/screens/photo_editor_page.dart';
 import '../models/photo_box.dart';
 import '../widgets/smart_border_overlay.dart';
 import '../services/collage_manager.dart';
@@ -20,14 +19,8 @@ class PhotoBoxWidget extends StatefulWidget {
   /// Callback when the box is dragged
   final void Function(DragUpdateDetails) onPanUpdate;
 
-  /// Callback when the delete button is tapped
-  final VoidCallback onDelete;
-
   /// Callback when add photo button is tapped
   final Future<void> Function()? onAddPhoto;
-
-  /// Callback when photo is modified (pan/zoom changes)
-  final VoidCallback? onPhotoModified;
 
   /// Global border settings from CollageManager
   final double globalBorderWidth;
@@ -49,9 +42,7 @@ class PhotoBoxWidget extends StatefulWidget {
     required this.isSelected,
     required this.onTap,
     required this.onPanUpdate,
-    required this.onDelete,
     this.onAddPhoto,
-    this.onPhotoModified,
     required this.globalBorderWidth,
     required this.globalBorderColor,
     required this.hasGlobalBorder,
@@ -175,51 +166,19 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                         ),
                       ),
 
-                    // Action buttons (only for selected boxes)
                     if (widget.isSelected)
                       Positioned(
-                        top: 8,
+                        top: 6,
                         left: 0,
                         right: 0,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.center,
+                        child: Center(
                           child: GestureDetector(
                             onPanStart: _onRotationHandleStart,
                             onPanUpdate: _onRotationHandleUpdate,
                             onPanEnd: _onRotationHandleEnd,
                             onPanCancel: _onRotationHandleCancel,
                             behavior: HitTestBehavior.opaque,
-                            child: _buildActionIcon(Icons.rotate_right),
-                          ),
-                        ),
-                      ),
-                    if (widget.isSelected)
-                      Positioned(
-                        bottom: 8,
-                        left: 0,
-                        right: 0,
-                        child: FittedBox(
-                          fit: BoxFit
-                              .scaleDown, // Prevent overflow on very small boxes
-                          alignment: Alignment.center,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: widget.onDelete,
-                                behavior: HitTestBehavior.opaque,
-                                child: _buildActionIcon(Icons.delete_outline),
-                              ),
-                              if (box.imageFile != null) ...[
-                                const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: () => _showPhotoEditor(context),
-                                  behavior: HitTestBehavior.opaque,
-                                  child: _buildActionIcon(Icons.edit),
-                                ),
-                              ],
-                            ],
+                            child: _buildRotationHandle(),
                           ),
                         ),
                       ),
@@ -241,15 +200,13 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
 
   void _handleScaleStart(ScaleStartDetails details) {
     widget.box.rotationBaseRadians = widget.box.rotationRadians;
-    _rotationActive = false;
-    _resetRotationTracking();
   }
 
   void _handleScaleUpdate(ScaleUpdateDetails details) {
     if (!widget.isSelected) return;
 
     final pointerCount = details.pointerCount;
-    if (pointerCount == 1 && !_rotationActive) {
+    if (pointerCount == 1) {
       widget.onPanUpdate(
         DragUpdateDetails(
           delta: details.focalPointDelta,
@@ -261,11 +218,22 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   }
 
   void _handleScaleEnd(ScaleEndDetails details) {
-    if (_rotationActive) {
-      // Rotation handle will manage cleanup when gesture ends.
-      return;
-    }
     widget.box.rotationBaseRadians = widget.box.rotationRadians;
+  }
+
+  Widget _buildRotationHandle() {
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.68),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Icon(
+        Icons.rotate_right,
+        size: 22,
+        color: Colors.white,
+      ),
+    );
   }
 
   void _onRotationHandleStart(DragStartDetails details) {
@@ -288,9 +256,8 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   }
 
   void _onRotationHandleUpdate(DragUpdateDetails details) {
-    if (!_rotationActive) {
-      return;
-    }
+    if (!_rotationActive) return;
+
     double newAngle = _computeRotationFromDrag(details.globalPosition);
     newAngle = _applyRotationSnapping(newAngle);
     if (newAngle != widget.box.rotationRadians) {
@@ -318,23 +285,6 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     widget.box.rotationBaseRadians = widget.box.rotationRadians;
     _clearRotationSnapGuides();
     _resetRotationTracking();
-  }
-
-  Widget _buildActionIcon(IconData icon) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      alignment: Alignment.center,
-      child: Icon(
-        icon,
-        size: 25,
-        color: Colors.white,
-      ),
-    );
   }
 
   double _computeRotationFromDrag(Offset globalPosition) {
@@ -429,17 +379,6 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     }
   }
 
-  /// Show photo editor modal
-  void _showPhotoEditor(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PhotoEditorPage(
-          photoBox: widget.box,
-          onPhotoChanged: widget.onPhotoModified,
-        ),
-      ),
-    );
-  }
 }
 
 /// Decorates the photo box frame so the outer shadow respects rounded corners.
