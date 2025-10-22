@@ -225,7 +225,7 @@ class _BorderPanelState extends State<BorderPanel> {
           child: _GradientSlider(
             value: value,
             min: 0.0,
-            max: 80.0,
+            max: 160.0,
             onChanged: (v) {
               widget.collageManager.setCornerRadius(v);
               setState(() {});

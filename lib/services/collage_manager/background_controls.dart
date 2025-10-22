@@ -71,7 +71,7 @@ mixin _CollageBackgroundControls on _CollageManagerBase {
   }
 
   void setCornerRadius(double radius) {
-    _cornerRadius = radius.clamp(0.0, 80.0);
+    _cornerRadius = radius.clamp(0.0, 160.0);
     notifyListeners();
   }
 }
