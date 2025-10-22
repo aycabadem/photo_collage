@@ -218,16 +218,24 @@ class _BorderPanelState extends State<BorderPanel> {
 
   /// Corner radius slider
   Widget _buildCornerRadiusSlider() {
-    return _GradientSlider(
-      value: widget.collageManager.cornerRadius,
-      min: 0.0,
-      max: 80.0,
-      onChanged: (v) {
-        widget.collageManager.setCornerRadius(v);
-        setState(() {});
-      },
-      label:
-          'Corner Radius: ${widget.collageManager.cornerRadius.toStringAsFixed(1)}px',
+    final double value = widget.collageManager.cornerRadius;
+    return Row(
+      children: [
+        Expanded(
+          child: _GradientSlider(
+            value: value,
+            min: 0.0,
+            max: 80.0,
+            onChanged: (v) {
+              widget.collageManager.setCornerRadius(v);
+              setState(() {});
+            },
+            label: 'Corner Radius: ${value.toStringAsFixed(1)}px',
+          ),
+        ),
+        const SizedBox(width: 12),
+        _buildValueBadge(value),
+      ],
     );
   }
 

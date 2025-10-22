@@ -1,12 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import '../models/photo_box.dart';
 import '../widgets/smart_border_overlay.dart';
 import '../services/collage_manager.dart';
 
 /// Widget for displaying a single photo box in the collage
-class PhotoBoxWidget extends StatefulWidget {
+class PhotoBoxWidget extends StatelessWidget {
   /// The photo box data to display
   final PhotoBox box;
 
@@ -18,6 +16,12 @@ class PhotoBoxWidget extends StatefulWidget {
 
   /// Callback when the box is dragged
   final void Function(DragUpdateDetails) onPanUpdate;
+
+  /// Callback when the edit button is tapped
+  final VoidCallback onEdit;
+
+  /// Callback when the delete button is tapped
+  final VoidCallback onDelete;
 
   /// Callback when add photo button is tapped
   final Future<void> Function()? onAddPhoto;
@@ -33,48 +37,24 @@ class PhotoBoxWidget extends StatefulWidget {
   /// CollageManager for accessing new border effects
   final CollageManager collageManager;
 
-  /// Notify parent when a rotation gesture becomes active/inactive
-  final void Function(bool active)? onRotateActive;
-
   const PhotoBoxWidget({
     super.key,
     required this.box,
     required this.isSelected,
     required this.onTap,
     required this.onPanUpdate,
+    required this.onEdit,
+    required this.onDelete,
     this.onAddPhoto,
     required this.globalBorderWidth,
     required this.globalBorderColor,
     required this.hasGlobalBorder,
     required this.otherBoxes,
     required this.collageManager,
-    this.onRotateActive,
   });
 
   @override
-  State<PhotoBoxWidget> createState() => _PhotoBoxWidgetState();
-}
-
-class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
-  bool _rotationActive = false;
-  double _rotationStartAngle = 0.0;
-  double? _rotationStartPointerAngle;
-  Offset? _boxCenterGlobal;
-  Offset? _rotationHandleStartGlobal;
-  bool _showRotationSnapGuides = false;
-  double _snapGuideAngle = 0.0;
-
-  @override
-  void didUpdateWidget(covariant PhotoBoxWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!widget.isSelected && _showRotationSnapGuides) {
-      _clearRotationSnapGuides();
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final box = widget.box;
     final bool hasImage = box.imageFile != null;
     final theme = Theme.of(context);
     final Color placeholderBorderColor =
@@ -88,15 +68,13 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     );
 
     return GestureDetector(
-      onDoubleTap: widget.onTap, // Double tap to select
-      onScaleStart: widget.isSelected ? _handleScaleStart : null,
-      onScaleUpdate: widget.isSelected ? _handleScaleUpdate : null,
-      onScaleEnd: widget.isSelected ? _handleScaleEnd : null,
+      onDoubleTap: onTap, // Double tap to select
+      onPanUpdate: isSelected ? onPanUpdate : null,
       behavior: HitTestBehavior.opaque, // Prevent background taps
       child: Container(
         decoration: _frameDecoration(
-          cornerRadius: widget.collageManager.cornerRadius,
-          intensity: widget.collageManager.shadowIntensity,
+          cornerRadius: collageManager.cornerRadius,
+          intensity: collageManager.shadowIntensity,
           frameColor: frameColor,
           isDarkMode: isDarkMode,
         ),
@@ -105,13 +83,12 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(
-                widget.collageManager.cornerRadius,
+                collageManager.cornerRadius,
               ),
               child: ColoredBox(
                 color: frameColor,
                 child: Stack(
                   children: [
-                    // Photo or placeholder
                     if (hasImage)
                       Transform.scale(
                         scale: box.photoScale,
@@ -129,7 +106,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(
-                              widget.collageManager.cornerRadius,
+                              collageManager.cornerRadius,
                             ),
                             border: Border.all(
                               color: placeholderBorderColor,
@@ -141,7 +118,9 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                     if (!hasImage)
                       Center(
                         child: GestureDetector(
-                          onTap: () => _addPhotoToBox(context),
+                          onTap: onAddPhoto == null
+                              ? null
+                              : () async => await onAddPhoto!(),
                           child: Icon(
                             Icons.add_a_photo,
                             color: theme.colorScheme.primary,
@@ -149,36 +128,17 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                           ),
                         ),
                       ),
-
-                    // Smart border overlay (ignore pointer so it doesn't block interactions)
-                    if (widget.hasGlobalBorder && widget.globalBorderWidth > 0)
+                    if (hasGlobalBorder && globalBorderWidth > 0)
                       IgnorePointer(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(
-                            widget.collageManager.cornerRadius,
+                            collageManager.cornerRadius,
                           ),
                           child: SmartBorderOverlay(
                             box: box,
-                            borderWidth: widget.globalBorderWidth,
-                            borderColor: widget.globalBorderColor,
-                            otherBoxes: widget.otherBoxes,
-                          ),
-                        ),
-                      ),
-
-                    if (widget.isSelected)
-                      Positioned(
-                        top: 6,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: GestureDetector(
-                            onPanStart: _onRotationHandleStart,
-                            onPanUpdate: _onRotationHandleUpdate,
-                            onPanEnd: _onRotationHandleEnd,
-                            onPanCancel: _onRotationHandleCancel,
-                            behavior: HitTestBehavior.opaque,
-                            child: _buildRotationHandle(),
+                            borderWidth: globalBorderWidth,
+                            borderColor: globalBorderColor,
+                            otherBoxes: otherBoxes,
                           ),
                         ),
                       ),
@@ -186,10 +146,16 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                 ),
               ),
             ),
-            if (_showRotationSnapGuides)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: _RotationSnapGuides(angle: _snapGuideAngle),
+            if (isSelected)
+              Positioned(
+                bottom: 10,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: _SelectionButtons(
+                    onEdit: hasImage ? onEdit : null,
+                    onDelete: onDelete,
+                  ),
                 ),
               ),
           ],
@@ -197,188 +163,71 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
       ),
     );
   }
+}
 
-  void _handleScaleStart(ScaleStartDetails details) {
-    widget.box.rotationBaseRadians = widget.box.rotationRadians;
-  }
+class _SelectionButtons extends StatelessWidget {
+  final VoidCallback? onEdit;
+  final VoidCallback onDelete;
 
-  void _handleScaleUpdate(ScaleUpdateDetails details) {
-    if (!widget.isSelected) return;
+  const _SelectionButtons({required this.onEdit, required this.onDelete});
 
-    final pointerCount = details.pointerCount;
-    if (pointerCount == 1) {
-      widget.onPanUpdate(
-        DragUpdateDetails(
-          delta: details.focalPointDelta,
-          globalPosition: details.focalPoint,
-          localPosition: details.localFocalPoint,
-        ),
-      );
-    }
-  }
-
-  void _handleScaleEnd(ScaleEndDetails details) {
-    widget.box.rotationBaseRadians = widget.box.rotationRadians;
-  }
-
-  Widget _buildRotationHandle() {
-    return Container(
-      padding: const EdgeInsets.all(6),
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.68),
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(28),
       ),
-      child: const Icon(
-        Icons.rotate_right,
-        size: 22,
-        color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _ToolbarIcon(
+              icon: Icons.edit_outlined,
+              onTap: onEdit,
+            ),
+            const SizedBox(width: 14),
+            _ToolbarIcon(
+              icon: Icons.delete_outline,
+              onTap: onDelete,
+            ),
+          ],
+        ),
       ),
     );
   }
+}
 
-  void _onRotationHandleStart(DragStartDetails details) {
-    _rotationActive = true;
-    _rotationStartAngle = widget.box.rotationRadians;
-    _rotationHandleStartGlobal = details.globalPosition;
-    widget.box.rotationBaseRadians = widget.box.rotationRadians;
-    widget.onRotateActive?.call(true);
-    widget.collageManager.setSnappingSuspended(true);
+class _ToolbarIcon extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback? onTap;
 
-    final renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox != null) {
-      final Offset centerLocal = renderBox.size.center(Offset.zero);
-      _boxCenterGlobal = renderBox.localToGlobal(centerLocal);
-      _rotationStartPointerAngle = _pointerAngle(details.globalPosition);
-    } else {
-      _boxCenterGlobal = null;
-      _rotationStartPointerAngle = null;
-    }
-  }
+  const _ToolbarIcon({required this.icon, required this.onTap});
 
-  void _onRotationHandleUpdate(DragUpdateDetails details) {
-    if (!_rotationActive) return;
+  @override
+  Widget build(BuildContext context) {
+    final Color activeColor = Theme.of(context).colorScheme.primary;
 
-    double newAngle = _computeRotationFromDrag(details.globalPosition);
-    newAngle = _applyRotationSnapping(newAngle);
-    if (newAngle != widget.box.rotationRadians) {
-      widget.box.rotationRadians = newAngle;
-      widget.collageManager.clampBoxToTemplate(widget.box);
-      widget.collageManager.refresh();
-    }
-  }
-
-  void _onRotationHandleEnd(DragEndDetails details) {
-    _finishRotationHandleGesture();
-  }
-
-  void _onRotationHandleCancel() {
-    _finishRotationHandleGesture();
-  }
-
-  void _finishRotationHandleGesture() {
-    if (!_rotationActive) {
-      return;
-    }
-    _rotationActive = false;
-    widget.onRotateActive?.call(false);
-    widget.collageManager.setSnappingSuspended(false);
-    widget.box.rotationBaseRadians = widget.box.rotationRadians;
-    _clearRotationSnapGuides();
-    _resetRotationTracking();
-  }
-
-  double _computeRotationFromDrag(Offset globalPosition) {
-    final double? startPointerAngle = _rotationStartPointerAngle;
-    final Offset? center = _boxCenterGlobal;
-    if (startPointerAngle != null && center != null) {
-      final double currentPointerAngle = _pointerAngle(globalPosition);
-      final double angleDelta =
-          _normalizeAngle(currentPointerAngle - startPointerAngle);
-      return _normalizeAngle(_rotationStartAngle + angleDelta);
-    }
-
-    const double fallbackSensitivity = 0.006; // radians per logical pixel
-    final Offset? startGlobal = _rotationHandleStartGlobal;
-    final double displacementX = startGlobal != null
-        ? globalPosition.dx - startGlobal.dx
-        : 0.0;
-    return _normalizeAngle(
-      _rotationStartAngle + displacementX * fallbackSensitivity,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 28,
+        height: 28,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.92),
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          size: 16,
+          color: onTap != null ? activeColor : Colors.grey,
+        ),
+      ),
     );
   }
-
-  double _pointerAngle(Offset globalPosition) {
-    final Offset? center = _boxCenterGlobal;
-    if (center == null) return 0.0;
-    final Offset vector = globalPosition - center;
-    return math.atan2(vector.dy, vector.dx);
-  }
-
-  void _resetRotationTracking() {
-    _rotationStartPointerAngle = null;
-    _boxCenterGlobal = null;
-    _rotationHandleStartGlobal = null;
-    _rotationStartAngle = widget.box.rotationRadians;
-  }
-
-  double _applyRotationSnapping(double angle) {
-    const double snapIncrement = math.pi / 4; // 45° steps
-    const double snapTolerance = math.pi / 36; // 5° tolerance
-
-    final double normalized = _normalizeAngle(angle);
-    final double snappedMultiple = (normalized / snapIncrement).roundToDouble();
-    final double snappedAngle = snappedMultiple * snapIncrement;
-
-    if ((normalized - snappedAngle).abs() <= snapTolerance) {
-      _updateRotationSnapGuides(snappedAngle);
-      return _normalizeAngle(snappedAngle);
-    }
-
-    _clearRotationSnapGuides();
-    return normalized;
-  }
-
-  double _normalizeAngle(double angle) {
-    const double twoPi = 2 * math.pi;
-    angle = angle % twoPi;
-    if (angle <= -math.pi) {
-      angle += twoPi;
-    } else if (angle > math.pi) {
-      angle -= twoPi;
-    }
-    return angle;
-  }
-
-  void _updateRotationSnapGuides(double targetAngle) {
-    final double normalized = _normalizeAngle(targetAngle);
-    if (_showRotationSnapGuides &&
-        (_snapGuideAngle - normalized).abs() <= 1e-4) {
-      return;
-    }
-    if (!mounted) return;
-    setState(() {
-      _showRotationSnapGuides = true;
-      _snapGuideAngle = normalized;
-    });
-  }
-
-  void _clearRotationSnapGuides() {
-    if (!_showRotationSnapGuides) {
-      return;
-    }
-    if (!mounted) return;
-    setState(() {
-      _showRotationSnapGuides = false;
-    });
-  }
-
-  /// Add photo to this specific box
-  void _addPhotoToBox(BuildContext context) async {
-    if (widget.onAddPhoto != null) {
-      await widget.onAddPhoto!();
-    }
-  }
-
 }
 
 /// Decorates the photo box frame so the outer shadow respects rounded corners.
@@ -442,70 +291,4 @@ List<BoxShadow>? _shadowLayers(double intensity, {required bool isDarkMode}) {
       offset: Offset(0, dropOffsetY),
     ),
   ];
-}
-
-class _RotationSnapGuides extends StatelessWidget {
-  final double angle;
-
-  const _RotationSnapGuides({required this.angle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: FractionallySizedBox(
-        widthFactor: 1.3,
-        heightFactor: 1.3,
-        child: CustomPaint(
-          painter: _RotationSnapGuidesPainter(angle: angle),
-        ),
-      ),
-    );
-  }
-}
-
-class _RotationSnapGuidesPainter extends CustomPainter {
-  final double angle;
-
-  const _RotationSnapGuidesPainter({required this.angle});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Offset center = size.center(Offset.zero);
-    final double length = size.longestSide;
-    final double halfLength = length * 0.5;
-
-    final Offset axis = Offset(math.cos(angle), math.sin(angle));
-    final Offset perp = Offset(-axis.dy, axis.dx);
-
-    final Paint glowPaint = Paint()
-      ..color = Colors.black.withValues(alpha: 0.18)
-      ..strokeWidth = 6
-      ..strokeCap = StrokeCap.round;
-
-    final Paint mainLinePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.9)
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-
-    final Paint secondaryLinePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.6)
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-
-    final Offset mainStart = center - axis * halfLength;
-    final Offset mainEnd = center + axis * halfLength;
-    final Offset perpStart = center - perp * halfLength;
-    final Offset perpEnd = center + perp * halfLength;
-
-    canvas.drawLine(mainStart, mainEnd, glowPaint);
-    canvas.drawLine(mainStart, mainEnd, mainLinePaint);
-
-    canvas.drawLine(perpStart, perpEnd, glowPaint);
-    canvas.drawLine(perpStart, perpEnd, secondaryLinePaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RotationSnapGuidesPainter oldDelegate) {
-    return oldDelegate.angle != angle;
-  }
 }

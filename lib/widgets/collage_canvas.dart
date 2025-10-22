@@ -43,8 +43,8 @@ class CollageCanvas extends StatelessWidget {
   final CollageManager collageManager;
   // Callback to read current zoom scale from parent (InteractiveViewer)
   final double Function() getCurrentScale;
-  // Notify parent when a box rotation gesture becomes active/inactive
-  final void Function(bool active)? onRotateActive;
+  // Trigger edit flow for the selected photo box
+  final void Function(PhotoBox box) onEditBox;
 
   const CollageCanvas({
     super.key,
@@ -61,7 +61,7 @@ class CollageCanvas extends StatelessWidget {
     required this.collageManager,
     this.animateSize = true,
     required this.getCurrentScale,
-    this.onRotateActive,
+    required this.onEditBox,
   });
 
   @override
@@ -186,38 +186,19 @@ class CollageCanvas extends StatelessWidget {
       child: SizedBox(
         width: adjustedWidth,
         height: adjustedHeight,
-        child: Transform.rotate(
-          alignment: Alignment.center,
-          angle: box.rotationRadians,
-          child: PhotoBoxWidget(
-            box: box,
-            isSelected: selectedBox == box,
-            onTap: () => onBoxSelected(box),
-            onPanUpdate: (details) {
-              // Transform drag delta from rotated space to global space
-              final angle = box.rotationRadians;
-              final cosAngle = math.cos(angle);
-              final sinAngle = math.sin(angle);
-              final globalDx = cosAngle * details.delta.dx - sinAngle * details.delta.dy;
-              final globalDy = sinAngle * details.delta.dx + cosAngle * details.delta.dy;
-              
-              final transformedDetails = DragUpdateDetails(
-                sourceTimeStamp: details.sourceTimeStamp,
-                delta: Offset(globalDx, globalDy),
-                primaryDelta: details.primaryDelta,
-                globalPosition: details.globalPosition,
-                localPosition: details.localPosition,
-              );
-              onBoxDragged(box, transformedDetails);
-            },
-            onAddPhoto: () async => await onAddPhotoToBox(box),
-            globalBorderWidth: collageManager.globalBorderWidth,
-            globalBorderColor: collageManager.globalBorderColor,
-            hasGlobalBorder: collageManager.hasGlobalBorder,
-            otherBoxes: photoBoxes.where((b) => b != box).toList(),
-            collageManager: collageManager,
-            onRotateActive: onRotateActive,
-          ),
+        child: PhotoBoxWidget(
+          box: box,
+          isSelected: selectedBox == box,
+          onTap: () => onBoxSelected(box),
+          onPanUpdate: (details) => onBoxDragged(box, details),
+          onEdit: () => onEditBox(box),
+          onDelete: () => onBoxDeleted(box),
+          onAddPhoto: () async => await onAddPhotoToBox(box),
+          globalBorderWidth: collageManager.globalBorderWidth,
+          globalBorderColor: collageManager.globalBorderColor,
+          hasGlobalBorder: collageManager.hasGlobalBorder,
+          otherBoxes: photoBoxes.where((b) => b != box).toList(),
+          collageManager: collageManager,
         ),
       ),
     );

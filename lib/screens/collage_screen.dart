@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -27,7 +25,6 @@ class CollageScreen extends StatefulWidget {
 class _CollageScreenState extends State<CollageScreen> {
   final TransformationController _transformationController =
       TransformationController();
-  bool _ivGesturesEnabled = true; // lock pan/zoom during two-finger rotate
 
   double _aspectScalar = 1.0; // width/height ratio in [0.5, 2.0]
   bool _isAspectDragging = false;
@@ -39,8 +36,6 @@ class _CollageScreenState extends State<CollageScreen> {
       create: (context) => CollageManager(),
       child: Consumer<CollageManager>(
         builder: (context, collageManager, child) {
-          final selectedBox = collageManager.selectedBox;
-          final double viewportWidth = MediaQuery.sizeOf(context).width;
           // Keep scalar in sync with current aspect when opening UI
           return Scaffold(
             appBar: AppBar(
@@ -69,7 +64,6 @@ class _CollageScreenState extends State<CollageScreen> {
               ],
             ),
             body: Stack(
-              clipBehavior: Clip.none,
               children: [
                 // Gradient outer background (behind white canvas)
                 Positioned.fill(
@@ -100,8 +94,8 @@ class _CollageScreenState extends State<CollageScreen> {
                           transformationController: _transformationController,
                           minScale: 0.3,
                           maxScale: 3.0,
-                          panEnabled: _ivGesturesEnabled,
-                          scaleEnabled: _ivGesturesEnabled,
+                          panEnabled: true,
+                          scaleEnabled: true,
                           boundaryMargin: EdgeInsets.zero,
                           child: SizedBox(
                             width: constraints.maxWidth,
@@ -149,11 +143,11 @@ class _CollageScreenState extends State<CollageScreen> {
                                       )
                                     : [],
                                 collageManager: collageManager,
-                                onRotateActive: (active) {
-                                  setState(() {
-                                    _ivGesturesEnabled = !active;
-                                  });
-                                },
+                                onEditBox: (box) => _openPhotoEditor(
+                                  context,
+                                  collageManager,
+                                  box,
+                                ),
                               ),
                             ),
                           ),
@@ -162,32 +156,6 @@ class _CollageScreenState extends State<CollageScreen> {
                     },
                   ),
                 ),
-
-
-                if (selectedBox != null)
-                  Positioned(
-                    top: -12,
-                    left: 0,
-                    right: 0,
-                    child: Center(
-                      child: _SelectionActionBar(
-                        maxWidth: _toolbarMaxWidth(
-                          viewportWidth,
-                          collageManager.templateSize.width,
-                        ),
-                        canEdit: selectedBox.imageFile != null,
-                        onEdit: selectedBox.imageFile != null
-                            ? () => _openPhotoEditor(
-                                  context,
-                                  collageManager,
-                                  selectedBox,
-                                )
-                            : null,
-                        onDelete: () => collageManager.deleteBox(selectedBox),
-                      ),
-                    ),
-                  ),
-
                 // Free-floating bottom controls (no navbar)
                 Positioned(
                   left: 0,
@@ -440,13 +408,6 @@ class _CollageScreenState extends State<CollageScreen> {
   double _getCurrentScale() {
     final matrix = _transformationController.value;
     return matrix.getMaxScaleOnAxis();
-  }
-
-  double _toolbarMaxWidth(double viewportWidth, double canvasWidth) {
-    final double available = math.max(0.0, viewportWidth - 32.0);
-    if (available <= 0.0) return 0.0;
-    if (canvasWidth <= 0.0) return available;
-    return math.min(available, canvasWidth);
   }
 
   // Legacy custom aspect dialog removed (handled via bottom sheet)
@@ -867,78 +828,6 @@ class _CollageScreenState extends State<CollageScreen> {
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectionActionBar extends StatelessWidget {
-  final double maxWidth;
-  final bool canEdit;
-  final VoidCallback? onEdit;
-  final VoidCallback onDelete;
-
-  const _SelectionActionBar({
-    required this.maxWidth,
-    required this.canEdit,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final double effectiveMaxWidth = maxWidth <= 0.0
-        ? double.infinity
-        : maxWidth;
-
-    final ButtonStyle baseStyle = FilledButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      textStyle: const TextStyle(fontSize: 12),
-      minimumSize: const Size(0, 32),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
-      visualDensity: VisualDensity.adaptivePlatformDensity,
-    );
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: effectiveMaxWidth),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FilledButton.icon(
-                onPressed: canEdit ? onEdit : null,
-                style: baseStyle.copyWith(
-                  backgroundColor: MaterialStatePropertyAll(
-                    theme.colorScheme.primaryContainer,
-                  ),
-                  foregroundColor: MaterialStatePropertyAll(
-                    theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                icon: const Icon(Icons.edit_outlined, size: 16),
-                label: const Text('Edit'),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: onDelete,
-                style: baseStyle.copyWith(
-                  backgroundColor: MaterialStatePropertyAll(
-                    theme.colorScheme.primaryContainer,
-                  ),
-                  foregroundColor: MaterialStatePropertyAll(
-                    theme.colorScheme.onPrimaryContainer,
-                  ),
-                ),
-                icon: const Icon(Icons.delete_outline, size: 16),
-                label: const Text('Delete'),
-              ),
-            ],
-          ),
         ),
       ),
     );
