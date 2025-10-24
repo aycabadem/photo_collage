@@ -70,8 +70,8 @@ class LayoutTemplates {
       description: 'One large, one small photo',
       photoCount: 2,
       photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.7, 1.0)),
-        PhotoLayout(position: Offset(0.7, 0.0), size: Size(0.3, 1.0)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.6, 1.0)),
+        PhotoLayout(position: Offset(0.6, 0.0), size: Size(0.4, 1.0)),
       ],
     ),
     LayoutTemplate(
@@ -85,13 +85,23 @@ class LayoutTemplates {
       ],
     ),
     LayoutTemplate(
-      id: '2_wide_tall',
-      name: 'Wide + Tall',
-      description: 'Wide left, tall right',
+      id: '2_tall_wide-back',
+      name: 'Tall + Wide',
+      description: 'Tall left, wide right',
       photoCount: 2,
       photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.6, 1.0)),
-        PhotoLayout(position: Offset(0.6, 0.0), size: Size(0.4, 1.0)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.6)),
+        PhotoLayout(position: Offset(0.0, 0.6), size: Size(1.0, 0.4)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '2_tall_wide-up',
+      name: 'Tall + Wide',
+      description: 'Tall left, wide right',
+      photoCount: 2,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.4)),
+        PhotoLayout(position: Offset(0.0, 0.4), size: Size(1.0, 0.6)),
       ],
     ),
 
@@ -118,39 +128,39 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.0, 0.67), size: Size(1.0, 0.33)),
       ],
     ),
-    LayoutTemplate(
-      id: '3_large_small',
-      name: '1 Large + 2 Small',
-      description: 'One large photo with two small',
-      photoCount: 3,
-      photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.67, 1.0)),
-        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.34, 1.0)),
-        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 1.0)),
-      ],
-    ),
-    LayoutTemplate(
-      id: '3_stripe_horizontal',
-      name: 'Horizontal Stripes',
-      description: 'Three horizontal strips',
-      photoCount: 3,
-      photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.33)),
-        PhotoLayout(position: Offset(0.0, 0.33), size: Size(1.0, 0.33)),
-        PhotoLayout(position: Offset(0.0, 0.66), size: Size(1.0, 0.34)),
-      ],
-    ),
-    LayoutTemplate(
-      id: '3_stripe_vertical',
-      name: 'Vertical Stripes',
-      description: 'Three vertical strips',
-      photoCount: 3,
-      photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 1.0)),
-        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.33, 1.0)),
-        PhotoLayout(position: Offset(0.66, 0.0), size: Size(0.34, 1.0)),
-      ],
-    ),
+    // LayoutTemplate(
+    //   id: '3_large_small',
+    //   name: '1 Large + 2 Small',
+    //   description: 'One large photo with two small',
+    //   photoCount: 3,
+    //   photoLayouts: [
+    //     PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.67, 1.0)),
+    //     PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.34, 1.0)),
+    //     PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 1.0)),
+    //   ],
+    // ),
+    // LayoutTemplate(
+    //   id: '3_stripe_horizontal',
+    //   name: 'Horizontal Stripes',
+    //   description: 'Three horizontal strips',
+    //   photoCount: 3,
+    //   photoLayouts: [
+    //     PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.33)),
+    //     PhotoLayout(position: Offset(0.0, 0.33), size: Size(1.0, 0.33)),
+    //     PhotoLayout(position: Offset(0.0, 0.66), size: Size(1.0, 0.34)),
+    //   ],
+    // ),
+    // LayoutTemplate(
+    //   id: '3_stripe_vertical',
+    //   name: 'Vertical Stripes',
+    //   description: 'Three vertical strips',
+    //   photoCount: 3,
+    //   photoLayouts: [
+    //     PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 1.0)),
+    //     PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.33, 1.0)),
+    //     PhotoLayout(position: Offset(0.66, 0.0), size: Size(0.34, 1.0)),
+    //   ],
+    // ),
     LayoutTemplate(
       id: '3_l_left',
       name: 'L-Left',
@@ -171,6 +181,72 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 1.0)),
         PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.5)),
         PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.5, 0.5)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '3_l_right-bck',
+      name: 'L-Right',
+      description: 'L-shape on right',
+      photoCount: 3,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.5)),
+        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(1.0, 0.5)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '3_l_right-up',
+      name: 'L-Right',
+      description: 'L-shape on right',
+      photoCount: 3,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.5, 0.5)),
+        PhotoLayout(position: Offset(0.5, 0.5), size: Size(0.5, 0.5)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '3_dif-one',
+      name: 'dif-one-3',
+      description: 'dif one 3',
+      photoCount: 3,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.4)),
+        PhotoLayout(position: Offset(0.0, 0.4), size: Size(0.4, 0.6)),
+        PhotoLayout(position: Offset(0.4, 0.4), size: Size(0.6, 0.6)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '3_dif-two',
+      name: 'dif-one-2',
+      description: 'dif one 2',
+      photoCount: 3,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.6, 0.6)),
+        PhotoLayout(position: Offset(0.6, 0.0), size: Size(0.4, 0.6)),
+        PhotoLayout(position: Offset(0.0, 0.6), size: Size(1.0, 0.4)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '3_dif-3',
+      name: 'dif-one-3',
+      description: 'dif one 3',
+      photoCount: 3,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.4, 1.0)),
+        PhotoLayout(position: Offset(0.4, 0.0), size: Size(0.6, 0.4)),
+        PhotoLayout(position: Offset(0.4, 0.4), size: Size(0.6, 0.6)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '3_dif-3',
+      name: 'dif-one-3',
+      description: 'dif one 3',
+      photoCount: 3,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.6, 0.6)),
+        PhotoLayout(position: Offset(0.6, 0.0), size: Size(0.4, 1.0)),
+        PhotoLayout(position: Offset(0.0, 0.6), size: Size(0.6, 0.4)),
       ],
     ),
 
@@ -211,26 +287,155 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.0, 0.75), size: Size(1.0, 0.25)),
       ],
     ),
+
     LayoutTemplate(
-      id: '4_wide_top',
-      name: 'Wide Top',
-      description: 'Wide top, two bottom',
-      photoCount: 3,
+      id: '4_horizontal-dif-1',
+      name: '4 Horizontal Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
       photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.6)),
-        PhotoLayout(position: Offset(0.0, 0.6), size: Size(0.5, 0.4)),
-        PhotoLayout(position: Offset(0.5, 0.6), size: Size(0.5, 0.4)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 1.0)),
+        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.5, 0.33), size: Size(0.5, 0.34)),
+        PhotoLayout(position: Offset(0.5, 0.67), size: Size(0.5, 0.33)),
       ],
     ),
     LayoutTemplate(
-      id: '4_wide_bottom',
-      name: 'Wide Bottom',
-      description: 'Two top, wide bottom',
-      photoCount: 3,
+      id: '4_horizontal-dif-2',
+      name: '4 Horizontal Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
       photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.4)),
-        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.4)),
-        PhotoLayout(position: Offset(0.0, 0.4), size: Size(1.0, 0.6)),
+        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 1.0)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.0, 0.33), size: Size(0.5, 0.34)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.5, 0.33)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '4_horizontal-dif-3',
+      name: '4 Horizontal Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(1.0, 0.5)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '4_horizontal-dif-4',
+      name: '4 Horizontal Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.33, 0.5), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.33, 0.5)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '4-dif-4',
+      name: '4  Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 1.0)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.33, 0.5), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 1.0)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '4-back-4',
+      name: '4 back Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.33)),
+        PhotoLayout(position: Offset(0.0, 0.33), size: Size(0.5, 0.34)),
+        PhotoLayout(position: Offset(0.5, 0.33), size: Size(0.5, 0.34)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(1.0, 0.33)),
+      ],
+    ),
+
+    LayoutTemplate(
+      id: '2 horiz 2 vert',
+      name: '2 horiz 2 vert',
+      description: '2 horizontal 2 vertical',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(1.0, 0.33)),
+        PhotoLayout(position: Offset(0.0, 0.33), size: Size(1.0, 0.34)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.5, 0.67), size: Size(0.5, 0.33)),
+      ],
+    ),
+
+    LayoutTemplate(
+      id: '2 horiz 2 vert inverted',
+      name: '2 horiz 2 vert inverted',
+      description: '2 horizontal 2 vertical inverted',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.5, 0), size: Size(0.5, 0.34)),
+        PhotoLayout(position: Offset(0.0, 0.33), size: Size(1.0, 0.34)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(1.0, 0.33)),
+      ],
+    ),
+
+    LayoutTemplate(
+      id: '2 horiz 2 vert y flip',
+      name: '2 horiz 2 vert y flip',
+      description: '2 horizontal 2 vertical y flip',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0), size: Size(0.33, 1)),
+        PhotoLayout(position: Offset(0.33, 0), size: Size(0.34, 1)),
+        PhotoLayout(position: Offset(0.67, 0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.33, 0.5)),
+      ],
+    ),
+
+    LayoutTemplate(
+      id: '2 horiz 2 vert x flip',
+      name: '2 horiz 2 vert x flip',
+      description: '2 horizontal 2 vertical x flip',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.33, 0), size: Size(0.34, 1)),
+        PhotoLayout(position: Offset(0.67, 0), size: Size(0.33, 1)),
+      ],
+    ),
+
+    LayoutTemplate(
+      id: '67 33 4x combo',
+      name: '67 33 4x combo',
+      description: '67 33 4x combo',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0), size: Size(0.5, 0.67)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.5, 0), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.5, 0.33), size: Size(0.5, 0.67)),
+      ],
+    ),
+
+    LayoutTemplate(
+      id: '67 33 4x combo z flip',
+      name: '67 33 4x combo z flip',
+      description: '67 33 4x combo z flip',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.33, 0), size: Size(0.67, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.67, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.33, 0.5)),
       ],
     ),
 
@@ -357,6 +562,19 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.67)),
 
         PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '5li',
+      name: '11Large + Small',
+      description: '11One large, one small photo',
+      photoCount: 5,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 1)),
+        PhotoLayout(position: Offset(0.67, 0.33), size: Size(0.33, 0.33)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.33, 1)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.33)),
       ],
     ),
   ];
