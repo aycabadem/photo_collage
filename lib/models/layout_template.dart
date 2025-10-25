@@ -438,22 +438,77 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.33, 0.5)),
       ],
     ),
+    LayoutTemplate(
+      id: '4lu',
+      name: 'Large + Small',
+      description: 'One large, one small photo',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.67, 0.67)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.67, 0.33)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.67)),
+
+        PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
+      ],
+    ),
 
     // 5 PHOTO LAYOUTS - Perfect fit
     LayoutTemplate(
-      id: '5_plus',
-      name: 'Plus Sign',
-      description: 'Plus pattern layout',
-      photoCount: 6,
+      id: '4_horizontal-dif-8',
+      name: '4 Horizontal Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
       photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.4, 0.4)),
-        PhotoLayout(position: Offset(0.4, 0.0), size: Size(0.6, 0.4)),
-        PhotoLayout(position: Offset(0.0, 0.4), size: Size(0.4, 0.6)),
-        PhotoLayout(position: Offset(0.4, 0.4), size: Size(0.3, 0.3)),
-        PhotoLayout(position: Offset(0.7, 0.4), size: Size(0.3, 0.3)),
-        PhotoLayout(position: Offset(0.4, 0.7), size: Size(0.6, 0.3)),
+        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.5)),
+        PhotoLayout(position: Offset(0.5, 0.5), size: Size(0.5, 0.5)),
+
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.0, 0.33), size: Size(0.5, 0.34)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.5, 0.33)),
       ],
     ),
+    LayoutTemplate(
+      id: '4_horizontal-dif-9',
+      name: '4 Horizontal Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.5, 0.5)),
+
+        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.5, 0.33), size: Size(0.5, 0.34)),
+        PhotoLayout(position: Offset(0.5, 0.67), size: Size(0.5, 0.33)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '4_horizontal-dif-10',
+      name: '4 Horizontal Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.5, 0.5)),
+        PhotoLayout(position: Offset(0.5, 0.5), size: Size(0.5, 0.5)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '4_horizontal-dif-41',
+      name: '4 Horizontal Strips',
+      description: 'Four horizontal strips',
+      photoCount: 4,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.33, 0.5), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.5)),
+        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.5)),
+
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.33, 0.5)),
+      ],
+    ),
+
     LayoutTemplate(
       id: '5_frame',
       name: 'Frame',
@@ -467,19 +522,69 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.75, 0.25), size: Size(0.25, 0.5)),
       ],
     ),
-
     LayoutTemplate(
-      id: '5_magazine',
-      name: 'Magazine Style',
-      description: 'Magazine-like layout',
-      photoCount: 6,
+      id: '5_frame-1',
+      name: 'Frame',
+      description: 'Frame with center photo',
+      photoCount: 5,
       photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.6)),
-        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.3)),
-        PhotoLayout(position: Offset(0.5, 0.3), size: Size(0.5, 0.3)),
-        PhotoLayout(position: Offset(0.0, 0.6), size: Size(0.25, 0.4)),
-        PhotoLayout(position: Offset(0.25, 0.6), size: Size(0.25, 0.4)),
-        PhotoLayout(position: Offset(0.5, 0.6), size: Size(0.5, 0.4)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.34, 1.0)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.33, 0.5)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '5_frame-2',
+      name: 'Frame',
+      description: 'Frame with center photo',
+      photoCount: 5,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.0, 0.33), size: Size(1, 0.34)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.5, 0.33)),
+        PhotoLayout(position: Offset(0.5, 0.67), size: Size(0.5, 0.33)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '5_frame-3',
+      name: 'Frame',
+      description: 'Frame with center photo',
+      photoCount: 5,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 0.33)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.34, 1)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.67)),
+        PhotoLayout(position: Offset(0.0, 0.33), size: Size(0.33, 0.67)),
+        PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '5_frame-4',
+      name: 'Frame',
+      description: 'Frame with center photo',
+      photoCount: 5,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 0.33)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.67, 0.67)),
+        PhotoLayout(position: Offset(0.0, 0.33), size: Size(0.33, 0.34)),
+        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.33, 0.33)),
+        PhotoLayout(position: Offset(0.33, 0.67), size: Size(0.67, 0.33)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '5li',
+      name: '11Large + Small',
+      description: '11One large, one small photo',
+      photoCount: 5,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 1)),
+        PhotoLayout(position: Offset(0.67, 0.33), size: Size(0.33, 0.34)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.34, 1)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.33)),
       ],
     ),
 
@@ -498,22 +603,50 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.5, 0.67), size: Size(0.5, 0.33)),
       ],
     ),
-
-    // 7 PHOTO LAYOUTS - Perfect fit
     LayoutTemplate(
-      id: '7_grid_irregular',
-      name: 'Irregular Grid',
-      description: 'Mixed grid layout',
+      id: '6_grid_2x3-dif',
+      name: '2x3 Grid',
+      description: 'Six equal rectangles vertical',
       photoCount: 6,
       photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.5)),
-        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.5)),
-        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.25, 0.5)),
-        PhotoLayout(position: Offset(0.25, 0.5), size: Size(0.25, 0.5)),
-        PhotoLayout(position: Offset(0.5, 0.5), size: Size(0.25, 0.5)),
-        PhotoLayout(position: Offset(0.75, 0.5), size: Size(0.25, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.0, 0.5), size: Size(0.33, 0.5)),
+        PhotoLayout(position: Offset(0.33, 0.5), size: Size(0.34, 0.5)),
+        PhotoLayout(position: Offset(0.67, 0.5), size: Size(0.34, 0.5)),
       ],
     ),
+    LayoutTemplate(
+      id: '5_magazine',
+      name: 'Magazine Style',
+      description: 'Magazine-like layout',
+      photoCount: 6,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.5, 0.6)),
+        PhotoLayout(position: Offset(0.5, 0.0), size: Size(0.5, 0.3)),
+        PhotoLayout(position: Offset(0.5, 0.3), size: Size(0.5, 0.3)),
+        PhotoLayout(position: Offset(0.0, 0.6), size: Size(0.25, 0.4)),
+        PhotoLayout(position: Offset(0.25, 0.6), size: Size(0.25, 0.4)),
+        PhotoLayout(position: Offset(0.5, 0.6), size: Size(0.5, 0.4)),
+      ],
+    ),
+    LayoutTemplate(
+      id: '5_plus',
+      name: 'Plus Sign',
+      description: 'Plus pattern layout',
+      photoCount: 6,
+      photoLayouts: [
+        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.4, 0.4)),
+        PhotoLayout(position: Offset(0.4, 0.0), size: Size(0.6, 0.4)),
+        PhotoLayout(position: Offset(0.0, 0.4), size: Size(0.4, 0.6)),
+        PhotoLayout(position: Offset(0.4, 0.4), size: Size(0.3, 0.3)),
+        PhotoLayout(position: Offset(0.7, 0.4), size: Size(0.3, 0.3)),
+        PhotoLayout(position: Offset(0.4, 0.7), size: Size(0.6, 0.3)),
+      ],
+    ),
+
+    // 7 PHOTO LAYOUTS - Perfect fit
 
     // 8 PHOTO LAYOUTS - Perfect fit
     LayoutTemplate(
@@ -549,32 +682,6 @@ class LayoutTemplates {
         PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.33, 0.33)),
         PhotoLayout(position: Offset(0.33, 0.67), size: Size(0.34, 0.33)),
         PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
-      ],
-    ),
-    LayoutTemplate(
-      id: '4lu',
-      name: 'Large + Small',
-      description: 'One large, one small photo',
-      photoCount: 4,
-      photoLayouts: [
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.67, 0.67)),
-        PhotoLayout(position: Offset(0.0, 0.67), size: Size(0.67, 0.33)),
-        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.67)),
-
-        PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
-      ],
-    ),
-    LayoutTemplate(
-      id: '5li',
-      name: '11Large + Small',
-      description: '11One large, one small photo',
-      photoCount: 5,
-      photoLayouts: [
-        PhotoLayout(position: Offset(0.67, 0.67), size: Size(0.33, 0.33)),
-        PhotoLayout(position: Offset(0.0, 0.0), size: Size(0.33, 1)),
-        PhotoLayout(position: Offset(0.67, 0.33), size: Size(0.33, 0.33)),
-        PhotoLayout(position: Offset(0.33, 0.0), size: Size(0.33, 1)),
-        PhotoLayout(position: Offset(0.67, 0.0), size: Size(0.33, 0.33)),
       ],
     ),
   ];
