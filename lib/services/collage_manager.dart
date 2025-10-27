@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:saver_gallery/saver_gallery.dart';
 
 import '../models/alignment_guideline.dart';
 import '../models/aspect_spec.dart';

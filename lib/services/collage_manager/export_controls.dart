@@ -145,17 +145,18 @@ mixin _CollageExportControls on _CollageManagerBase {
         return null;
       }
 
-      final result = await ImageGallerySaver.saveImage(
+      final result = await SaverGallery.saveImage(
         byteData.buffer.asUint8List(),
         quality: 100,
-        name: 'collage_${DateTime.now().millisecondsSinceEpoch}',
+        name: 'collage_${DateTime.now().millisecondsSinceEpoch}.png',
+        isReturnPathOfIOS: true,
+        androidRelativePath: 'Pictures/CollageMaker',
       );
 
-      if (result['isSuccess'] == true) {
-        final dynamic filePath =
-            result['filePath'] ?? result['filepath'] ?? result['path'];
-        if (filePath is String && filePath.isNotEmpty) {
-          return filePath;
+      if (result.isSuccess) {
+        final String path = (result.filePath ?? '').trim();
+        if (path.isNotEmpty) {
+          return path;
         }
         return '';
       }
