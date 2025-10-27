@@ -752,7 +752,9 @@ class _CollageScreenState extends State<CollageScreen> {
           collageManager.changeBackgroundOpacity(opacity);
         },
       ),
-    );
+    ).whenComplete(() {
+      _activeTool = null;
+    });
   }
 
   // Show border panel modal

@@ -61,12 +61,12 @@ mixin _CollageBackgroundControls on _CollageManagerBase {
   }
 
   void setInnerMargin(double margin) {
-    _innerMargin = margin.clamp(0.0, 60.0);
+    _innerMargin = margin.clamp(0.0, 20.0);
     notifyListeners();
   }
 
   void setOuterMargin(double margin) {
-    _outerMargin = margin.clamp(0.0, 120.0);
+    _outerMargin = margin.clamp(0.0, 20.0);
     notifyListeners();
   }
 

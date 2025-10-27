@@ -19,6 +19,10 @@ class BorderPanel extends StatefulWidget {
 class _BorderPanelState extends State<BorderPanel> {
   String _selectedEffect = 'inner';
   bool _showSlider = false;
+  double? _shadowDraft;
+  double? _innerDraft;
+  double? _outerDraft;
+  double? _cornerDraft;
 
   @override
   Widget build(BuildContext context) {
@@ -157,85 +161,134 @@ class _BorderPanelState extends State<BorderPanel> {
 
   /// Shadow slider
   Widget _buildShadowSlider() {
-    return _GradientSlider(
-      value: widget.collageManager.shadowIntensity,
-      min: 0.0,
-      max: 14.0,
-      onChanged: (v) {
-        widget.collageManager.setShadowIntensity(v);
-        setState(() {});
+    return StatefulBuilder(
+      builder: (context, update) {
+        final double value =
+            _shadowDraft ?? widget.collageManager.shadowIntensity;
+        return _GradientSlider(
+          value: value,
+          min: 0.0,
+          max: 14.0,
+          onChanged: (v) {
+            update(() {
+              _shadowDraft = v;
+            });
+          },
+          onChangeEnd: (v) {
+            widget.collageManager.setShadowIntensity(v);
+            update(() {
+              _shadowDraft = null;
+            });
+          },
+          label: 'Shadow: ${value.toStringAsFixed(1)}',
+        );
       },
-      label:
-          'Shadow: ${widget.collageManager.shadowIntensity.toStringAsFixed(1)}',
     );
   }
 
   /// Inner margin slider (space between photos)
   Widget _buildInnerMarginSlider() {
-    final double value = widget.collageManager.innerMargin;
-    return Row(
-      children: [
-        Expanded(
-          child: _GradientSlider(
-            value: value,
-            min: 0.0,
-            max: 60.0,
-            onChanged: (v) {
-              widget.collageManager.setInnerMargin(v);
-              setState(() {});
-            },
-            label: 'Inner: ${value.toStringAsFixed(1)}px',
-          ),
-        ),
-        const SizedBox(width: 12),
-        _buildValueBadge(value),
-      ],
+    return StatefulBuilder(
+      builder: (context, update) {
+        final double value =
+            (_innerDraft ?? widget.collageManager.innerMargin).clamp(0.0, 20.0);
+        return Row(
+          children: [
+            Expanded(
+              child: _GradientSlider(
+                value: value,
+                min: 0.0,
+                max: 20.0,
+                onChanged: (v) {
+                  update(() {
+                    _innerDraft = v;
+                  });
+                },
+                onChangeEnd: (v) {
+                  widget.collageManager.setInnerMargin(v);
+                  update(() {
+                    _innerDraft = null;
+                  });
+                },
+                label: 'Inner: ${value.toStringAsFixed(1)}px',
+              ),
+            ),
+            const SizedBox(width: 12),
+            _buildValueBadge(value),
+          ],
+        );
+      },
     );
   }
 
   /// Outer margin slider (frame around collage)
   Widget _buildOuterMarginSlider() {
-    final double value = widget.collageManager.outerMargin;
-    return Row(
-      children: [
-        Expanded(
-          child: _GradientSlider(
-            value: value,
-            min: 0.0,
-            max: 120.0,
-            onChanged: (v) {
-              widget.collageManager.setOuterMargin(v);
-              setState(() {});
-            },
-            label: 'Outer: ${value.toStringAsFixed(1)}px',
-          ),
-        ),
-        const SizedBox(width: 12),
-        _buildValueBadge(value),
-      ],
+    return StatefulBuilder(
+      builder: (context, update) {
+        final double value =
+            (_outerDraft ?? widget.collageManager.outerMargin).clamp(0.0, 20.0);
+        return Row(
+          children: [
+            Expanded(
+              child: _GradientSlider(
+                value: value,
+                min: 0.0,
+                max: 20.0,
+                onChanged: (v) {
+                  update(() {
+                    _outerDraft = v;
+                  });
+                },
+                onChangeEnd: (v) {
+                  widget.collageManager.setOuterMargin(v);
+                  update(() {
+                    _outerDraft = null;
+                  });
+                },
+                label: 'Outer: ${value.toStringAsFixed(1)}px',
+              ),
+            ),
+            const SizedBox(width: 12),
+            _buildValueBadge(value),
+          ],
+        );
+      },
     );
   }
 
   /// Corner radius slider
   Widget _buildCornerRadiusSlider() {
-    final double value = widget.collageManager.cornerRadius;
-    return Row(
-      children: [
-        Expanded(
-          child: _GradientSlider(
-            value: value,
-            min: 0.0,
-            max: 160.0,
-            onChanged: (v) {
-              widget.collageManager.setCornerRadius(v);
-              setState(() {});
-            },
-            label: 'Corner Radius: ${value.toStringAsFixed(1)}px',
-          ),
-        ),
-        const SizedBox(width: 12),
-        _buildValueBadge(value),
-      ],
+    return StatefulBuilder(
+      builder: (context, update) {
+        final double value = (_cornerDraft ??
+                widget.collageManager.cornerRadius)
+            .clamp(0.0, 160.0);
+        return Row(
+          children: [
+            Expanded(
+              child: _GradientSlider(
+                value: value,
+                min: 0.0,
+                max: 160.0,
+                onChanged: (v) {
+                  update(() {
+                    _cornerDraft = v;
+                  });
+                },
+                onChangeEnd: (v) {
+                  widget.collageManager.setCornerRadius(v);
+                  update(() {
+                    _cornerDraft = null;
+                  });
+                },
+                label: 'Corner Radius: ${value.toStringAsFixed(1)}px',
+              ),
+            ),
+            const SizedBox(width: 12),
+            _buildValueBadge(value),
+          ],
+        );
+      },
     );
   }
 
@@ -289,6 +342,7 @@ class _GradientSlider extends StatelessWidget {
   final double min;
   final double max;
   final ValueChanged<double> onChanged;
+  final ValueChanged<double>? onChangeEnd;
   final String label;
 
   const _GradientSlider({
@@ -296,6 +350,7 @@ class _GradientSlider extends StatelessWidget {
     required this.min,
     required this.max,
     required this.onChanged,
+    this.onChangeEnd,
     required this.label,
   });
 
@@ -324,6 +379,7 @@ class _GradientSlider extends StatelessWidget {
           max: max,
           label: label,
           onChanged: onChanged,
+          onChangeEnd: onChangeEnd,
         ),
       ),
     );
