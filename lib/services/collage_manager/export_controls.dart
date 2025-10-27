@@ -4,27 +4,39 @@ mixin _CollageExportControls on _CollageManagerBase {
   Future<String?> saveCollage({int? exportWidth}) async {
     try {
       final double aspectRatio = _selectedAspect.ratio;
-      final int resolvedWidth = (exportWidth ?? _selectedExportWidth).clamp(800, 8000);
+      final int resolvedWidth = (exportWidth ?? _selectedExportWidth).clamp(
+        800,
+        8000,
+      );
       final int resolvedHeight = (resolvedWidth / aspectRatio).round();
 
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
 
-      final rect = Rect.fromLTWH(0, 0, resolvedWidth.toDouble(), resolvedHeight.toDouble());
+      final rect = Rect.fromLTWH(
+        0,
+        0,
+        resolvedWidth.toDouble(),
+        resolvedHeight.toDouble(),
+      );
       if (_backgroundMode == BackgroundMode.gradient) {
         final angle = _backgroundGradient.angleDeg * math.pi / 180.0;
         final cx = resolvedWidth / 2.0;
         final cy = resolvedHeight / 2.0;
         final dx = math.cos(angle);
         final dy = math.sin(angle);
-        final halfDiag = 0.5 * math.sqrt(
-          resolvedWidth * resolvedWidth + resolvedHeight * resolvedHeight,
-        );
+        final halfDiag =
+            0.5 *
+            math.sqrt(
+              resolvedWidth * resolvedWidth + resolvedHeight * resolvedHeight,
+            );
         final start = Offset(cx - dx * halfDiag, cy - dy * halfDiag);
         final end = Offset(cx + dx * halfDiag, cy + dy * halfDiag);
 
         final colors = _backgroundGradient.stops
-            .map((s) => s.color.withValues(alpha: s.color.a * _backgroundOpacity))
+            .map(
+              (s) => s.color.withValues(alpha: s.color.a * _backgroundOpacity),
+            )
             .toList();
         final stops = _backgroundGradient.stops.map((s) => s.offset).toList();
         final shader = ui.Gradient.linear(start, end, colors, stops);
@@ -62,7 +74,8 @@ mixin _CollageExportControls on _CollageManagerBase {
               (box.position.dx + box.size.width) >= (_templateSize.width - eps);
           final bool isTopEdge = box.position.dy <= eps;
           final bool isBottomEdge =
-              (box.position.dy + box.size.height) >= (_templateSize.height - eps);
+              (box.position.dy + box.size.height) >=
+              (_templateSize.height - eps);
 
           final double leftInset = isLeftEdge ? 0.0 : innerHalfX;
           final double rightInset = isRightEdge ? 0.0 : innerHalfX;
@@ -148,17 +161,13 @@ mixin _CollageExportControls on _CollageManagerBase {
       final result = await SaverGallery.saveImage(
         byteData.buffer.asUint8List(),
         quality: 100,
-        name: 'collage_${DateTime.now().millisecondsSinceEpoch}.png',
-        isReturnPathOfIOS: true,
+        fileName: 'collage_${DateTime.now().millisecondsSinceEpoch}.png',
+        skipIfExists: false,
         androidRelativePath: 'Pictures/CollageMaker',
       );
 
       if (result.isSuccess) {
-        final String path = (result.filePath ?? '').trim();
-        if (path.isNotEmpty) {
-          return path;
-        }
-        return '';
+        return 'succes';
       }
 
       return null;
