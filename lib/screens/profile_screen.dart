@@ -153,7 +153,13 @@ class _UsageOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool trialEnded = !isPremium && !trialActive && !trialAvailable;
+    const int _freeQuota = 3;
+    final int remainingFree = freeSavesRemaining < 0
+        ? _freeQuota
+        : (freeSavesRemaining > _freeQuota ? _freeQuota : freeSavesRemaining);
+    final int usedFree = _freeQuota - remainingFree;
+    final double usageProgress = _freeQuota == 0 ? 0.0 : usedFree / _freeQuota;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -175,9 +181,7 @@ class _UsageOverviewCard extends StatelessWidget {
                 ? 'Premium active'
                 : trialActive
                     ? 'Free trial active'
-                    : trialAvailable
-                        ? 'Try unlimited access'
-                        : 'Free plan',
+                    : 'Free plan',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -193,41 +197,56 @@ class _UsageOverviewCard extends StatelessWidget {
               'Enjoy unlimited exports during your free trial. ${_trialDaysLabel(trialDaysRemaining)} remaining.',
               style: theme.textTheme.bodyMedium,
             )
-          else if (trialAvailable)
+          else
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Try 3 days of unlimited collage exports. Afterwards you keep 3 free saves every week.',
+                  'Free plan: You can save up to 3 collages per week. Free saves left this week: $remainingFree.',
                   style: theme.textTheme.bodyMedium,
                 ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: onStartTrial,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Start 3-day trial',
-                      style: TextStyle(fontWeight: FontWeight.w700),
-                    ),
+                const SizedBox(height: 12),
+                LinearProgressIndicator(
+                  value: usageProgress.clamp(0.0, 1.0),
+                  backgroundColor: const Color(0xFFE5E7EB),
+                  color: theme.colorScheme.primary,
+                  minHeight: 6,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Used this week: $usedFree / $_freeQuota',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                if (trialAvailable) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Need more saves? Start your 3-day unlimited trial anytime.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: onStartTrial,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Start 3-day trial',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ),
+                ],
               ],
-            )
-          else if (trialEnded)
-            Text(
-              freeSavesRemaining >= 0
-                  ? 'Free plan: You can save up to 3 collages per week. Free saves left this week: $freeSavesRemaining.'
-                  : 'Free plan: You can save up to 3 collages per week. Upgrade anytime for unlimited access.',
-              style: theme.textTheme.bodyMedium,
             ),
         ],
       ),
