@@ -109,6 +109,8 @@ class _CollageScreenState extends State<CollageScreen> {
                                 getCurrentScale: _getCurrentScale,
                                 onBoxSelected: (box) =>
                                     collageManager.selectBox(box),
+                                onBoxBroughtToFront: (box) =>
+                                    collageManager.bringBoxToFront(box),
                                 onBoxDragged: (box, details) {
                                   // Handle box dragging with scale
                                   final scale = _getCurrentScale();

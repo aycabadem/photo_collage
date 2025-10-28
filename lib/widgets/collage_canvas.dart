@@ -22,6 +22,9 @@ class CollageCanvas extends StatelessWidget {
   /// Callback when a photo box is tapped
   final ValueChanged<PhotoBox> onBoxSelected;
 
+  /// Callback when a photo box should be raised above others
+  final ValueChanged<PhotoBox> onBoxBroughtToFront;
+
   /// Callback when a photo box is dragged
   final void Function(PhotoBox, DragUpdateDetails) onBoxDragged;
 
@@ -52,6 +55,7 @@ class CollageCanvas extends StatelessWidget {
     required this.photoBoxes,
     required this.selectedBox,
     required this.onBoxSelected,
+    required this.onBoxBroughtToFront,
     required this.onBoxDragged,
     required this.onBoxDeleted,
     required this.onAddPhotoToBox,
@@ -190,6 +194,7 @@ class CollageCanvas extends StatelessWidget {
           box: box,
           isSelected: selectedBox == box,
           onTap: () => onBoxSelected(box),
+          onBringToFront: () => onBoxBroughtToFront(box),
           onPanUpdate: (details) => onBoxDragged(box, details),
           onEdit: () => onEditBox(box),
           onDelete: () => onBoxDeleted(box),

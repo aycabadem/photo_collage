@@ -6,6 +6,22 @@ mixin _CollagePhotoBoxControls on _CollageManagerBase {
     notifyListeners();
   }
 
+  void bringBoxToFront(PhotoBox box) {
+    final int index = _photoBoxes.indexOf(box);
+    if (index < 0) return;
+    if (index == _photoBoxes.length - 1) {
+      _selectedBox = box;
+      notifyListeners();
+      return;
+    }
+
+    _photoBoxes
+      ..removeAt(index)
+      ..add(box);
+    _selectedBox = box;
+    notifyListeners();
+  }
+
   Future<void> addPhotoBox() async {
     final XFile? pickedFile = await _imagePicker.pickImage(
       source: ImageSource.gallery,

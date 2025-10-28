@@ -14,6 +14,9 @@ class PhotoBoxWidget extends StatelessWidget {
   /// Callback when the box is tapped
   final VoidCallback onTap;
 
+  /// Callback when the box should move above others
+  final VoidCallback onBringToFront;
+
   /// Callback when the box is dragged
   final void Function(DragUpdateDetails) onPanUpdate;
 
@@ -42,6 +45,7 @@ class PhotoBoxWidget extends StatelessWidget {
     required this.box,
     required this.isSelected,
     required this.onTap,
+    required this.onBringToFront,
     required this.onPanUpdate,
     required this.onEdit,
     required this.onDelete,
@@ -68,7 +72,8 @@ class PhotoBoxWidget extends StatelessWidget {
     );
 
     return GestureDetector(
-      onDoubleTap: onTap, // Double tap to select
+      onTap: onTap,
+      onDoubleTap: onBringToFront,
       onPanUpdate: isSelected ? onPanUpdate : null,
       behavior: HitTestBehavior.opaque, // Prevent background taps
       child: Container(
