@@ -1,7 +1,7 @@
 part of '../collage_manager.dart';
 
 mixin _CollageExportControls on _CollageManagerBase {
-  Future<String?> saveCollage({int? exportWidth}) async {
+  Future<bool> saveCollage({int? exportWidth}) async {
     try {
       final double aspectRatio = _selectedAspect.ratio;
       final int resolvedWidth = (exportWidth ?? _selectedExportWidth).clamp(
@@ -155,7 +155,7 @@ mixin _CollageExportControls on _CollageManagerBase {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
       if (byteData == null) {
-        return null;
+        return false;
       }
 
       final result = await SaverGallery.saveImage(
@@ -166,13 +166,9 @@ mixin _CollageExportControls on _CollageManagerBase {
         androidRelativePath: 'Pictures/CollageMaker',
       );
 
-      if (result.isSuccess) {
-        return 'succes';
-      }
-
-      return null;
+      return result.isSuccess;
     } catch (_) {
-      return null;
+      return false;
     }
   }
 

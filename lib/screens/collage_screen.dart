@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/aspect_spec.dart';
@@ -23,6 +24,7 @@ class CollageScreen extends StatefulWidget {
 }
 
 class _CollageScreenState extends State<CollageScreen> {
+  static const MethodChannel _galleryChannel = MethodChannel('collage/gallery');
   final TransformationController _transformationController =
       TransformationController();
 
@@ -435,15 +437,15 @@ class _CollageScreenState extends State<CollageScreen> {
     );
 
     try {
-      final savedPath = await manager.saveCollage(exportWidth: selectedWidth);
+      final bool saved = await manager.saveCollage(exportWidth: selectedWidth);
 
       if (!context.mounted) return;
       Navigator.of(context).pop();
 
       if (!context.mounted) return;
 
-      if (savedPath != null) {
-        await _showSaveSuccessDialog(context, savedPath);
+      if (saved) {
+        await _showSaveSuccessDialog(context);
       } else {
         await _showSaveErrorDialog(context);
       }
@@ -457,10 +459,7 @@ class _CollageScreenState extends State<CollageScreen> {
     }
   }
 
-  Future<void> _showSaveSuccessDialog(
-    BuildContext context,
-    String savedPath,
-  ) async {
+  Future<void> _showSaveSuccessDialog(BuildContext context) async {
     return showDialog(
       context: context,
       barrierDismissible: true,
@@ -518,7 +517,7 @@ class _CollageScreenState extends State<CollageScreen> {
               ElevatedButton.icon(
                 onPressed: () async {
                   Navigator.of(dialogContext).pop();
-                  await _openPhotosApp(context, savedPath);
+                  await _openPhotosApp(context);
                 },
                 icon: const Icon(Icons.photo_library_outlined),
                 label: const Text('Open Photos'),
@@ -577,29 +576,25 @@ class _CollageScreenState extends State<CollageScreen> {
     );
   }
 
-  Future<void> _openPhotosApp(BuildContext context, String maybePath) async {
-    Uri? uri;
-
-    if (maybePath.isNotEmpty) {
-      try {
-        final parsed = Uri.parse(maybePath);
-        uri = parsed.scheme.isEmpty ? Uri.file(maybePath) : parsed;
-      } catch (_) {
-        uri = Uri.file(maybePath);
-      }
+  Future<void> _openPhotosApp(BuildContext context) async {
+    bool handled = false;
+    try {
+      await _galleryChannel.invokeMethod<void>('openGallery');
+      handled = true;
+    } catch (_) {
+      handled = false;
     }
 
-    uri ??= () {
-      if (Platform.isIOS) {
-        return Uri.parse('photos-redirect://');
-      }
-      if (Platform.isAndroid) {
-        return Uri.parse('content://media/internal/images/media');
-      }
-      return null;
-    }();
+    if (handled) return;
 
-    if (uri == null || !await canLaunchUrl(uri)) {
+    Uri? fallbackUri;
+    if (Platform.isIOS) {
+      fallbackUri = Uri.parse('photos-redirect://');
+    } else if (Platform.isAndroid) {
+      fallbackUri = Uri.parse('content://media/external/images/media');
+    }
+
+    if (fallbackUri == null || !await canLaunchUrl(fallbackUri)) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -611,7 +606,8 @@ class _CollageScreenState extends State<CollageScreen> {
       return;
     }
 
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final opened =
+        await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
