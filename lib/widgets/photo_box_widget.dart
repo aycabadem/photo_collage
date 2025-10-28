@@ -183,28 +183,46 @@ class _SelectionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(28),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _ToolbarIcon(
-              icon: Icons.edit_outlined,
-              onTap: onEdit,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool useColumn = constraints.maxWidth < 120;
+
+        final Widget spacing = useColumn
+            ? const SizedBox(height: 12)
+            : const SizedBox(width: 14);
+
+        final Widget content = useColumn
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ToolbarIcon(icon: Icons.edit_outlined, onTap: onEdit),
+                  spacing,
+                  _ToolbarIcon(icon: Icons.delete_outline, onTap: onDelete),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ToolbarIcon(icon: Icons.edit_outlined, onTap: onEdit),
+                  spacing,
+                  _ToolbarIcon(icon: Icons.delete_outline, onTap: onDelete),
+                ],
+              );
+
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.45),
+            borderRadius: BorderRadius.circular(useColumn ? 18 : 28),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: useColumn ? 6 : 8,
+              vertical: useColumn ? 8 : 6,
             ),
-            const SizedBox(width: 14),
-            _ToolbarIcon(
-              icon: Icons.delete_outline,
-              onTap: onDelete,
-            ),
-          ],
-        ),
-      ),
+            child: content,
+          ),
+        );
+      },
     );
   }
 }
