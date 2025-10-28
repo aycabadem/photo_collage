@@ -72,7 +72,12 @@ class PhotoBoxWidget extends StatelessWidget {
     );
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        onTap();
+        if (!hasImage && onAddPhoto != null) {
+          onAddPhoto!();
+        }
+      },
       onDoubleTap: onBringToFront,
       onPanUpdate: isSelected ? onPanUpdate : null,
       behavior: HitTestBehavior.opaque, // Prevent background taps
@@ -151,7 +156,7 @@ class PhotoBoxWidget extends StatelessWidget {
                 ),
               ),
             ),
-            if (isSelected)
+            if (isSelected && hasImage)
               Positioned(
                 bottom: 10,
                 left: 0,
