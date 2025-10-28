@@ -14,6 +14,7 @@ import '../widgets/ios_color_picker_modal.dart';
 import '../widgets/border_panel.dart';
 import '../widgets/layout_picker_modal.dart';
 import 'photo_editor_page.dart';
+import 'profile_screen.dart';
 
 /// Main screen for the photo collage application
 class CollageScreen extends StatefulWidget {
@@ -60,6 +61,13 @@ class _CollageScreenState extends State<CollageScreen> {
                   tooltip: 'Save Collage',
                   icon: const Icon(Icons.save),
                   onPressed: () => _saveCollage(context, collageManager),
+                  iconSize: 28,
+                ),
+                const SizedBox(width: 12),
+                IconButton(
+                  tooltip: 'Account',
+                  icon: const Icon(Icons.person_outline),
+                  onPressed: _openProfile,
                   iconSize: 28,
                 ),
                 const SizedBox(width: 16),
@@ -572,6 +580,14 @@ class _CollageScreenState extends State<CollageScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _openProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const ProfileScreen(),
       ),
     );
   }
