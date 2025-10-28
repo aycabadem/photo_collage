@@ -166,6 +166,13 @@ mixin _CollageExportControls on _CollageManagerBase {
         androidRelativePath: 'Pictures/CollageMaker',
       );
 
+      if (result.isSuccess) {
+        if (!_isPremium) {
+          _weeklySavesUsed += 1;
+        }
+        notifyListeners();
+      }
+
       return result.isSuccess;
     } catch (_) {
       return false;

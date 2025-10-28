@@ -2,34 +2,84 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/collage_manager.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  int _selectedPlanIndex = 1; // Default to monthly
+
+  static const List<_PlanOption> _plans = [
+    _PlanOption(
+      id: 'weekly',
+      label: 'Weekly',
+      priceLabel: '\$3.49 / week',
+      billingDetail: 'Billed weekly • cancel anytime',
+      perks: [
+        'Unlimited collage exports',
+        'Premium layouts & effects',
+        'Early access to new features',
+      ],
+    ),
+    _PlanOption(
+      id: 'monthly',
+      label: 'Monthly',
+      priceLabel: '\$7.99 / month',
+      billingDetail: 'Best for casual creators',
+      perks: [
+        'Unlimited collage exports',
+        'Premium layouts & effects',
+      ],
+      highlighted: true,
+    ),
+    _PlanOption(
+      id: 'yearly',
+      label: 'Yearly',
+      priceLabel: '\$49.99 / year',
+      billingDetail: 'Save 48% vs monthly billing',
+      perks: [
+        'Unlimited collage exports',
+        'All current & future premium tools',
+      ],
+    ),
+  ];
+
+  void _onPlanSelected(int index) {
+    setState(() => _selectedPlanIndex = index);
+  }
+
+  void _handleSubscribe(CollageManager manager) {
+    final plan = _plans[_selectedPlanIndex];
+
+    if (manager.isPremium) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('You already have premium access.'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    manager.setPremium(true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${plan.label} plan activated! Enjoy unlimited access.'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final collageManager = context.watch<CollageManager>();
     final bool isPremium = collageManager.isPremium;
-
-    void handleSubscribe() {
-      if (isPremium) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You already have premium access.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        return;
-      }
-
-      collageManager.setPremium(true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Premium unlocked! Enjoy unlimited layouts.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    final int savesUsed = collageManager.weeklySavesUsed;
+    final int saveLimit = collageManager.weeklySaveLimit;
 
     return Scaffold(
       appBar: AppBar(
@@ -41,12 +91,22 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
-          _FreeUsageCard(theme: theme, isPremium: isPremium),
+          _UsageOverviewCard(
+            theme: theme,
+            isPremium: isPremium,
+            savesUsed: savesUsed,
+            saveLimit: saveLimit,
+          ),
           const SizedBox(height: 18),
           _SubscriptionSection(
             theme: theme,
             isPremium: isPremium,
-            onSubscribe: handleSubscribe,
+            plans: _plans,
+            selectedIndex: _selectedPlanIndex,
+            onPlanSelected: _onPlanSelected,
+            onSubscribe: () => _handleSubscribe(collageManager),
+            savesUsed: savesUsed,
+            saveLimit: saveLimit,
           ),
           const SizedBox(height: 18),
           _LegalSection(theme: theme),
@@ -56,14 +116,28 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class _FreeUsageCard extends StatelessWidget {
+class _UsageOverviewCard extends StatelessWidget {
   final ThemeData theme;
   final bool isPremium;
+  final int savesUsed;
+  final int saveLimit;
 
-  const _FreeUsageCard({required this.theme, required this.isPremium});
+  const _UsageOverviewCard({
+    required this.theme,
+    required this.isPremium,
+    required this.savesUsed,
+    required this.saveLimit,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final bool unlimited = isPremium || saveLimit <= 0;
+    final double progress = !unlimited && saveLimit > 0
+        ? (savesUsed / saveLimit).clamp(0.0, 1.0)
+        : 0.0;
+    final int limitedUsed =
+        !unlimited && saveLimit > 0 ? (savesUsed > saveLimit ? saveLimit : savesUsed) : savesUsed;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -88,29 +162,15 @@ class _FreeUsageCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (isPremium)
-            const Text(
-              'Unlimited collage exports, premium layouts and future features are all unlocked.',
-            )
-          else ...[
-            const Text(
-              'You can save 1 collage per week. Upgrade to unlock unlimited saves, premium layouts and more.',
-            ),
-            const SizedBox(height: 14),
-            LinearProgressIndicator(
-              value: 1.0,
-              backgroundColor: const Color(0xFFE5E7EB),
-              color: theme.colorScheme.primary,
-              minHeight: 6,
-            ),
-            const SizedBox(height: 6),
             Text(
-              'Weekly saves used: 1 / 1',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+              'Unlimited collage exports, premium layouts and all upcoming features are unlocked.',
+              style: theme.textTheme.bodyMedium,
+            )
+          else
+            Text(
+              'Free users can save 1 collage per week. Upgrade to unlock unlimited saves and premium layouts.',
+              style: theme.textTheme.bodyMedium,
             ),
-          ],
         ],
       ),
     );
@@ -120,208 +180,186 @@ class _FreeUsageCard extends StatelessWidget {
 class _SubscriptionSection extends StatelessWidget {
   final ThemeData theme;
   final bool isPremium;
+  final List<_PlanOption> plans;
+  final int selectedIndex;
+  final ValueChanged<int> onPlanSelected;
   final VoidCallback onSubscribe;
+  final int savesUsed;
+  final int saveLimit;
 
   const _SubscriptionSection({
     required this.theme,
     required this.isPremium,
+    required this.plans,
+    required this.selectedIndex,
+    required this.onPlanSelected,
     required this.onSubscribe,
+    required this.savesUsed,
+    required this.saveLimit,
   });
 
   @override
   Widget build(BuildContext context) {
-    final plans = [
-      const _Plan(
-        title: 'Weekly Pass',
-        price: '\$3.49 / week',
-        perks: [
-          'Unlimited collage exports',
-          'Remove weekly cap',
-          'All premium layouts',
-        ],
-      ),
-      const _Plan(
-        title: 'Monthly Pass',
-        price: '\$7.99 / month',
-        perks: [
-          'Unlimited collage exports',
-          'Premium layouts & effects',
-          'Priority feature previews',
-        ],
-        highlighted: true,
-      ),
-      const _Plan(
-        title: 'Annual Pass',
-        price: '\$49.99 / year',
-        perks: [
-          'Unlimited collage exports',
-          'Save 48% vs monthly',
-          'VIP feature previews',
-        ],
-      ),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Upgrade for unlimited access',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...plans.map(
-          (plan) => Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: _PlanCard(
-              plan: plan,
-              theme: theme,
-              isPremium: isPremium,
-              onSubscribe: onSubscribe,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Plan {
-  final String title;
-  final String price;
-  final List<String> perks;
-  final bool highlighted;
-
-  const _Plan({
-    required this.title,
-    required this.price,
-    required this.perks,
-    this.highlighted = false,
-  });
-}
-
-class _PlanCard extends StatelessWidget {
-  final _Plan plan;
-  final ThemeData theme;
-  final bool isPremium;
-  final VoidCallback onSubscribe;
-
-  const _PlanCard({
-    required this.plan,
-    required this.theme,
-    required this.isPremium,
-    required this.onSubscribe,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final borderColor = plan.highlighted
-        ? theme.colorScheme.primary
-        : const Color(0xFFE5E7EB);
-    final backgroundColor =
-        plan.highlighted ? theme.colorScheme.primary.withValues(alpha: 0.07) : Colors.white;
+    final _PlanOption plan = plans[selectedIndex];
+    final bool unlimited = isPremium || saveLimit <= 0;
+    final int limitedUsed =
+        !unlimited && saveLimit > 0 ? (savesUsed > saveLimit ? saveLimit : savesUsed) : savesUsed;
 
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 1.4),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.07),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      plan.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      plan.price,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (plan.highlighted)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Best value',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...plan.perks.map(
-            (perk) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: theme.colorScheme.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(perk)),
-                ],
-              ),
+          Text(
+            'Upgrade for unlimited access',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: isPremium ? null : onSubscribe,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: isPremium
-                    ? theme.colorScheme.primary.withValues(alpha: 0.4)
-                    : theme.colorScheme.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double totalSpacing = 16; // spacing of 8 between 3 chips
+              final double chipWidth =
+                  ((constraints.maxWidth - totalSpacing) / plans.length).clamp(80.0, 160.0);
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.center,
+                children: List.generate(plans.length, (index) {
+                  final option = plans[index];
+                  final bool selected = index == selectedIndex;
+                  return SizedBox(
+                    width: chipWidth,
+                    child: ChoiceChip(
+                      label: Text(option.label, textAlign: TextAlign.center),
+                      selected: selected,
+                      onSelected: (value) {
+                        if (!value) return;
+                        onPlanSelected(index);
+                      },
+                      selectedColor: theme.colorScheme.primary,
+                      backgroundColor: const Color(0xFFFAFBF6),
+                      showCheckmark: false,
+                      labelStyle: TextStyle(
+                        color: selected ? Colors.white : theme.colorScheme.primary,
+                        fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }),
+              );
+            },
+          ),
+          const SizedBox(height: 18),
+          Container(
+            decoration: BoxDecoration(
+              color: plan.highlighted
+                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: plan.highlighted
+                    ? theme.colorScheme.primary.withValues(alpha: 0.6)
+                    : const Color(0xFFE4E7D5),
+                width: 1.4,
+              ),
+            ),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  plan.priceLabel,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
-              ),
-              child: Text(
-                isPremium ? 'Subscribed' : 'Subscribe',
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
+                const SizedBox(height: 6),
+                Text(
+                  plan.billingDetail,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.9),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ...plan.perks.map(
+                  (perk) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      '• $perk',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isPremium ? null : onSubscribe,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isPremium
+                          ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                          : theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      isPremium
+                          ? 'Premium active'
+                          : 'Start ${plan.label.toLowerCase()} plan',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _PlanOption {
+  final String id;
+  final String label;
+  final String priceLabel;
+  final String billingDetail;
+  final List<String> perks;
+  final bool highlighted;
+
+  const _PlanOption({
+    required this.id,
+    required this.label,
+    required this.priceLabel,
+    required this.billingDetail,
+    required this.perks,
+    this.highlighted = false,
+  });
 }
 
 class _LegalSection extends StatelessWidget {
@@ -353,7 +391,9 @@ class _LegalSection extends StatelessWidget {
         onTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Restore will be available when subscriptions launch.'),
+              content: Text(
+                'Restore will be available when subscriptions launch.',
+              ),
               duration: Duration(seconds: 2),
             ),
           );

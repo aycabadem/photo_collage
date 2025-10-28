@@ -105,6 +105,7 @@ abstract class _CollageManagerBase extends ChangeNotifier {
 
   // Premium access
   bool _isPremium = false;
+  int _weeklySavesUsed = 0;
 
   // Getters
   AspectSpec get selectedAspect => _selectedAspect;
@@ -146,6 +147,8 @@ abstract class _CollageManagerBase extends ChangeNotifier {
 
   bool get isPremium => _isPremium;
   bool get isFreeUser => !_isPremium;
+  int get weeklySavesUsed => _weeklySavesUsed;
+  int get weeklySaveLimit => _isPremium ? -1 : 1;
 
   // Derived background color including opacity
   Color get backgroundColorWithOpacity =>
@@ -154,6 +157,14 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   void setPremium(bool value) {
     if (_isPremium == value) return;
     _isPremium = value;
+    if (value) {
+      // Optional: allow unlimited saves immediately
+    }
+    notifyListeners();
+  }
+
+  void resetWeeklyUsage() {
+    _weeklySavesUsed = 0;
     notifyListeners();
   }
 

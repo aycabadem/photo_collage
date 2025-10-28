@@ -799,6 +799,7 @@ class _CollageScreenState extends State<CollageScreen> {
 
   // Show layout picker modal
   void _showLayoutPicker(BuildContext context, CollageManager collageManager) {
+    final hostContext = context;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -813,7 +814,7 @@ class _CollageScreenState extends State<CollageScreen> {
           Navigator.of(context).pop();
           _openProfile(collageManager);
         },
-        hostContext: context,
+        hostContext: hostContext,
       ),
     );
   }
