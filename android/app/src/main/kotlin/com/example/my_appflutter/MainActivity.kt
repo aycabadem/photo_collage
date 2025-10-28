@@ -38,17 +38,17 @@ class MainActivity : FlutterActivity() {
   }
 
   private fun openGallery() {
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-      setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
+    val intent = Intent(Intent.ACTION_MAIN).apply {
+      addCategory(Intent.CATEGORY_APP_GALLERY)
       addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-      addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
     try {
       startActivity(intent)
     } catch (ex: ActivityNotFoundException) {
-      val fallback = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
+      val fallback = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
         addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-        type = "image/*"
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
       }
       startActivity(fallback)
     }
