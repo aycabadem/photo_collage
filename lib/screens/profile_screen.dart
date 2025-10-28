@@ -20,8 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       billingDetail: 'Billed weekly • cancel anytime',
       perks: [
         'Unlimited collage exports',
-        'Premium layouts & effects',
-        'Early access to new features',
+        'Access all premium layouts',
       ],
     ),
     _PlanOption(
@@ -31,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       billingDetail: 'Best for casual creators',
       perks: [
         'Unlimited collage exports',
-        'Premium layouts & effects',
+        'Access all premium layouts',
       ],
       highlighted: true,
     ),
@@ -42,7 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       billingDetail: 'Save 48% vs monthly billing',
       perks: [
         'Unlimited collage exports',
-        'All current & future premium tools',
+        'Access all premium layouts',
       ],
     ),
   ];
@@ -73,13 +72,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _startTrial(CollageManager manager) {
+    final started = manager.startTrial();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          started
+              ? 'Free trial started! Enjoy unlimited access for 3 days.'
+              : 'Free trial is no longer available.',
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final collageManager = context.watch<CollageManager>();
     final bool isPremium = collageManager.isPremium;
-    final int savesUsed = collageManager.weeklySavesUsed;
-    final int saveLimit = collageManager.weeklySaveLimit;
+    final bool trialActive = collageManager.isTrialActive;
+    final bool trialAvailable = collageManager.canStartTrial;
+    final int trialDaysRemaining = collageManager.trialDaysRemaining;
+    final int freeSavesRemaining = collageManager.freeSavesRemaining;
 
     return Scaffold(
       appBar: AppBar(
@@ -94,8 +109,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _UsageOverviewCard(
             theme: theme,
             isPremium: isPremium,
-            savesUsed: savesUsed,
-            saveLimit: saveLimit,
+            trialAvailable: trialAvailable,
+            trialActive: trialActive,
+            trialDaysRemaining: trialDaysRemaining,
+            freeSavesRemaining: freeSavesRemaining,
+            onStartTrial: trialAvailable ? () => _startTrial(collageManager) : null,
           ),
           const SizedBox(height: 18),
           _SubscriptionSection(
@@ -105,8 +123,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             selectedIndex: _selectedPlanIndex,
             onPlanSelected: _onPlanSelected,
             onSubscribe: () => _handleSubscribe(collageManager),
-            savesUsed: savesUsed,
-            saveLimit: saveLimit,
           ),
           const SizedBox(height: 18),
           _LegalSection(theme: theme),
@@ -119,25 +135,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
 class _UsageOverviewCard extends StatelessWidget {
   final ThemeData theme;
   final bool isPremium;
-  final int savesUsed;
-  final int saveLimit;
+  final bool trialAvailable;
+  final bool trialActive;
+  final int trialDaysRemaining;
+  final int freeSavesRemaining;
+  final VoidCallback? onStartTrial;
 
   const _UsageOverviewCard({
     required this.theme,
     required this.isPremium,
-    required this.savesUsed,
-    required this.saveLimit,
+    required this.trialAvailable,
+    required this.trialActive,
+    required this.trialDaysRemaining,
+    required this.freeSavesRemaining,
+    required this.onStartTrial,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool unlimited = isPremium || saveLimit <= 0;
-    final double progress = !unlimited && saveLimit > 0
-        ? (savesUsed / saveLimit).clamp(0.0, 1.0)
-        : 0.0;
-    final int limitedUsed =
-        !unlimited && saveLimit > 0 ? (savesUsed > saveLimit ? saveLimit : savesUsed) : savesUsed;
-
+    final bool trialEnded = !isPremium && !trialActive && !trialAvailable;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -155,7 +171,13 @@ class _UsageOverviewCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isPremium ? 'Premium active' : 'Free plan',
+            isPremium
+                ? 'Premium active'
+                : trialActive
+                    ? 'Free trial active'
+                    : trialAvailable
+                        ? 'Try unlimited access'
+                        : 'Free plan',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -166,15 +188,56 @@ class _UsageOverviewCard extends StatelessWidget {
               'Unlimited collage exports, premium layouts and all upcoming features are unlocked.',
               style: theme.textTheme.bodyMedium,
             )
-          else
+          else if (trialActive)
             Text(
-              'Free users can save 1 collage per week. Upgrade to unlock unlimited saves and premium layouts.',
+              'Enjoy unlimited exports during your free trial. ${_trialDaysLabel(trialDaysRemaining)} remaining.',
+              style: theme.textTheme.bodyMedium,
+            )
+          else if (trialAvailable)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Try 3 days of unlimited collage exports. Afterwards you keep 3 free saves every week.',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: onStartTrial,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Start 3-day trial',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else if (trialEnded)
+            Text(
+              freeSavesRemaining >= 0
+                  ? 'Free plan: You can save up to 3 collages per week. Free saves left this week: $freeSavesRemaining.'
+                  : 'Free plan: You can save up to 3 collages per week. Upgrade anytime for unlimited access.',
               style: theme.textTheme.bodyMedium,
             ),
         ],
       ),
     );
   }
+}
+
+String _trialDaysLabel(int daysRemaining) {
+  if (daysRemaining <= 0) return 'Less than a day';
+  return daysRemaining == 1 ? '1 day' : '$daysRemaining days';
 }
 
 class _SubscriptionSection extends StatelessWidget {
@@ -184,8 +247,6 @@ class _SubscriptionSection extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onPlanSelected;
   final VoidCallback onSubscribe;
-  final int savesUsed;
-  final int saveLimit;
 
   const _SubscriptionSection({
     required this.theme,
@@ -194,16 +255,11 @@ class _SubscriptionSection extends StatelessWidget {
     required this.selectedIndex,
     required this.onPlanSelected,
     required this.onSubscribe,
-    required this.savesUsed,
-    required this.saveLimit,
   });
 
   @override
   Widget build(BuildContext context) {
     final _PlanOption plan = plans[selectedIndex];
-    final bool unlimited = isPremium || saveLimit <= 0;
-    final int limitedUsed =
-        !unlimited && saveLimit > 0 ? (savesUsed > saveLimit ? saveLimit : savesUsed) : savesUsed;
 
     return Container(
       decoration: BoxDecoration(
@@ -269,14 +325,10 @@ class _SubscriptionSection extends StatelessWidget {
           const SizedBox(height: 18),
           Container(
             decoration: BoxDecoration(
-              color: plan.highlighted
-                  ? theme.colorScheme.primary.withValues(alpha: 0.08)
-                  : Colors.white,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: plan.highlighted
-                    ? theme.colorScheme.primary.withValues(alpha: 0.6)
-                    : const Color(0xFFE4E7D5),
+                color: const Color(0xFFE4E7D5),
                 width: 1.4,
               ),
             ),

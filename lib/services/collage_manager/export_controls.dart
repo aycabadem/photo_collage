@@ -3,6 +3,13 @@ part of '../collage_manager.dart';
 mixin _CollageExportControls on _CollageManagerBase {
   Future<bool> saveCollage({int? exportWidth}) async {
     try {
+      if (!_isPremium && !isTrialActive) {
+        final int limit = weeklySaveLimit;
+        if (limit > 0 && _weeklySavesUsed >= limit) {
+          return false;
+        }
+      }
+
       final double aspectRatio = _selectedAspect.ratio;
       final int resolvedWidth = (exportWidth ?? _selectedExportWidth).clamp(
         800,
@@ -167,8 +174,11 @@ mixin _CollageExportControls on _CollageManagerBase {
       );
 
       if (result.isSuccess) {
-        if (!_isPremium) {
-          _weeklySavesUsed += 1;
+        if (!_isPremium && !isTrialActive) {
+          final int limit = weeklySaveLimit;
+          if (limit > 0) {
+            _weeklySavesUsed += 1;
+          }
         }
         notifyListeners();
       }

@@ -106,6 +106,9 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   // Premium access
   bool _isPremium = false;
   int _weeklySavesUsed = 0;
+  DateTime? _trialStart;
+
+  static const Duration _trialDuration = Duration(days: 3);
 
   // Getters
   AspectSpec get selectedAspect => _selectedAspect;
@@ -148,7 +151,33 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   bool get isPremium => _isPremium;
   bool get isFreeUser => !_isPremium;
   int get weeklySavesUsed => _weeklySavesUsed;
-  int get weeklySaveLimit => _isPremium ? -1 : 1;
+  bool get canStartTrial => !_isPremium && _trialStart == null;
+  bool get isTrialActive {
+    if (_trialStart == null) return false;
+    return DateTime.now().difference(_trialStart!) < _trialDuration;
+  }
+
+  bool get hasTrialEnded => _trialStart != null && !isTrialActive;
+
+  int get trialDaysRemaining {
+    if (!isTrialActive || _trialStart == null) return 0;
+    final elapsed = DateTime.now().difference(_trialStart!);
+    final remaining = _trialDuration - elapsed;
+    if (remaining.isNegative) return 0;
+    final hours = remaining.inHours + (remaining.inMinutes % 60 > 0 ? 1 : 0);
+    final days = (hours / 24).ceil();
+    return days > 0 ? days : 0;
+  }
+
+  int get weeklySaveLimit => _isPremium || isTrialActive ? -1 : 3;
+
+  int get freeSavesRemaining {
+    if (_isPremium || isTrialActive) return -1;
+    final limit = weeklySaveLimit;
+    if (limit <= 0) return -1;
+    final remaining = limit - _weeklySavesUsed;
+    return remaining < 0 ? 0 : remaining;
+  }
 
   // Derived background color including opacity
   Color get backgroundColorWithOpacity =>
@@ -158,9 +187,17 @@ abstract class _CollageManagerBase extends ChangeNotifier {
     if (_isPremium == value) return;
     _isPremium = value;
     if (value) {
-      // Optional: allow unlimited saves immediately
+      _weeklySavesUsed = 0;
     }
     notifyListeners();
+  }
+
+  bool startTrial() {
+    if (!canStartTrial) return false;
+    _trialStart = DateTime.now();
+    _weeklySavesUsed = 0;
+    notifyListeners();
+    return true;
   }
 
   void resetWeeklyUsage() {

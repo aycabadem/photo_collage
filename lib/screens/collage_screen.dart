@@ -435,6 +435,14 @@ class _CollageScreenState extends State<CollageScreen> {
       return;
     }
 
+    if (!manager.isPremium && !manager.isTrialActive) {
+      final int limit = manager.weeklySaveLimit;
+      if (limit > 0 && manager.weeklySavesUsed >= limit) {
+        await _showSaveLimitDialog(context, manager);
+        return;
+      }
+    }
+
     manager.setSelectedExportWidth(selectedWidth);
 
     // Show loading indicator
@@ -465,6 +473,35 @@ class _CollageScreenState extends State<CollageScreen> {
         }
       }
     }
+  }
+
+  Future<void> _showSaveLimitDialog(
+    BuildContext context,
+    CollageManager manager,
+  ) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Free saves used up'),
+        content: const Text(
+          'You have used your 3 free saves for this week. Start your free 3-day trial or upgrade to keep exporting collages without limits.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Close'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _openProfile(manager);
+            },
+            child: const Text('View Plans'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _showSaveSuccessDialog(BuildContext context) async {
@@ -809,7 +846,7 @@ class _CollageScreenState extends State<CollageScreen> {
         onLayoutSelected: (layout) {
           collageManager.applyLayoutTemplate(layout);
         },
-        isPremium: collageManager.isPremium,
+        isPremium: collageManager.isPremium || collageManager.isTrialActive,
         onUpgradeRequested: () {
           Navigator.of(context).pop();
           _openProfile(collageManager);
