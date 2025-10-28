@@ -103,6 +103,9 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   // Image picker
   final ImagePicker _imagePicker = ImagePicker();
 
+  // Premium access
+  bool _isPremium = false;
+
   // Getters
   AspectSpec get selectedAspect => _selectedAspect;
   Size get templateSize => _templateSize;
@@ -141,9 +144,18 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   // Photo margin getter
   double get photoMargin => _photoMargin;
 
+  bool get isPremium => _isPremium;
+  bool get isFreeUser => !_isPremium;
+
   // Derived background color including opacity
   Color get backgroundColorWithOpacity =>
       _backgroundColor.withValues(alpha: _backgroundOpacity);
+
+  void setPremium(bool value) {
+    if (_isPremium == value) return;
+    _isPremium = value;
+    notifyListeners();
+  }
 
   void refresh() => notifyListeners();
 

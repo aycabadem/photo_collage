@@ -67,7 +67,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 IconButton(
                   tooltip: 'Account',
                   icon: const Icon(Icons.person_outline),
-                  onPressed: _openProfile,
+                  onPressed: () => _openProfile(collageManager),
                   iconSize: 28,
                 ),
                 const SizedBox(width: 16),
@@ -584,10 +584,13 @@ class _CollageScreenState extends State<CollageScreen> {
     );
   }
 
-  void _openProfile() {
+  void _openProfile(CollageManager manager) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => const ProfileScreen(),
+        builder: (_) => ChangeNotifierProvider.value(
+          value: manager,
+          child: const ProfileScreen(),
+        ),
       ),
     );
   }
@@ -805,6 +808,12 @@ class _CollageScreenState extends State<CollageScreen> {
         onLayoutSelected: (layout) {
           collageManager.applyLayoutTemplate(layout);
         },
+        isPremium: collageManager.isPremium,
+        onUpgradeRequested: () {
+          Navigator.of(context).pop();
+          _openProfile(collageManager);
+        },
+        hostContext: context,
       ),
     );
   }

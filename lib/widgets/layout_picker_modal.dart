@@ -4,8 +4,17 @@ import '../models/layout_template.dart';
 /// Modern layout picker modal with simple grid preview
 class LayoutPickerModal extends StatelessWidget {
   final Function(LayoutTemplate?) onLayoutSelected;
+  final bool isPremium;
+  final VoidCallback onUpgradeRequested;
+  final BuildContext hostContext;
 
-  const LayoutPickerModal({super.key, required this.onLayoutSelected});
+  const LayoutPickerModal({
+    super.key,
+    required this.onLayoutSelected,
+    required this.isPremium,
+    required this.onUpgradeRequested,
+    required this.hostContext,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +150,8 @@ class LayoutPickerModal extends StatelessWidget {
   }
 
   Widget _buildLayoutGrid() {
+    const int freeLayoutLimit = 8;
+    final bool premium = isPremium;
     // Get all layouts
     List<LayoutTemplate> layouts = _uniqueLayoutsBySignature(LayoutTemplates.templates);
 
@@ -156,7 +167,8 @@ class LayoutPickerModal extends StatelessWidget {
         itemCount: layouts.length,
         itemBuilder: (context, index) {
           final layout = layouts[index];
-          return _buildModernLayoutTile(layout, context);
+          final bool locked = !premium && index >= freeLayoutLimit;
+          return _buildModernLayoutTile(layout, context, locked);
         },
       ),
     );
@@ -182,10 +194,25 @@ class LayoutPickerModal extends StatelessWidget {
 
   String _r(double v) => (v * 10).round().toString(); // 1 decimal rounding key
 
-  Widget _buildModernLayoutTile(LayoutTemplate layout, BuildContext context) {
+  Widget _buildModernLayoutTile(
+    LayoutTemplate layout,
+    BuildContext context,
+    bool locked,
+  ) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
+        if (locked) {
+          ScaffoldMessenger.of(hostContext).hideCurrentSnackBar();
+          ScaffoldMessenger.of(hostContext).showSnackBar(
+            const SnackBar(
+              content: Text('Upgrade to unlock all premium layouts.'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          onUpgradeRequested();
+          return;
+        }
         onLayoutSelected(layout);
         Navigator.pop(context);
       },
@@ -211,6 +238,33 @@ class LayoutPickerModal extends StatelessWidget {
                 ),
               ),
             ),
+            if (locked)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.45),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Icon(
+                        Icons.lock_outline,
+                        color: Colors.white,
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        'Premium',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

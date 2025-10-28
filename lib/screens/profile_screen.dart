@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/collage_manager.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -6,6 +8,28 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final collageManager = context.watch<CollageManager>();
+    final bool isPremium = collageManager.isPremium;
+
+    void handleSubscribe() {
+      if (isPremium) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You already have premium access.'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      collageManager.setPremium(true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Premium unlocked! Enjoy unlimited layouts.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -17,9 +41,13 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
-          _FreeUsageCard(theme: theme),
+          _FreeUsageCard(theme: theme, isPremium: isPremium),
           const SizedBox(height: 18),
-          _SubscriptionSection(theme: theme),
+          _SubscriptionSection(
+            theme: theme,
+            isPremium: isPremium,
+            onSubscribe: handleSubscribe,
+          ),
           const SizedBox(height: 18),
           _LegalSection(theme: theme),
         ],
@@ -30,8 +58,9 @@ class ProfileScreen extends StatelessWidget {
 
 class _FreeUsageCard extends StatelessWidget {
   final ThemeData theme;
+  final bool isPremium;
 
-  const _FreeUsageCard({required this.theme});
+  const _FreeUsageCard({required this.theme, required this.isPremium});
 
   @override
   Widget build(BuildContext context) {
@@ -52,30 +81,36 @@ class _FreeUsageCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Free plan',
+            isPremium ? 'Premium active' : 'Free plan',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'You can save 1 collage per week. Upgrade to unlock unlimited saves, premium layouts and more.',
-          ),
-          const SizedBox(height: 14),
-          LinearProgressIndicator(
-            value: 1.0,
-            backgroundColor: const Color(0xFFE5E7EB),
-            color: theme.colorScheme.primary,
-            minHeight: 6,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Weekly saves used: 1 / 1',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
+          if (isPremium)
+            const Text(
+              'Unlimited collage exports, premium layouts and future features are all unlocked.',
+            )
+          else ...[
+            const Text(
+              'You can save 1 collage per week. Upgrade to unlock unlimited saves, premium layouts and more.',
             ),
-          ),
+            const SizedBox(height: 14),
+            LinearProgressIndicator(
+              value: 1.0,
+              backgroundColor: const Color(0xFFE5E7EB),
+              color: theme.colorScheme.primary,
+              minHeight: 6,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Weekly saves used: 1 / 1',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -84,8 +119,14 @@ class _FreeUsageCard extends StatelessWidget {
 
 class _SubscriptionSection extends StatelessWidget {
   final ThemeData theme;
+  final bool isPremium;
+  final VoidCallback onSubscribe;
 
-  const _SubscriptionSection({required this.theme});
+  const _SubscriptionSection({
+    required this.theme,
+    required this.isPremium,
+    required this.onSubscribe,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +174,12 @@ class _SubscriptionSection extends StatelessWidget {
         ...plans.map(
           (plan) => Padding(
             padding: const EdgeInsets.only(bottom: 14),
-            child: _PlanCard(plan: plan, theme: theme),
+            child: _PlanCard(
+              plan: plan,
+              theme: theme,
+              isPremium: isPremium,
+              onSubscribe: onSubscribe,
+            ),
           ),
         ),
       ],
@@ -158,10 +204,14 @@ class _Plan {
 class _PlanCard extends StatelessWidget {
   final _Plan plan;
   final ThemeData theme;
+  final bool isPremium;
+  final VoidCallback onSubscribe;
 
   const _PlanCard({
     required this.plan,
     required this.theme,
+    required this.isPremium,
+    required this.onSubscribe,
   });
 
   @override
@@ -251,25 +301,20 @@ class _PlanCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Subscriptions coming soon.'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
+              onPressed: isPremium ? null : onSubscribe,
               style: ElevatedButton.styleFrom(
-                backgroundColor: theme.colorScheme.primary,
+                backgroundColor: isPremium
+                    ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                    : theme.colorScheme.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Subscribe',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              child: Text(
+                isPremium ? 'Subscribed' : 'Subscribe',
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ),
