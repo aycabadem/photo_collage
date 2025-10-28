@@ -2,6 +2,7 @@ part of '../collage_manager.dart';
 
 mixin _CollageTransformControls on _CollageManagerBase {
   void moveBox(PhotoBox box, Offset delta) {
+    if (!_isCustomMode) return;
     final newX = box.position.dx + delta.dx;
     final newY = box.position.dy + delta.dy;
 
