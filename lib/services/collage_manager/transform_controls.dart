@@ -36,10 +36,12 @@ mixin _CollageTransformControls on _CollageManagerBase {
     double snappedX = position.dx;
     double snappedY = position.dy;
 
+    const double snapTolerance = 1.8;
+
     for (final otherBox in _photoBoxes) {
       if (otherBox == movingBox) continue;
 
-      if ((position.dx - otherBox.position.dx).abs() <= 5) {
+      if ((position.dx - otherBox.position.dx).abs() <= snapTolerance) {
         snappedX = otherBox.position.dx;
       }
 
@@ -48,22 +50,22 @@ mixin _CollageTransformControls on _CollageManagerBase {
                   otherBox.position.dx -
                   otherBox.size.width)
               .abs() <=
-          5) {
+          snapTolerance) {
         snappedX =
             otherBox.position.dx + otherBox.size.width - movingBox.size.width;
       }
 
       if ((position.dx - (otherBox.position.dx + otherBox.size.width)).abs() <=
-          5) {
+          snapTolerance) {
         snappedX = otherBox.position.dx + otherBox.size.width;
       }
 
       if ((position.dx + movingBox.size.width - otherBox.position.dx).abs() <=
-          5) {
+          snapTolerance) {
         snappedX = otherBox.position.dx - movingBox.size.width;
       }
 
-      if ((position.dy - otherBox.position.dy).abs() <= 5) {
+      if ((position.dy - otherBox.position.dy).abs() <= snapTolerance) {
         snappedY = otherBox.position.dy;
       }
 
@@ -72,61 +74,61 @@ mixin _CollageTransformControls on _CollageManagerBase {
                   otherBox.position.dy -
                   otherBox.size.height)
               .abs() <=
-          5) {
+          snapTolerance) {
         snappedY =
             otherBox.position.dy + otherBox.size.height - movingBox.size.height;
       }
 
       if ((position.dy - (otherBox.position.dy + otherBox.size.height)).abs() <=
-          5) {
+          snapTolerance) {
         snappedY = otherBox.position.dy + otherBox.size.height;
       }
 
       if ((position.dy + movingBox.size.height - otherBox.position.dy).abs() <=
-          5) {
+          snapTolerance) {
         snappedY = otherBox.position.dy - movingBox.size.height;
       }
 
       final movingCenterX = position.dx + movingBox.size.width / 2;
       final otherCenterX = otherBox.position.dx + otherBox.size.width / 2;
-      if ((movingCenterX - otherCenterX).abs() <= 5) {
+      if ((movingCenterX - otherCenterX).abs() <= snapTolerance) {
         snappedX = otherCenterX - movingBox.size.width / 2;
       }
 
       final movingCenterY = position.dy + movingBox.size.height / 2;
       final otherCenterY = otherBox.position.dy + otherBox.size.height / 2;
-      if ((movingCenterY - otherCenterY).abs() <= 5) {
+      if ((movingCenterY - otherCenterY).abs() <= snapTolerance) {
         snappedY = otherCenterY - movingBox.size.height / 2;
       }
 
       if ((position.dx - (otherBox.position.dx + otherBox.size.width)).abs() <=
-              5 &&
+              snapTolerance &&
           (position.dy - (otherBox.position.dy + otherBox.size.height)).abs() <=
-              5) {
+              snapTolerance) {
         snappedX = otherBox.position.dx + otherBox.size.width;
         snappedY = otherBox.position.dy + otherBox.size.height;
       }
 
       if ((position.dx + movingBox.size.width - otherBox.position.dx).abs() <=
-              5 &&
+              snapTolerance &&
           (position.dy - (otherBox.position.dy + otherBox.size.height)).abs() <=
-              5) {
+              snapTolerance) {
         snappedX = otherBox.position.dx - movingBox.size.width;
         snappedY = otherBox.position.dy + otherBox.size.height;
       }
 
       if ((position.dx - (otherBox.position.dx + otherBox.size.width)).abs() <=
-              5 &&
+              snapTolerance &&
           (position.dy + movingBox.size.height - otherBox.position.dy).abs() <=
-              5) {
+              snapTolerance) {
         snappedX = otherBox.position.dx + otherBox.size.width;
         snappedY = otherBox.position.dy - movingBox.size.height;
       }
 
       if ((position.dx + movingBox.size.width - otherBox.position.dx).abs() <=
-              5 &&
+              snapTolerance &&
           (position.dy + movingBox.size.height - otherBox.position.dy).abs() <=
-              5) {
+              snapTolerance) {
         snappedX = otherBox.position.dx - movingBox.size.width;
         snappedY = otherBox.position.dy - movingBox.size.height;
       }
@@ -137,10 +139,10 @@ mixin _CollageTransformControls on _CollageManagerBase {
     final movingCenterX = position.dx + movingBox.size.width / 2;
     final movingCenterY = position.dy + movingBox.size.height / 2;
 
-    if ((movingCenterX - centerX).abs() <= 5) {
+    if ((movingCenterX - centerX).abs() <= snapTolerance) {
       snappedX = centerX - movingBox.size.width / 2;
     }
-    if ((movingCenterY - centerY).abs() <= 5) {
+    if ((movingCenterY - centerY).abs() <= snapTolerance) {
       snappedY = centerY - movingBox.size.height / 2;
     }
 
