@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/aspect_spec.dart';
@@ -59,9 +60,16 @@ class _CollageScreenState extends State<CollageScreen> {
                 const SizedBox(width: 12),
                 IconButton(
                   tooltip: 'Save Collage',
-                  icon: const Icon(Icons.save),
                   onPressed: () => _saveCollage(context, collageManager),
-                  iconSize: 28,
+                  icon: SvgPicture.asset(
+                    'assets/icons/save_arrow.svg',
+                    width: 28,
+                    height: 28,
+                    colorFilter: ColorFilter.mode(
+                      Theme.of(context).colorScheme.primary,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 IconButton(
