@@ -60,8 +60,10 @@ class _PhotoEditorPageState extends State<PhotoEditorPage> {
       targetWidth = targetHeight * canvasAspect;
     }
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
-      decoration: BoxDecoration(color: const Color(0xFFFCFAEE)),
+      decoration: BoxDecoration(color: scheme.surface),
       padding: const EdgeInsets.only(left: 8, top: 8, right: 8, bottom: 32),
       child: SizedBox(
         width: targetWidth,
@@ -119,8 +121,8 @@ class _PhotoEditorPageState extends State<PhotoEditorPage> {
                   },
                 )
               : Container(
-                  color: const Color(0xFFFCFAEE),
-                  child: const Center(child: Icon(Icons.image, size: 64)),
+                  color: scheme.surface,
+                  child: Icon(Icons.image, size: 64, color: scheme.primary),
                 ),
         ),
       ),

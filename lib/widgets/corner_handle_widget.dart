@@ -25,6 +25,7 @@ class _CornerHandleWidgetState extends State<CornerHandleWidget> {
   Widget build(BuildContext context) {
     final double size = _isHovered || _isDragging ? 8.0 : 6.0;
     final double hitArea = 16.0;
+    final scheme = Theme.of(context).colorScheme;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -50,11 +51,8 @@ class _CornerHandleWidgetState extends State<CornerHandleWidget> {
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                color: const Color(0xFF007AFF),
-                width: 1.5,
-              ),
+              color: scheme.primary,
+              border: Border.all(color: Colors.black.withOpacity(0.85), width: 1.5),
               borderRadius: BorderRadius.circular(size / 2),
               boxShadow: [
                 BoxShadow(

@@ -34,14 +34,16 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
         width: MediaQuery.of(context).size.width * 0.8,
         height: MediaQuery.of(context).size.height * 0.7,
         decoration: BoxDecoration(
-          color: const Color(0xFFFCFAEE),
+          color: scheme.surface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
         ),
         child: Column(
           children: [
@@ -49,7 +51,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFFCFAEE),
+                color: scheme.surface,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -86,8 +88,11 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                 child: Container(
                   margin: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFA5B68D), width: 1.0),
-                    color: const Color(0xFFFCFAEE),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.1),
+                      width: 1.0,
+                    ),
+                    color: scheme.secondary,
                   ),
                   child: SizedBox(
                     width: widget.photoBox.size.width,
@@ -159,9 +164,13 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                               },
                             )
                           : Container(
-                              color: const Color(0xFFFCFAEE),
-                              child: const Center(
-                                child: Icon(Icons.image, size: 64),
+                              color: scheme.secondary,
+                              child: Center(
+                                child: Icon(
+                                  Icons.image,
+                                  size: 64,
+                                  color: scheme.primary.withOpacity(0.6),
+                                ),
                               ),
                             ),
                     ),

@@ -64,21 +64,24 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Container(
       width: size.width,
       constraints: BoxConstraints(maxHeight: size.height * 0.34),
-      decoration: const BoxDecoration(
-        color: Color(0xFFFCFAEE),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
+        border: Border.all(color: Colors.white.withOpacity(0.06)),
         boxShadow: [
           BoxShadow(
-            color: Color(0x33000000), // ~20% black
-            blurRadius: 20,
+            color: Colors.black.withOpacity(0.35),
+            blurRadius: 24,
             offset: Offset(0, -5),
-            spreadRadius: 5,
+            spreadRadius: 4,
           ),
         ],
       ),
@@ -128,12 +131,21 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
 
   Widget _tab(String label, bool active, VoidCallback onTap) {
     final theme = Theme.of(context);
-    final Color primary = theme.colorScheme.primary;
-    final Color background = Colors.white;
-    final Color borderColor = active
-        ? primary.withValues(alpha: 0.45)
-        : primary.withValues(alpha: 0.25);
-    final Color textColor = primary.withValues(alpha: active ? 0.95 : 0.75);
+    final scheme = theme.colorScheme;
+    final Color background = active
+        ? scheme.primary.withOpacity(0.12)
+        : scheme.secondary.withOpacity(0.9);
+    final Color borderColor = scheme.primary.withOpacity(active ? 0.5 : 0.18);
+    final Color textColor = scheme.primary.withOpacity(active ? 1.0 : 0.75);
+    final List<BoxShadow>? shadows = active
+        ? [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.35),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ]
+        : null;
 
     return GestureDetector(
       onTap: onTap,
@@ -144,15 +156,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           color: background,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: borderColor, width: 1.2),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: primary.withValues(alpha: 0.25),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : null,
+          boxShadow: shadows,
         ),
         child: Text(
           label,
@@ -457,15 +461,15 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         constraints: const BoxConstraints(minHeight: 44),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: theme.colorScheme.secondary,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: borderColor),
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: const Color(0x26000000),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
                 ]
               : null,
@@ -627,12 +631,12 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     return FilledButton(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: primary,
+        backgroundColor: primary,
+        foregroundColor: Colors.black,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: primary.withValues(alpha: 0.45), width: 1.1),
+        side: BorderSide(color: Colors.black.withOpacity(0.2), width: 1.1),
         elevation: 0,
       ),
       child: const Text('Reset'),

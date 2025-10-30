@@ -96,13 +96,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final int trialDaysRemaining = collageManager.trialDaysRemaining;
     final int freeSavesRemaining = collageManager.freeSavesRemaining;
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Account'),
-        backgroundColor: const Color(0xFFFCFAEE),
+        backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      backgroundColor: const Color(0xFFFCFAEE),
+      backgroundColor: scheme.background,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
@@ -162,13 +164,14 @@ class _UsageOverviewCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        border: Border.all(color: Colors.white12, width: 1),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
+            color: Colors.black54,
+            blurRadius: 18,
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -208,7 +211,7 @@ class _UsageOverviewCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
                   value: usageProgress.clamp(0.0, 1.0),
-                  backgroundColor: const Color(0xFFE5E7EB),
+                  backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
                   color: theme.colorScheme.primary,
                   minHeight: 6,
                 ),
@@ -233,7 +236,7 @@ class _UsageOverviewCard extends StatelessWidget {
                       onPressed: onStartTrial,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.white,
+                        foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -280,15 +283,18 @@ class _SubscriptionSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final _PlanOption plan = plans[selectedIndex];
 
+    final scheme = theme.colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
+        border: Border.all(color: Colors.white12, width: 1),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.07),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
+            color: Colors.black54,
+            blurRadius: 20,
+            offset: Offset(0, 12),
           ),
         ],
       ),
@@ -324,11 +330,11 @@ class _SubscriptionSection extends StatelessWidget {
                         if (!value) return;
                         onPlanSelected(index);
                       },
-                      selectedColor: theme.colorScheme.primary,
-                      backgroundColor: const Color(0xFFFAFBF6),
+                      selectedColor: scheme.primary,
+                      backgroundColor: Colors.white12,
                       showCheckmark: false,
                       labelStyle: TextStyle(
-                        color: selected ? Colors.white : theme.colorScheme.primary,
+                        color: selected ? Colors.black : scheme.primary.withOpacity(0.7),
                         fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -344,11 +350,11 @@ class _SubscriptionSection extends StatelessWidget {
           const SizedBox(height: 18),
           Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: scheme.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFFE4E7D5),
-                width: 1.4,
+                color: Colors.white12,
+                width: 1.2,
               ),
             ),
             padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
@@ -386,10 +392,9 @@ class _SubscriptionSection extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: isPremium ? null : onSubscribe,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isPremium
-                          ? theme.colorScheme.primary.withValues(alpha: 0.4)
-                          : theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
+                      backgroundColor:
+                          isPremium ? Colors.white24 : scheme.primary,
+                      foregroundColor: isPremium ? Colors.black54 : Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -472,15 +477,18 @@ class _LegalSection extends StatelessWidget {
       ),
     ];
 
+    final scheme = theme.colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        border: Border.all(color: Colors.white12, width: 1),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black54,
+            blurRadius: 18,
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -496,15 +504,17 @@ class _LegalSection extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                trailing: Icon(Icons.chevron_right_rounded,
+                    color: scheme.primary.withOpacity(0.7)),
                 onTap: tile.onTap,
               ),
               if (!isLast)
-                const Divider(
+                Divider(
                   height: 1,
                   thickness: 1,
                   indent: 16,
                   endIndent: 16,
+                  color: Colors.white10,
                 ),
             ],
           );
@@ -539,9 +549,10 @@ void _showPlaceholderDocument(
       maxChildSize: 0.9,
       minChildSize: 0.5,
       builder: (context, scrollController) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(color: Colors.white.withOpacity(0.08)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
@@ -553,7 +564,10 @@ void _showPlaceholderDocument(
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.12),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primary
+                      .withOpacity(0.18),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

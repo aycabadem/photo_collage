@@ -29,6 +29,7 @@ class _EdgeHandleWidgetState extends State<EdgeHandleWidget> {
     final double lineLength = _isHovered || _isDragging ? 24.0 : 20.0;
     final double lineThickness = _isHovered || _isDragging ? 3.0 : 2.0;
     final double hitArea = 16.0;
+    final scheme = Theme.of(context).colorScheme;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -54,7 +55,7 @@ class _EdgeHandleWidgetState extends State<EdgeHandleWidget> {
             width: widget.isHorizontal ? lineLength : lineThickness,
             height: widget.isHorizontal ? lineThickness : lineLength,
             decoration: BoxDecoration(
-              color: const Color(0xFF007AFF),
+              color: scheme.primary,
               borderRadius: BorderRadius.circular(lineThickness / 2),
               boxShadow: [
                 BoxShadow(

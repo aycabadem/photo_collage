@@ -28,19 +28,21 @@ class _BorderPanelState extends State<BorderPanel> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewPadding.bottom - 16;
 
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: EdgeInsets.only(bottom: bottomInset),
-      decoration: const BoxDecoration(
-        color: Color(0xFFFCFAEE),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Color(0x1A000000), // ~10% black
-            blurRadius: 10,
-            offset: Offset(0, -2),
+            color: Colors.black54,
+            blurRadius: 18,
+            offset: Offset(0, -4),
           ),
         ],
       ),
@@ -312,13 +314,14 @@ class _BorderPanelState extends State<BorderPanel> {
 
   Widget _buildValueBadge(double value) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: scheme.primary.withOpacity(0.08),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.35),
+          color: Colors.white.withOpacity(0.1),
           width: 1,
         ),
       ),
@@ -327,7 +330,7 @@ class _BorderPanelState extends State<BorderPanel> {
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: theme.colorScheme.primary,
+          color: scheme.primary,
         ),
       ),
     );

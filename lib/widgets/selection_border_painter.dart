@@ -19,7 +19,7 @@ class SelectionBorderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF007AFF)
+      ..color = Colors.white
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 

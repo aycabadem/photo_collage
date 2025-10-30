@@ -18,11 +18,12 @@ class LayoutPickerModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Color(0xFFFCFAEE),
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -35,7 +36,7 @@ class LayoutPickerModal extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: scheme.primary.withOpacity(0.18),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -52,13 +53,13 @@ class LayoutPickerModal extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: scheme.secondary,
                       borderRadius: BorderRadius.circular(24),
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back,
-                      color: Colors.white,
+                      color: scheme.onSecondary,
                       size: 22,
                     ),
                   ),
@@ -69,7 +70,7 @@ class LayoutPickerModal extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: scheme.onSurface,
                   ),
                 ),
               ],
@@ -92,6 +93,7 @@ class LayoutPickerModal extends StatelessWidget {
   }
 
   Widget _buildCustomOption(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -102,17 +104,17 @@ class LayoutPickerModal extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFCFAEE),
+          color: scheme.secondary,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+            color: Colors.white.withOpacity(0.08),
           ),
         ),
         child: Row(
           children: [
             Icon(
               Icons.edit,
-              color: Theme.of(context).colorScheme.primary,
+              color: scheme.onSurface,
               size: 24,
             ),
             const SizedBox(width: 12),
@@ -125,14 +127,14 @@ class LayoutPickerModal extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: scheme.onSurface,
                     ),
                   ),
                   Text(
                     'Create your own layout',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: scheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ],
@@ -140,7 +142,7 @@ class LayoutPickerModal extends StatelessWidget {
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: Theme.of(context).colorScheme.primary,
+              color: scheme.onSurface.withOpacity(0.6),
               size: 16,
             ),
           ],
@@ -199,6 +201,7 @@ class LayoutPickerModal extends StatelessWidget {
     BuildContext context,
     bool locked,
   ) {
+    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -218,10 +221,10 @@ class LayoutPickerModal extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFCFAEE),
+          color: scheme.secondary,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            color: Colors.white.withOpacity(0.06),
           ),
         ),
         child: Stack(
@@ -233,8 +236,8 @@ class LayoutPickerModal extends StatelessWidget {
                 size: const Size.square(double.infinity),
                 painter: ModernLayoutPreviewPainter(
                   layout.photoLayouts,
-                  fillColor: const Color(0xFFFCFAEE), // background fill
-                  strokeColor: const Color(0xFFA5B68D), // frame color
+                  fillColor: scheme.surface,
+                  strokeColor: Colors.white24,
                 ),
               ),
             ),

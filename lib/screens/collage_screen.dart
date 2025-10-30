@@ -47,7 +47,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 'Custom Collage',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 24),
               ),
-              backgroundColor: const Color(0xFFFCFAEE),
+              backgroundColor: Theme.of(context).colorScheme.surface,
               elevation: 0,
               shadowColor: Colors.transparent,
               actions: [
@@ -86,7 +86,9 @@ class _CollageScreenState extends State<CollageScreen> {
                 // Gradient outer background (behind white canvas)
                 Positioned.fill(
                   child: Container(
-                    decoration: const BoxDecoration(color: Color(0xFFFCFAEE)),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
                   ),
                 ),
                 // Main canvas and interactions
@@ -269,6 +271,8 @@ class _CollageScreenState extends State<CollageScreen> {
     setState(() {
       _aspectScalar = manager.selectedAspect.ratio.clamp(0.5, 2.0);
     });
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -280,12 +284,20 @@ class _CollageScreenState extends State<CollageScreen> {
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewPadding.bottom,
             ),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFCFAEE),
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
               ),
+              border: Border.all(color: Colors.white.withOpacity(0.06)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.35),
+                  blurRadius: 22,
+                  offset: const Offset(0, -6),
+                ),
+              ],
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -314,7 +326,7 @@ class _CollageScreenState extends State<CollageScreen> {
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: Icon(Icons.close, color: scheme.primary),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                     ],
@@ -354,6 +366,7 @@ class _CollageScreenState extends State<CollageScreen> {
     void Function(void Function()) setLocal,
     VoidCallback hideSlider,
   ) {
+    final scheme = Theme.of(context).colorScheme;
     String fmt2(double v) {
       final s = v.toStringAsFixed(2);
       return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
@@ -367,14 +380,14 @@ class _CollageScreenState extends State<CollageScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFFCFAEE),
+            color: scheme.secondary,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0x33A5B68D)),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
           ),
           child: Text(
             formatRatio(_aspectScalar),
             style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
+              color: scheme.primary,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),
@@ -384,9 +397,9 @@ class _CollageScreenState extends State<CollageScreen> {
         Expanded(
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: const Color(0xFFA5B68D),
-              inactiveTrackColor: const Color(0x4DA5B68D),
-              thumbColor: const Color(0xFFA5B68D),
+              activeTrackColor: scheme.primary.withOpacity(0.85),
+              inactiveTrackColor: scheme.primary.withOpacity(0.25),
+              thumbColor: scheme.primary,
             ),
             child: Slider(
               value: _aspectScalar,
@@ -694,95 +707,111 @@ class _CollageScreenState extends State<CollageScreen> {
     int selectedWidth = manager.selectedExportWidth;
     final double aspectRatio = manager.selectedAspect.ratio;
 
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return showModalBottomSheet<int>(
       context: context,
       isScrollControlled: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setState) {
             return SafeArea(
               top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'Save image',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Choose the export size before saving your collage.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.black.withValues(alpha: 0.6),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    RadioGroup<int>(
-                      groupValue: selectedWidth,
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setState(() => selectedWidth = value);
-                      },
-                      child: Column(
-                        children: [
-                          for (final option in options)
-                            RadioListTile<int>(
-                              value: option.width,
-                              contentPadding: EdgeInsets.zero,
-                              title:
-                                  Text('${option.label} (${option.width}px)'),
-                              subtitle: Text(
-                                '${option.width} x '
-                                '${(option.width / aspectRatio).round()}px',
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextButton(
-                            onPressed: () => Navigator.of(sheetContext).pop(),
-                            child: const Text('Cancel'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton(
-                            onPressed: () =>
-                                Navigator.of(sheetContext).pop(selectedWidth),
-                            style: FilledButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text('Save'),
-                          ),
-                        ),
-                      ],
+              child: Container(
+                decoration: BoxDecoration(
+                  color: scheme.surface,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
+                  border: Border.all(color: Colors.white.withOpacity(0.07)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.35),
+                      blurRadius: 22,
+                      offset: const Offset(0, -6),
                     ),
                   ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 36,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: scheme.primary.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'Save image',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Choose the export size before saving your collage.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      RadioGroup<int>(
+                        groupValue: selectedWidth,
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setState(() => selectedWidth = value);
+                        },
+                        child: Column(
+                          children: [
+                            for (final option in options)
+                              RadioListTile<int>(
+                                value: option.width,
+                                contentPadding: EdgeInsets.zero,
+                                title:
+                                    Text('${option.label} (${option.width}px)'),
+                                subtitle: Text(
+                                  '${option.width} x '
+                                  '${(option.width / aspectRatio).round()}px',
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.of(sheetContext).pop(),
+                              child: const Text('Cancel'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () => Navigator.of(sheetContext)
+                                  .pop(selectedWidth),
+                              style: FilledButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Save'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
