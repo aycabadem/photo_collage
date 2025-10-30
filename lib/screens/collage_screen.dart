@@ -715,7 +715,7 @@ class _CollageScreenState extends State<CollageScreen> {
                       ),
                     ),
                     Text(
-                      'Save resolution',
+                      'Save image',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),

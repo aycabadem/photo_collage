@@ -202,7 +202,7 @@ class _UsageOverviewCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Free plan: You can save up to 3 collages per week. Free saves left this week: $remainingFree.',
+                  'You can save up to 3 collages per week. Free saves left this week: $remainingFree.',
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 12),
