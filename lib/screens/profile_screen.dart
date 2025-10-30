@@ -16,8 +16,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _PlanOption(
       id: 'weekly',
       label: 'Weekly',
-      priceLabel: '\$3.49 / week',
-      billingDetail: 'Billed weekly • cancel anytime',
+      priceLabel: '€1.99 / week',
+      billingDetail: 'Renews automatically • cancel anytime',
       perks: [
         'Unlimited collage exports',
         'Access all premium layouts',
@@ -26,8 +26,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _PlanOption(
       id: 'monthly',
       label: 'Monthly',
-      priceLabel: '\$7.99 / month',
-      billingDetail: 'Best for casual creators',
+      priceLabel: '€5.99 / month',
+      billingDetail: 'Save 25% vs weekly • renews automatically, cancel anytime',
       perks: [
         'Unlimited collage exports',
         'Access all premium layouts',
@@ -37,8 +37,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _PlanOption(
       id: 'yearly',
       label: 'Yearly',
-      priceLabel: '\$49.99 / year',
-      billingDetail: 'Save 48% vs monthly billing',
+      priceLabel: '€39.99 / year',
+      billingDetail: 'Save 61% vs weekly • renews automatically, cancel anytime',
       perks: [
         'Unlimited collage exports',
         'Access all premium layouts',
