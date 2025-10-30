@@ -166,7 +166,7 @@ class _UsageOverviewCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12, width: 1),
+        border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Colors.black54,
@@ -236,7 +236,7 @@ class _UsageOverviewCard extends StatelessWidget {
                       onPressed: onStartTrial,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: theme.colorScheme.primary,
-                        foregroundColor: Colors.black,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -289,7 +289,7 @@ class _SubscriptionSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white12, width: 1),
+        border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Colors.black54,
@@ -331,10 +331,10 @@ class _SubscriptionSection extends StatelessWidget {
                         onPlanSelected(index);
                       },
                       selectedColor: scheme.primary,
-                      backgroundColor: Colors.white12,
+                      backgroundColor: Colors.black.withOpacity(0.05),
                       showCheckmark: false,
                       labelStyle: TextStyle(
-                        color: selected ? Colors.black : scheme.primary.withOpacity(0.7),
+                        color: selected ? Colors.white : scheme.primary.withOpacity(0.75),
                         fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -353,7 +353,7 @@ class _SubscriptionSection extends StatelessWidget {
               color: scheme.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white12,
+                color: Colors.black.withOpacity(0.08),
                 width: 1.2,
               ),
             ),
@@ -393,8 +393,8 @@ class _SubscriptionSection extends StatelessWidget {
                     onPressed: isPremium ? null : onSubscribe,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isPremium ? Colors.white24 : scheme.primary,
-                      foregroundColor: isPremium ? Colors.black54 : Colors.black,
+                          isPremium ? Colors.black.withOpacity(0.08) : scheme.primary,
+                      foregroundColor: isPremium ? Colors.black54 : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -483,7 +483,7 @@ class _LegalSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white12, width: 1),
+        border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Colors.black54,
@@ -514,7 +514,7 @@ class _LegalSection extends StatelessWidget {
                   thickness: 1,
                   indent: 16,
                   endIndent: 16,
-                  color: Colors.white10,
+                  color: Colors.black.withOpacity(0.08),
                 ),
             ],
           );
@@ -552,7 +552,7 @@ void _showPlaceholderDocument(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.black.withOpacity(0.08)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(

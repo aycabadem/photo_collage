@@ -47,7 +47,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 'Custom Collage',
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 24),
               ),
-              backgroundColor: Theme.of(context).colorScheme.surface,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               elevation: 0,
               shadowColor: Colors.transparent,
               actions: [
@@ -87,7 +87,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
+                      color: Colors.white,
                     ),
                   ),
                 ),

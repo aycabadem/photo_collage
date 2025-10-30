@@ -107,7 +107,7 @@ class LayoutPickerModal extends StatelessWidget {
           color: scheme.secondary,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.black.withOpacity(0.08),
           ),
         ),
         child: Row(
@@ -224,7 +224,7 @@ class LayoutPickerModal extends StatelessWidget {
           color: scheme.secondary,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: Colors.white.withOpacity(0.06),
+            color: Colors.black.withOpacity(0.08),
           ),
         ),
         child: Stack(
@@ -237,7 +237,7 @@ class LayoutPickerModal extends StatelessWidget {
                 painter: ModernLayoutPreviewPainter(
                   layout.photoLayouts,
                   fillColor: scheme.surface,
-                  strokeColor: Colors.white24,
+                  strokeColor: Colors.black.withOpacity(0.15),
                 ),
               ),
             ),

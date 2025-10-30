@@ -130,22 +130,15 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   Widget _tab(String label, bool active, VoidCallback onTap) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final Color background = active
-        ? scheme.primary.withOpacity(0.12)
-        : scheme.secondary.withOpacity(0.9);
-    final Color borderColor = scheme.primary.withOpacity(active ? 0.5 : 0.18);
-    final Color textColor = scheme.primary.withOpacity(active ? 1.0 : 0.75);
-    final List<BoxShadow>? shadows = active
-        ? [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.35),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ]
-        : null;
+    final Color textColor = Colors.white;
+    final List<BoxShadow> shadows = [
+      BoxShadow(
+        color: Colors.black.withOpacity(active ? 0.6 : 0.15),
+        blurRadius: active ? 18 : 6,
+        offset: Offset(0, active ? 6 : 2),
+        spreadRadius: active ? 1 : 0,
+      ),
+    ];
 
     return GestureDetector(
       onTap: onTap,
@@ -153,9 +146,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: background,
+          color: Colors.black,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: 1.2),
+          border: Border.all(color: Colors.black, width: 1.2),
           boxShadow: shadows,
         ),
         child: Text(
@@ -165,6 +158,15 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
             fontSize: 13.5,
             letterSpacing: 0.3,
             color: textColor,
+            shadows: active
+                ? [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.6),
+                      offset: const Offset(0, 2),
+                      blurRadius: 4,
+                    ),
+                  ]
+                : null,
           ),
         ),
       ),
@@ -632,7 +634,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       onPressed: onPressed,
       style: FilledButton.styleFrom(
         backgroundColor: primary,
-        foregroundColor: Colors.black,
+        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

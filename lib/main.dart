@@ -10,21 +10,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const background = Color(0xFF101316);
-    const surface = Color(0xFF181B1F);
-    const surfaceAlt = Color(0xFF1F2327);
-    const primary = Color(0xFFF5F5F5);
-    const secondary = Color(0xFF2C3035);
+    const background = Color(0xFFFFFFFF);
+    const surface = Color(0xFFF6F6F6);
+    const surfaceAlt = Color(0xFFEDEDED);
+    const primary = Color(0xFF121212);
+    const secondary = Color(0xFFD6D6D6);
 
-    final scheme = const ColorScheme.dark(
+    final scheme = const ColorScheme.light(
       primary: primary,
-      onPrimary: Colors.black,
+      onPrimary: Colors.white,
       secondary: secondary,
-      onSecondary: Colors.white,
+      onSecondary: Colors.black87,
       surface: surface,
-      onSurface: Colors.white70,
+      onSurface: Colors.black87,
       background: background,
-      onBackground: Colors.white,
+      onBackground: Colors.black,
     );
 
     TextTheme bolden(TextTheme t) => TextTheme(
@@ -49,10 +49,10 @@ class MyApp extends StatelessWidget {
       title: 'Custom Collage',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        brightness: Brightness.dark,
+        brightness: Brightness.light,
         colorScheme: scheme,
         scaffoldBackgroundColor: background,
-        canvasColor: background,
+        canvasColor: surface,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           foregroundColor: primary,
@@ -64,8 +64,8 @@ class MyApp extends StatelessWidget {
         dialogBackgroundColor: surface,
         cardColor: surfaceAlt,
         iconTheme: const IconThemeData(color: primary),
-        textTheme: bolden(ThemeData.dark().textTheme.apply(bodyColor: primary, displayColor: primary)),
-        primaryTextTheme: bolden(ThemeData.dark().primaryTextTheme.apply(bodyColor: primary, displayColor: primary)),
+        textTheme: bolden(ThemeData.light().textTheme.apply(bodyColor: primary, displayColor: primary)),
+        primaryTextTheme: bolden(ThemeData.light().primaryTextTheme.apply(bodyColor: primary, displayColor: primary)),
         useMaterial3: true,
       ),
       home: const CollageScreen(),
