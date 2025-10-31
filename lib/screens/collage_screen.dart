@@ -8,7 +8,6 @@ import '../models/background.dart';
 import '../models/photo_box.dart';
 import '../services/collage_manager.dart';
 import '../widgets/collage_canvas.dart';
-
 import '../widgets/ios_color_picker_modal.dart';
 import '../widgets/border_panel.dart';
 import '../widgets/layout_picker_modal.dart';
@@ -21,6 +20,249 @@ class CollageScreen extends StatefulWidget {
 
   @override
   State<CollageScreen> createState() => _CollageScreenState();
+}
+
+class _CurvedBottomBar extends StatelessWidget {
+  final String? activeKey;
+  final VoidCallback onLayoutPressed;
+  final VoidCallback onStylePressed;
+  final VoidCallback onBackgroundPressed;
+  final VoidCallback onAddPhotoPressed;
+  final VoidCallback onSavePressed;
+
+  const _CurvedBottomBar({
+    required this.activeKey,
+    required this.onLayoutPressed,
+    required this.onStylePressed,
+    required this.onBackgroundPressed,
+    required this.onAddPhotoPressed,
+    required this.onSavePressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final Color barColor = theme.colorScheme.surface;
+    final Color shadowColor = Colors.black.withOpacity(0.18);
+
+    return SizedBox(
+      height: 84,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          Positioned.fill(
+            child: CustomPaint(
+              painter: _CurvedNavPainter(
+                color: barColor,
+                shadowColor: shadowColor,
+                cornerRadius: 22,
+                notchRadius: 30,
+                notchDepth: 26,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 6,
+            child: Material(
+              color: Colors.transparent,
+              elevation: 6,
+              shape: const CircleBorder(),
+              shadowColor: Colors.black.withOpacity(0.25),
+              child: InkWell(
+                onTap: onAddPhotoPressed,
+                customBorder: const CircleBorder(),
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.add_a_photo,
+                    color: Colors.black,
+                    size: 26,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 8,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _BottomBarItem(
+                      icon: Icons.grid_view,
+                      label: 'Layout',
+                      active: activeKey == 'layout',
+                      onTap: onLayoutPressed,
+                    ),
+                  ),
+                  Expanded(
+                    child: _BottomBarItem(
+                      icon: Icons.border_all,
+                      label: 'Style',
+                      active: activeKey == 'style',
+                      onTap: onStylePressed,
+                    ),
+                  ),
+                  const SizedBox(width: 64),
+                    Expanded(
+                      child: _BottomBarItem(
+                        icon: Icons.format_paint,
+                        label: 'Color',
+                        active: activeKey == 'background',
+                        onTap: onBackgroundPressed,
+                      ),
+                    ),
+                  Expanded(
+                    child: _BottomBarItem.custom(
+                      label: 'Save',
+                      active: false,
+                      onTap: onSavePressed,
+                      builder: (context, color) => SvgPicture.asset(
+                        'assets/icons/save_arrow.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomBarItem extends StatelessWidget {
+  final IconData? icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+  final Widget? Function(BuildContext context, Color color)? builder;
+
+  const _BottomBarItem({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  }) : builder = null;
+
+  const _BottomBarItem.custom({
+    required this.builder,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  }) : icon = null;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final Color displayColor = Colors.black;
+
+    Widget leading;
+    if (builder != null) {
+      leading = builder!(context, displayColor) ?? const SizedBox.shrink();
+    } else if (icon != null) {
+      leading = Icon(icon, size: 24, color: displayColor);
+    } else {
+      leading = const SizedBox.shrink();
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            leading,
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: displayColor,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CurvedNavPainter extends CustomPainter {
+  final Color color;
+  final Color shadowColor;
+  final double cornerRadius;
+  final double notchRadius;
+  final double notchDepth;
+
+  _CurvedNavPainter({
+    required this.color,
+    required this.shadowColor,
+    required this.cornerRadius,
+    required this.notchRadius,
+    required this.notchDepth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Path path = Path();
+    final double centerX = size.width / 2;
+    final double notchSpan = notchRadius * 2 + 24;
+    final double leftNotch = centerX - notchSpan / 2;
+    final double rightNotch = centerX + notchSpan / 2;
+    final double c = cornerRadius;
+    final double depth = notchDepth;
+
+    path.moveTo(0, c);
+    path.quadraticBezierTo(0, 0, c, 0);
+    path.lineTo(leftNotch, 0);
+    path.cubicTo(
+      leftNotch + 12,
+      0,
+      centerX - notchRadius,
+      depth,
+      centerX,
+      depth,
+    );
+    path.cubicTo(
+      centerX + notchRadius,
+      depth,
+      rightNotch - 12,
+      0,
+      rightNotch,
+      0,
+    );
+    path.lineTo(size.width - c, 0);
+    path.quadraticBezierTo(size.width, 0, size.width, c);
+    path.lineTo(size.width, size.height - c);
+    path.quadraticBezierTo(size.width, size.height, size.width - c, size.height);
+    path.lineTo(c, size.height);
+    path.quadraticBezierTo(0, size.height, 0, size.height - c);
+    path.close();
+
+    canvas.drawShadow(path, shadowColor, 8, true);
+    final paint = Paint()..color = color;
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _CollageScreenState extends State<CollageScreen> {
@@ -47,27 +289,6 @@ class _CollageScreenState extends State<CollageScreen> {
               elevation: 0,
               shadowColor: Colors.transparent,
               actions: [
-                IconButton(
-                  tooltip: 'Add Photo Box',
-                  onPressed: () => collageManager.addPhotoBox(),
-                  icon: const Icon(Icons.add_a_photo),
-                  iconSize: 28,
-                ),
-                const SizedBox(width: 12),
-                IconButton(
-                  tooltip: 'Save Collage',
-                  onPressed: () => _saveCollage(context, collageManager),
-                  icon: SvgPicture.asset(
-                    'assets/icons/save_arrow.svg',
-                    width: 28,
-                    height: 28,
-                    colorFilter: ColorFilter.mode(
-                      Theme.of(context).colorScheme.primary,
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 IconButton(
                   tooltip: 'Account',
                   icon: const Icon(Icons.person_outline),
@@ -174,44 +395,25 @@ class _CollageScreenState extends State<CollageScreen> {
                     },
                   ),
                 ),
-                // Free-floating bottom controls (no navbar)
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 24, // slightly higher from the bottom
-                  child: Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      // Layouts
-                      _buildBottomBarButton(
-                        icon: Icons.grid_view,
-                        label: 'Layout',
-                        onPressed: () =>
-                            _showLayoutPicker(context, collageManager),
-                        isActive: false,
-                      ),
-                      // Margins / Border panel
-                      _buildBottomBarButton(
-                        icon: Icons.border_all,
-                        label: 'Style',
-                        onPressed: () =>
-                            _showBorderPanel(context, collageManager),
-                        isActive: false,
-                      ),
-                      // Background color
-                      _buildBottomBarButton(
-                        icon: Icons.format_paint,
-                        label: 'Background',
-                        onPressed: () => _toggleTool(
-                          context,
-                          'background',
-                          () => _showColorPicker(context, collageManager),
-                        ),
-                        isActive: false,
-                      ),
-                      // Save was moved to AppBar
-                    ],
+                  bottom: 0,
+                  child: _CurvedBottomBar(
+                    activeKey: _activeTool,
+                    onLayoutPressed: () => _openLayoutPicker(context, collageManager),
+                    onStylePressed: () => _openStylePanel(context, collageManager),
+                    onBackgroundPressed: () => _openBackgroundPicker(context, collageManager),
+                    onAddPhotoPressed: () {
+                      Navigator.of(context).maybePop();
+                      setState(() => _activeTool = null);
+                      collageManager.addPhotoBox();
+                    },
+                    onSavePressed: () {
+                      Navigator.of(context).maybePop();
+                      setState(() => _activeTool = null);
+                      _saveCollage(context, collageManager);
+                    },
                   ),
                 ),
               ],
@@ -237,14 +439,34 @@ class _CollageScreenState extends State<CollageScreen> {
     );
   }
 
-  void _toggleTool(BuildContext context, String key, VoidCallback open) {
-    if (_activeTool == key) {
+  void _openLayoutPicker(BuildContext context, CollageManager manager) {
+    if (_activeTool == 'layout') {
       Navigator.of(context).maybePop();
-      _activeTool = null;
+      setState(() => _activeTool = null);
       return;
     }
-    _activeTool = key;
-    open();
+    setState(() => _activeTool = 'layout');
+    _showLayoutPicker(context, manager);
+  }
+
+  void _openStylePanel(BuildContext context, CollageManager manager) {
+    if (_activeTool == 'style') {
+      Navigator.of(context).maybePop();
+      setState(() => _activeTool = null);
+      return;
+    }
+    setState(() => _activeTool = 'style');
+    _showBorderPanel(context, manager);
+  }
+
+  void _openBackgroundPicker(BuildContext context, CollageManager manager) {
+    if (_activeTool == 'background') {
+      Navigator.of(context).maybePop();
+      setState(() => _activeTool = null);
+      return;
+    }
+    setState(() => _activeTool = 'background');
+    _showColorPicker(context, manager);
   }
 
 
@@ -655,7 +877,12 @@ class _CollageScreenState extends State<CollageScreen> {
         },
       ),
     ).whenComplete(() {
-      _activeTool = null;
+      if (!mounted) return;
+      setState(() {
+        if (_activeTool == 'background') {
+          _activeTool = null;
+        }
+      });
     });
   }
 
@@ -677,8 +904,12 @@ class _CollageScreenState extends State<CollageScreen> {
         },
       ),
     ).whenComplete(() {
-      // Ensure inset is reset if user dismisses with swipe/back
-      // collageManager.setBottomUiInset(0);
+      if (!mounted) return;
+      setState(() {
+        if (_activeTool == 'style') {
+          _activeTool = null;
+        }
+      });
     });
   }
 
@@ -701,46 +932,13 @@ class _CollageScreenState extends State<CollageScreen> {
         },
         hostContext: hostContext,
       ),
-    );
-  }
-
-  // Build bottom bar button
-  Widget _buildBottomBarButton({
-    required IconData icon,
-    String? label,
-    required VoidCallback onPressed,
-    required bool isActive,
-    Widget? child,
-  }) {
-    if (child != null) {
-      return child;
-    }
-
-    final color = Theme.of(context).colorScheme.primary;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 28),
-            if (label != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
+    ).whenComplete(() {
+      if (!mounted) return;
+      setState(() {
+        if (_activeTool == 'layout') {
+          _activeTool = null;
+        }
+      });
+    });
   }
 }
