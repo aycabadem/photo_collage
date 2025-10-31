@@ -4,11 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../models/aspect_spec.dart';
 import '../models/background.dart';
 import '../models/photo_box.dart';
 import '../services/collage_manager.dart';
-import '../widgets/aspect_ratio_selector.dart';
 import '../widgets/collage_canvas.dart';
 
 import '../widgets/ios_color_picker_modal.dart';
@@ -30,8 +28,6 @@ class _CollageScreenState extends State<CollageScreen> {
   final TransformationController _transformationController =
       TransformationController();
 
-  double _aspectScalar = 1.0; // width/height ratio in [0.5, 2.0]
-  bool _isAspectDragging = false;
   String? _activeTool;
 
   @override
@@ -125,7 +121,7 @@ class _CollageScreenState extends State<CollageScreen> {
                                 templateSize: collageManager.templateSize,
                                 photoBoxes: collageManager.photoBoxes,
                                 selectedBox: collageManager.selectedBox,
-                                animateSize: !_isAspectDragging,
+                                animateSize: true,
                                 getCurrentScale: _getCurrentScale,
                                 onBoxSelected: (box) =>
                                     collageManager.selectBox(box),
@@ -214,17 +210,6 @@ class _CollageScreenState extends State<CollageScreen> {
                         ),
                         isActive: false,
                       ),
-                      // Aspect panel
-                      _buildBottomBarButton(
-                        icon: Icons.aspect_ratio,
-                        label: 'Aspect',
-                        onPressed: () => _toggleTool(
-                          context,
-                          'aspect',
-                          () => _showAspectPanel(context, collageManager),
-                        ),
-                        isActive: false,
-                      ),
                       // Save was moved to AppBar
                     ],
                   ),
@@ -236,9 +221,6 @@ class _CollageScreenState extends State<CollageScreen> {
       ),
     );
   }
-
-  /// Inline aspect slider UI shown under AppBar
-  // Removed: old inline aspect slider (Aspect now handled by bottom sheet)
 
   Future<void> _openPhotoEditor(
     BuildContext context,
@@ -265,177 +247,6 @@ class _CollageScreenState extends State<CollageScreen> {
     open();
   }
 
-  // Aspect as a bottom sheet: presets + slider
-  void _showAspectPanel(BuildContext context, CollageManager manager) {
-    // Initialize current ratio for potential slider use
-    setState(() {
-      _aspectScalar = manager.selectedAspect.ratio.clamp(0.5, 2.0);
-    });
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        bool showSlider = false;
-        return StatefulBuilder(
-          builder: (context, setLocal) => Container(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewPadding.bottom,
-            ),
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-              border: Border.all(color: Colors.white.withOpacity(0.06)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.35),
-                  blurRadius: 22,
-                  offset: const Offset(0, -6),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      AspectRatioSelector(
-                        selectedAspect: manager.selectedAspect,
-                        presets: manager.presetsWithCustom,
-                        onAspectChanged: (aspect) {
-                          manager.applyAspect(aspect);
-                          // Rebuild header instantly so selection reflects
-                          setLocal(() {});
-                        },
-                        onCustomRatioPressed: () {
-                          setLocal(() {
-                            showSlider = true;
-                            _aspectScalar = manager.selectedAspect.ratio.clamp(
-                              0.5,
-                              2.0,
-                            );
-                          });
-                        },
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: Icon(Icons.close, color: scheme.primary),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: showSlider
-                        ? Padding(
-                            key: const ValueKey('slider'),
-                            padding: const EdgeInsets.only(top: 8, bottom: 10),
-                            child: _buildAspectSliderInlineBody(
-                              context,
-                              manager,
-                              setLocal,
-                              () => setLocal(() {
-                                showSlider = false;
-                              }),
-                            ),
-                          )
-                        : const SizedBox.shrink(key: ValueKey('empty')),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    ).whenComplete(() {
-      _activeTool = null;
-    });
-  }
-
-  // Slider body used in bottom sheet; closes on change end
-  Widget _buildAspectSliderInlineBody(
-    BuildContext context,
-    CollageManager manager,
-    void Function(void Function()) setLocal,
-    VoidCallback hideSlider,
-  ) {
-    final scheme = Theme.of(context).colorScheme;
-    String fmt2(double v) {
-      final s = v.toStringAsFixed(2);
-      return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
-    }
-
-    String formatRatio(double r) =>
-        r >= 1.0 ? '${fmt2(r)}:1' : '1:${fmt2(1.0 / r)}';
-
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: scheme.secondary,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          child: Text(
-            formatRatio(_aspectScalar),
-            style: TextStyle(
-              color: scheme.primary,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.3,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: scheme.primary.withOpacity(0.85),
-              inactiveTrackColor: scheme.primary.withOpacity(0.25),
-              thumbColor: scheme.primary,
-            ),
-            child: Slider(
-              value: _aspectScalar,
-              min: 0.5,
-              max: 2.0,
-              onChanged: (v) {
-                _isAspectDragging = true;
-                setLocal(() => _aspectScalar = v);
-                final AspectSpec spec = v >= 1
-                    ? AspectSpec(w: v, h: 1, label: formatRatio(v))
-                    : AspectSpec(w: 1, h: 1 / v, label: formatRatio(v));
-                final screenSize = MediaQuery.of(context).size;
-                manager.applyAspect(spec, screenSize: screenSize);
-              },
-              onChangeEnd: (_) {
-                setLocal(() => _isAspectDragging = false);
-                final AspectSpec spec = _aspectScalar >= 1
-                    ? AspectSpec(
-                        w: _aspectScalar,
-                        h: 1,
-                        label: formatRatio(_aspectScalar),
-                      )
-                    : AspectSpec(
-                        w: 1,
-                        h: 1 / _aspectScalar,
-                        label: formatRatio(_aspectScalar),
-                      );
-                manager.setCustomAspect(spec);
-                // Keep the slider open until the sheet is dismissed
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   /// Get current scale from transformation controller
   double _getCurrentScale() {

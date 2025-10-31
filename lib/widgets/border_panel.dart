@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../models/aspect_spec.dart';
 import '../services/collage_manager.dart';
+import 'aspect_ratio_selector.dart';
 
 /// Border effects panel with SHADOW, BORDER, and CORNER RADIUS
 class BorderPanel extends StatefulWidget {
@@ -23,6 +25,13 @@ class _BorderPanelState extends State<BorderPanel> {
   double? _innerDraft;
   double? _outerDraft;
   double? _cornerDraft;
+  double _aspectScalar = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _aspectScalar = widget.collageManager.selectedAspect.ratio.clamp(0.5, 2.0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,10 +86,19 @@ class _BorderPanelState extends State<BorderPanel> {
         onTap: () {
           setState(() {
             if (_selectedEffect == key) {
-              _showSlider = !_showSlider; // toggle
+              final bool willShow = !_showSlider;
+              _showSlider = willShow;
+              if (willShow && key == 'aspect') {
+                _aspectScalar =
+                    widget.collageManager.selectedAspect.ratio.clamp(0.5, 2.0);
+              }
             } else {
               _selectedEffect = key;
               _showSlider = true; // show for newly selected effect
+              if (key == 'aspect') {
+                _aspectScalar =
+                    widget.collageManager.selectedAspect.ratio.clamp(0.5, 2.0);
+              }
             }
           });
         },
@@ -114,6 +132,7 @@ class _BorderPanelState extends State<BorderPanel> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
+        item('aspect', Icons.aspect_ratio, 'Aspect'),
         item('shadow', Icons.tonality, 'Shadow'),
         item('inner', Icons.border_inner, 'Inner'),
         item('outer', Icons.border_outer, 'Outer'),
@@ -124,6 +143,9 @@ class _BorderPanelState extends State<BorderPanel> {
 
   /// Compact slider area: label + slider stacked
   Widget _buildCompactSliderArea() {
+    if (_selectedEffect == 'aspect') {
+      return _buildAspectControls();
+    }
     return SizedBox(
       height: 64,
       child: Column(
@@ -148,6 +170,8 @@ class _BorderPanelState extends State<BorderPanel> {
   /// Build the appropriate slider based on selected effect
   Widget _buildSlider() {
     switch (_selectedEffect) {
+      case 'aspect':
+        return const SizedBox.shrink();
       case 'shadow':
         return _buildShadowSlider();
       case 'inner':
@@ -297,6 +321,8 @@ class _BorderPanelState extends State<BorderPanel> {
   /// Get the title for the selected effect
   String _getEffectTitle() {
     switch (_selectedEffect) {
+      case 'aspect':
+        return 'Aspect Ratio';
       case 'shadow':
         return 'Shadow';
       case 'inner':
@@ -337,6 +363,125 @@ class _BorderPanelState extends State<BorderPanel> {
   }
 
   // _selectEffect removed (not used)
+
+  Widget _buildAspectControls() {
+    final theme = Theme.of(context);
+    final manager = widget.collageManager;
+
+    String fmt2(double v) {
+      final s = v.toStringAsFixed(2);
+      return s.endsWith('.00') ? s.substring(0, s.length - 3) : s;
+    }
+
+    String formatRatio(double r) =>
+        r >= 1.0 ? '${fmt2(r)}:1' : '1:${fmt2(1.0 / r)}';
+
+    AspectSpec buildSpec(double ratio) {
+      if (ratio >= 1.0) {
+        return AspectSpec(w: ratio, h: 1, label: formatRatio(ratio));
+      } else {
+        return AspectSpec(w: 1, h: 1 / ratio, label: formatRatio(ratio));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Aspect Ratio',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 160),
+              child: AspectRatioSelector(
+                selectedAspect: manager.selectedAspect,
+                presets: manager.presetsWithCustom,
+                onAspectChanged: (aspect) {
+                  setState(() {
+                    _aspectScalar = aspect.ratio.clamp(0.5, 2.0);
+                  });
+                  manager.applyAspect(aspect);
+                },
+                onCustomRatioPressed: () {
+                  setState(() {
+                    _aspectScalar =
+                        manager.selectedAspect.ratio.clamp(0.5, 2.0);
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color:
+                          theme.colorScheme.secondary.withOpacity(0.25),
+                      borderRadius: BorderRadius.circular(8),
+                      border:
+                          Border.all(color: Colors.black.withOpacity(0.05)),
+                    ),
+                    child: Text(
+                      formatRatio(_aspectScalar),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 4,
+                      activeTrackColor: theme.colorScheme.primary,
+                      inactiveTrackColor:
+                          theme.colorScheme.primary.withOpacity(0.2),
+                      thumbColor: theme.colorScheme.primary,
+                      overlayColor:
+                          theme.colorScheme.primary.withOpacity(0.12),
+                      thumbShape:
+                          const RoundSliderThumbShape(enabledThumbRadius: 10),
+                      overlayShape:
+                          const RoundSliderOverlayShape(overlayRadius: 18),
+                    ),
+                    child: Slider(
+                      value: _aspectScalar,
+                      min: 0.5,
+                      max: 2.0,
+                      onChanged: (v) {
+                        setState(() {
+                          _aspectScalar = v;
+                        });
+                        final spec = buildSpec(v);
+                        manager.applyAspect(spec);
+                      },
+                      onChangeEnd: (v) {
+                        final spec = buildSpec(v);
+                        manager.setCustomAspect(spec);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 /// A compact gradient slider with small label, matching the visual style
