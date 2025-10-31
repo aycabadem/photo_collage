@@ -752,107 +752,122 @@ class _CollageScreenState extends State<CollageScreen> {
       context: context,
       isScrollControlled: false,
       backgroundColor: Colors.transparent,
+      barrierColor: Colors.transparent,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setState) {
             return SafeArea(
               top: false,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: scheme.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
+              bottom: false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x30000000),
+                        blurRadius: 24,
+                        offset: Offset(0, -6),
+                      ),
+                    ],
                   ),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.07),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: 22,
-                      offset: const Offset(0, -6),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 36,
-                          height: 4,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: scheme.primary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      Text(
-                        'Save image',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Choose the export size before saving your collage.',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      RadioGroup<int>(
-                        groupValue: selectedWidth,
-                        onChanged: (value) {
-                          if (value == null) return;
-                          setState(() => selectedWidth = value);
-                        },
-                        child: Column(
-                          children: [
-                            for (final option in options)
-                              RadioListTile<int>(
-                                value: option.width,
-                                contentPadding: EdgeInsets.zero,
-                                title: Text(
-                                  '${option.label} (${option.width}px)',
-                                ),
-                                subtitle: Text(
-                                  '${option.width} x '
-                                  '${(option.width / aspectRatio).round()}px',
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
+                    child: Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: TextButton(
-                              onPressed: () => Navigator.of(sheetContext).pop(),
-                              child: const Text('Cancel'),
+                          Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              margin: const EdgeInsets.only(bottom: 12),
+                              decoration: BoxDecoration(
+                                color: scheme.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton(
-                              onPressed: () =>
-                                  Navigator.of(sheetContext).pop(selectedWidth),
-                              style: FilledButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                          Text(
+                            'Save image',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Choose the export size before saving your collage.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: scheme.onSurface.withValues(alpha: 0.7),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          RadioGroup<int>(
+                            groupValue: selectedWidth,
+                            onChanged: (value) {
+                              if (value == null) return;
+                              setState(() => selectedWidth = value);
+                            },
+                            child: Column(
+                              children: [
+                                for (final option in options)
+                                  RadioListTile<int>(
+                                    value: option.width,
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(
+                                      '${option.label} (${option.width}px)',
+                                    ),
+                                    subtitle: Text(
+                                      '${option.width} x '
+                                      '${(option.width / aspectRatio).round()}px',
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(sheetContext).pop(),
+                                  child: const Text('Cancel'),
                                 ),
                               ),
-                              child: const Text('Save'),
-                            ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: FilledButton(
+                                  onPressed: () => Navigator.of(sheetContext)
+                                      .pop(selectedWidth),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.black,
+                                    elevation: 0,
+                                    side: const BorderSide(
+                                      color: Colors.black,
+                                      width: 1.2,
+                                    ),
+                                    alignment: Alignment.center,
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text('Save'),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
