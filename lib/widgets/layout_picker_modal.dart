@@ -27,6 +27,14 @@ class LayoutPickerModal extends StatelessWidget {
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x30000000),
+            blurRadius: 24,
+            offset: Offset(0, -6),
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -208,11 +216,7 @@ class LayoutPickerModal extends StatelessWidget {
         Navigator.pop(context);
       },
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.black, width: 1.2),
-        ),
+        decoration: const BoxDecoration(),
         child: Stack(
           children: [
             // Layout preview with borders
@@ -232,7 +236,6 @@ class LayoutPickerModal extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.45),
-                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
