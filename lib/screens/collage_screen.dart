@@ -945,17 +945,29 @@ class _CollageScreenState extends State<CollageScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent,
-      builder: (context) => LayoutPickerModal(
-        onLayoutSelected: (layout) {
-          collageManager.applyLayoutTemplate(layout);
-        },
-        isPremium: collageManager.isPremium || collageManager.isTrialActive,
-        onUpgradeRequested: () {
-          Navigator.of(context).pop();
-          _openProfile(collageManager);
-        },
-        hostContext: hostContext,
-      ),
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.5,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, scrollController) {
+            return LayoutPickerModal(
+              onLayoutSelected: (layout) {
+                collageManager.applyLayoutTemplate(layout);
+              },
+              isPremium:
+                  collageManager.isPremium || collageManager.isTrialActive,
+              onUpgradeRequested: () {
+                Navigator.of(context).pop();
+                _openProfile(collageManager);
+              },
+              hostContext: hostContext,
+              scrollController: scrollController,
+            );
+          },
+        );
+      },
     ).whenComplete(() {
       if (!mounted) return;
       setState(() {

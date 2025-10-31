@@ -7,6 +7,7 @@ class LayoutPickerModal extends StatelessWidget {
   final bool isPremium;
   final VoidCallback onUpgradeRequested;
   final BuildContext hostContext;
+  final ScrollController? scrollController;
 
   const LayoutPickerModal({
     super.key,
@@ -14,13 +15,14 @@ class LayoutPickerModal extends StatelessWidget {
     required this.isPremium,
     required this.onUpgradeRequested,
     required this.hostContext,
+    this.scrollController,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final controller = scrollController ?? ScrollController();
     return Container(
-      height: MediaQuery.of(context).size.height * 0.72,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -36,47 +38,51 @@ class LayoutPickerModal extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          Center(
-            child: Container(
-              width: 42,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Center(
-              child: Text(
-                'Choose Layout',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: scheme.onSurface,
+      child: CustomScrollView(
+        controller: controller,
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                const SizedBox(height: 8),
+                Center(
+                  child: Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Center(
+                    child: Text(
+                      'Choose Layout',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildCustomOption(context),
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
           ),
-          const SizedBox(height: 12),
-
-          // Custom option
-          Padding(
+          SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildCustomOption(context),
+            sliver: _buildLayoutGridSliver(),
           ),
-
-          const SizedBox(height: 20),
-
-          // Layout grid - direct without categories
-          Expanded(child: _buildLayoutGrid()),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
         ],
       ),
     );
@@ -148,27 +154,26 @@ class LayoutPickerModal extends StatelessWidget {
     );
   }
 
-  Widget _buildLayoutGrid() {
+  SliverGrid _buildLayoutGridSliver() {
     const int freeLayoutLimit = 8;
     final bool premium = isPremium;
     // Get all layouts
     List<LayoutTemplate> layouts = _uniqueLayoutsBySignature(LayoutTemplates.templates);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 4, // 4 columns like the reference
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: layouts.length,
-        itemBuilder: (context, index) {
+    return SliverGrid(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4, // 4 columns like the reference
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.0,
+      ),
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
           final layout = layouts[index];
           final bool locked = !premium && index >= freeLayoutLimit;
           return _buildModernLayoutTile(layout, context, locked);
         },
+        childCount: layouts.length,
       ),
     );
   }
