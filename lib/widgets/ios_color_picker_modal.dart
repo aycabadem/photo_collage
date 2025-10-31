@@ -66,9 +66,11 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final double panelHeight = size.height * 0.5;
     return Container(
       width: size.width,
-      constraints: BoxConstraints(maxHeight: size.height * 0.34),
+      height: panelHeight,
+      constraints: BoxConstraints(maxHeight: panelHeight),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.only(
