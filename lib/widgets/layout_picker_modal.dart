@@ -20,10 +20,10 @@ class LayoutPickerModal extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: const BorderRadius.only(
+      height: MediaQuery.of(context).size.height * 0.72,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -86,11 +86,18 @@ class LayoutPickerModal extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: scheme.secondary,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withOpacity(0.08),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -183,7 +190,6 @@ class LayoutPickerModal extends StatelessWidget {
     BuildContext context,
     bool locked,
   ) {
-    final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () {
@@ -203,11 +209,9 @@ class LayoutPickerModal extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: scheme.secondary,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-              color: Colors.black.withValues(alpha: 0.08),
-          ),
+          border: Border.all(color: Colors.black, width: 1.2),
         ),
         child: Stack(
           children: [
@@ -218,8 +222,8 @@ class LayoutPickerModal extends StatelessWidget {
                 size: const Size.square(double.infinity),
                 painter: ModernLayoutPreviewPainter(
                   layout.photoLayouts,
-                  fillColor: scheme.surface,
-                  strokeColor: Colors.black.withValues(alpha: 0.15),
+                  fillColor: Colors.white,
+                  strokeColor: Colors.black,
                 ),
               ),
             ),
