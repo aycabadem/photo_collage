@@ -70,18 +70,17 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       width: size.width,
       constraints: BoxConstraints(maxHeight: size.height * 0.34),
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: Colors.white,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
-        boxShadow: [
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.35),
+            color: Color(0x30000000),
             blurRadius: 24,
-            offset: Offset(0, -5),
-            spreadRadius: 4,
+            offset: Offset(0, -6),
           ),
         ],
       ),
@@ -316,6 +315,13 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(2),
                   gradient: LinearGradient(colors: colors),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
               ),
               SliderTheme(
