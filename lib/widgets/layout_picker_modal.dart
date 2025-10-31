@@ -30,52 +30,34 @@ class LayoutPickerModal extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-            color: scheme.primary.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(2),
+          const SizedBox(height: 8),
+          Center(
+            child: Container(
+              width: 42,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.18),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
+          const SizedBox(height: 12),
 
-          // Header with back button
+          // Header
           Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: scheme.secondary,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: scheme.onSecondary,
-                      size: 22,
-                    ),
-                  ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Center(
+              child: Text(
+                'Choose Layout',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: scheme.onSurface,
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  'Choose Layout',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
+          const SizedBox(height: 12),
 
           // Custom option
           Padding(
@@ -134,7 +116,7 @@ class LayoutPickerModal extends StatelessWidget {
                     'Create your own layout',
                     style: TextStyle(
                       fontSize: 14,
-              color: scheme.onSurface.withValues(alpha: 0.7),
+                      color: scheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],

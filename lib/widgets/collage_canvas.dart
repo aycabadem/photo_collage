@@ -99,27 +99,38 @@ class CollageCanvas extends StatelessWidget {
 
   final bool animateSize;
 
-  BoxDecoration _decoration() => BoxDecoration(
-    gradient: collageManager.backgroundMode == BackgroundMode.gradient
+  BoxDecoration _decoration() {
+    final bool isGradient =
+        collageManager.backgroundMode == BackgroundMode.gradient;
+    final LinearGradient backgroundGradient = isGradient
         ? LinearGradient(
             begin: _beginFromAngle(collageManager.backgroundGradient.angleDeg),
             end: _endFromAngle(collageManager.backgroundGradient.angleDeg),
             colors: collageManager.gradientColorsWithOpacity,
             stops: collageManager.gradientStops,
           )
-        : null,
-    color: collageManager.backgroundMode == BackgroundMode.solid
-        ? collageManager.backgroundColorWithOpacity
-        : null,
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withValues(alpha: 0.1),
-        blurRadius: 10,
-        offset: const Offset(0, 5),
-        spreadRadius: 2,
-      ),
-    ],
-  );
+        : LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              collageManager.backgroundColorWithOpacity,
+              collageManager.backgroundColorWithOpacity,
+            ],
+            stops: const [0.0, 1.0],
+          );
+
+    return BoxDecoration(
+      gradient: backgroundGradient,
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.1),
+          blurRadius: 10,
+          offset: const Offset(0, 5),
+          spreadRadius: 2,
+        ),
+      ],
+    );
+  }
 
   Widget _contentStack(BuildContext context) => Padding(
     padding: EdgeInsets.all(collageManager.outerMargin),
