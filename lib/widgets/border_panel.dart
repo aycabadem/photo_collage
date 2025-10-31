@@ -397,84 +397,57 @@ class _BorderPanelState extends State<BorderPanel> {
         ),
         const SizedBox(height: 10),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 160),
-              child: AspectRatioSelector(
-                selectedAspect: manager.selectedAspect,
-                presets: manager.presetsWithCustom,
-                onAspectChanged: (aspect) {
-                  setState(() {
-                    _aspectScalar = aspect.ratio.clamp(0.5, 2.0);
-                  });
-                  manager.applyAspect(aspect);
-                },
-                onCustomRatioPressed: () {
-                  setState(() {
-                    _aspectScalar =
-                        manager.selectedAspect.ratio.clamp(0.5, 2.0);
-                  });
-                },
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color:
-                          theme.colorScheme.secondary.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(8),
-                      border:
-                          Border.all(color: Colors.black.withOpacity(0.05)),
-                    ),
-                    child: Text(
-                      formatRatio(_aspectScalar),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.primary,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
+          AspectRatioSelector(
+            selectedAspect: manager.selectedAspect,
+            presets: manager.presetsWithCustom,
+            onAspectChanged: (aspect) {
+              setState(() {
+                _aspectScalar = aspect.ratio.clamp(0.5, 2.0);
+              });
+              manager.applyAspect(aspect);
+            },
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                  trackHeight: 4,
+                  activeTrackColor: theme.colorScheme.primary,
+                  inactiveTrackColor:
+                      theme.colorScheme.primary.withOpacity(0.2),
+                  thumbColor: theme.colorScheme.primary,
+                  overlayColor:
+                      theme.colorScheme.primary.withOpacity(0.12),
+                  thumbShape:
+                      const RoundSliderThumbShape(enabledThumbRadius: 10),
+                  overlayShape:
+                      const RoundSliderOverlayShape(overlayRadius: 18),
+                  valueIndicatorColor: theme.colorScheme.primary,
+                  valueIndicatorTextStyle: theme.textTheme.labelMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: 10),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 4,
-                      activeTrackColor: theme.colorScheme.primary,
-                      inactiveTrackColor:
-                          theme.colorScheme.primary.withOpacity(0.2),
-                      thumbColor: theme.colorScheme.primary,
-                      overlayColor:
-                          theme.colorScheme.primary.withOpacity(0.12),
-                      thumbShape:
-                          const RoundSliderThumbShape(enabledThumbRadius: 10),
-                      overlayShape:
-                          const RoundSliderOverlayShape(overlayRadius: 18),
-                    ),
-                    child: Slider(
-                      value: _aspectScalar,
-                      min: 0.5,
-                      max: 2.0,
-                      onChanged: (v) {
-                        setState(() {
-                          _aspectScalar = v;
-                        });
-                        final spec = buildSpec(v);
-                        manager.applyAspect(spec);
-                      },
-                      onChangeEnd: (v) {
-                        final spec = buildSpec(v);
-                        manager.setCustomAspect(spec);
-                      },
-                    ),
-                  ),
-                ],
+                  showValueIndicator: ShowValueIndicator.always,
+                ),
+                child: Slider(
+                  value: _aspectScalar,
+                  min: 0.5,
+                  max: 2.0,
+                  label: formatRatio(_aspectScalar),
+                  onChanged: (v) {
+                    setState(() {
+                      _aspectScalar = v;
+                    });
+                    final spec = buildSpec(v);
+                    manager.applyAspect(spec);
+                    manager.setCustomAspect(spec);
+                  },
+                  onChangeEnd: (v) {
+                    final spec = buildSpec(v);
+                    manager.setCustomAspect(spec);
+                  },
+                ),
               ),
             ),
           ],

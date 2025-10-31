@@ -12,15 +12,11 @@ class AspectRatioSelector extends StatelessWidget {
   /// Callback when aspect ratio changes
   final ValueChanged<AspectSpec> onAspectChanged;
 
-  /// Callback to open custom aspect ratio dialog
-  final VoidCallback onCustomRatioPressed;
-
   const AspectRatioSelector({
     super.key,
     required this.selectedAspect,
     required this.presets,
     required this.onAspectChanged,
-    required this.onCustomRatioPressed,
   });
 
   @override
@@ -34,40 +30,25 @@ class AspectRatioSelector extends StatelessWidget {
     );
     final AspectSpec? dropdownValue = (matched.w > 0 && matched.h > 0) ? matched : null;
 
-    return Row(
-      children: [
-        // Aspect ratio dropdown
-        DropdownButton<AspectSpec>(
-          value: dropdownValue,
-          underline: Container(), // Remove default underline
-          icon: Icon(
-            Icons.arrow_drop_down,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w600,
-          ),
-          items: presets
-              .map((v) => DropdownMenuItem<AspectSpec>(value: v, child: Text(v.label)))
-              .toList(),
-          onChanged: (v) {
-            if (v != null) {
-              onAspectChanged(v);
-            }
-          },
-        ),
-        Container(width: 1, height: 24, color: Colors.grey[300]),
-        IconButton(
-          tooltip: 'Custom ratio',
-          onPressed: onCustomRatioPressed,
-          icon: Icon(Icons.tune, color: Theme.of(context).colorScheme.primary),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            foregroundColor: Theme.of(context).colorScheme.primary,
-          ),
-        ),
-      ],
+    return DropdownButton<AspectSpec>(
+      value: dropdownValue,
+      underline: Container(),
+      icon: Icon(
+        Icons.arrow_drop_down,
+        color: Theme.of(context).colorScheme.primary,
+      ),
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.primary,
+        fontWeight: FontWeight.w600,
+      ),
+      items: presets
+          .map((v) => DropdownMenuItem<AspectSpec>(value: v, child: Text(v.label)))
+          .toList(),
+      onChanged: (v) {
+        if (v != null) {
+          onAspectChanged(v);
+        }
+      },
     );
   }
 }
