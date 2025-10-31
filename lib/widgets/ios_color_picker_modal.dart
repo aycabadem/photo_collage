@@ -226,7 +226,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _h = v);
         _applyHslLive();
       },
-      divisions: 360,
       snapToEnds: true,
     );
   }
@@ -245,7 +244,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _s = v);
         _applyHslLive();
       },
-      divisions: 100,
       snapToEnds: true,
     );
   }
@@ -263,7 +261,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _l = v);
         _applyHslLive();
       },
-      divisions: 100,
       snapToEnds: true,
     );
   }
@@ -296,7 +293,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
               valueLabel,
               style: TextStyle(
                 fontSize: 12,
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.75),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.75),
               ),
             ),
           ],
@@ -320,13 +319,14 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                   activeTrackColor: Colors.transparent,
                   inactiveTrackColor: Colors.transparent,
                   overlayShape: SliderComponentShape.noOverlay,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 9,
+                  ),
                 ),
                 child: Slider(
                   min: min,
                   max: max,
                   value: value,
-                  divisions: divisions,
                   onChanged: onChanged,
                   onChangeEnd: (v) {
                     if (!snapToEnds) return;
@@ -352,8 +352,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       widget.onColorChanged(_selectedColor, _selectedOpacity);
     }
   }
-
-
 
   // Removed: unused color grid generator
 
@@ -391,7 +389,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                       end: Alignment.centerRight,
                     ),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.20),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.20),
                     ),
                   ),
                 ),
@@ -406,7 +406,9 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                     color: Theme.of(context).colorScheme.surface,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.25),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.25),
                     ),
                   ),
                   child: const Icon(Icons.swap_horiz, size: 18),
@@ -447,7 +449,12 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     );
   }
 
-  Widget _colorChip(Color color, bool active, String label, VoidCallback onTap) {
+  Widget _colorChip(
+    Color color,
+    bool active,
+    String label,
+    VoidCallback onTap,
+  ) {
     final theme = Theme.of(context);
     final Color borderColor = active
         ? theme.colorScheme.primary.withValues(alpha: 0.6)
@@ -524,7 +531,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _gH = v);
         _commitActiveHsl();
       },
-      divisions: 360,
       snapToEnds: true,
     );
   }
@@ -543,7 +549,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _gS = v);
         _commitActiveHsl();
       },
-      divisions: 100,
       snapToEnds: true,
     );
   }
@@ -561,7 +566,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _gL = v);
         _commitActiveHsl();
       },
-      divisions: 100,
       snapToEnds: true,
     );
   }
@@ -579,7 +583,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         setState(() => _gradient = _gradient.copyWith(angleDeg: v));
         _applyGradientLive();
       },
-      divisions: 360,
       snapToEnds: true,
     );
   }

@@ -43,7 +43,7 @@ class _CurvedBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final Color barColor = theme.colorScheme.surface;
-    final Color shadowColor = Colors.black.withOpacity(0.18);
+    final Color shadowColor = Colors.black.withValues(alpha: 0.18);
 
     return SizedBox(
       height: 84,
@@ -62,12 +62,12 @@ class _CurvedBottomBar extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 6,
+            top: -10,
             child: Material(
               color: Colors.transparent,
               elevation: 6,
               shape: const CircleBorder(),
-              shadowColor: Colors.black.withOpacity(0.25),
+              shadowColor: Colors.black.withValues(alpha: 0.25),
               child: InkWell(
                 onTap: onAddPhotoPressed,
                 customBorder: const CircleBorder(),
@@ -113,14 +113,14 @@ class _CurvedBottomBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 64),
-                    Expanded(
-                      child: _BottomBarItem(
-                        icon: Icons.format_paint,
-                        label: 'Color',
-                        active: activeKey == 'background',
-                        onTap: onBackgroundPressed,
-                      ),
+                  Expanded(
+                    child: _BottomBarItem(
+                      icon: Icons.format_paint,
+                      label: 'Color',
+                      active: activeKey == 'background',
+                      onTap: onBackgroundPressed,
                     ),
+                  ),
                   Expanded(
                     child: _BottomBarItem.custom(
                       label: 'Save',
@@ -251,7 +251,12 @@ class _CurvedNavPainter extends CustomPainter {
     path.lineTo(size.width - c, 0);
     path.quadraticBezierTo(size.width, 0, size.width, c);
     path.lineTo(size.width, size.height - c);
-    path.quadraticBezierTo(size.width, size.height, size.width - c, size.height);
+    path.quadraticBezierTo(
+      size.width,
+      size.height,
+      size.width - c,
+      size.height,
+    );
     path.lineTo(c, size.height);
     path.quadraticBezierTo(0, size.height, 0, size.height - c);
     path.close();
@@ -303,9 +308,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 // Gradient outer background (behind white canvas)
                 Positioned.fill(
                   child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                    ),
+                    decoration: BoxDecoration(color: Colors.white),
                   ),
                 ),
                 // Main canvas and interactions
@@ -401,9 +404,12 @@ class _CollageScreenState extends State<CollageScreen> {
                   bottom: 0,
                   child: _CurvedBottomBar(
                     activeKey: _activeTool,
-                    onLayoutPressed: () => _openLayoutPicker(context, collageManager),
-                    onStylePressed: () => _openStylePanel(context, collageManager),
-                    onBackgroundPressed: () => _openBackgroundPicker(context, collageManager),
+                    onLayoutPressed: () =>
+                        _openLayoutPicker(context, collageManager),
+                    onStylePressed: () =>
+                        _openStylePanel(context, collageManager),
+                    onBackgroundPressed: () =>
+                        _openBackgroundPicker(context, collageManager),
                     onAddPhotoPressed: () {
                       Navigator.of(context).maybePop();
                       setState(() => _activeTool = null);
@@ -431,10 +437,8 @@ class _CollageScreenState extends State<CollageScreen> {
   ) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PhotoEditorPage(
-          photoBox: box,
-          onPhotoChanged: manager.refresh,
-        ),
+        builder: (_) =>
+            PhotoEditorPage(photoBox: box, onPhotoChanged: manager.refresh),
       ),
     );
   }
@@ -468,7 +472,6 @@ class _CollageScreenState extends State<CollageScreen> {
     setState(() => _activeTool = 'background');
     _showColorPicker(context, manager);
   }
-
 
   /// Get current scale from transformation controller
   double _getCurrentScale() {
@@ -716,8 +719,10 @@ class _CollageScreenState extends State<CollageScreen> {
       return;
     }
 
-    final opened =
-        await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
+    final opened = await launchUrl(
+      fallbackUri,
+      mode: LaunchMode.externalApplication,
+    );
     if (!opened && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -755,12 +760,15 @@ class _CollageScreenState extends State<CollageScreen> {
               child: Container(
                 decoration: BoxDecoration(
                   color: scheme.surface,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(20)),
-                  border: Border.all(color: Colors.white.withOpacity(0.07)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.07),
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withValues(alpha: 0.35),
                       blurRadius: 22,
                       offset: const Offset(0, -6),
                     ),
@@ -778,7 +786,7 @@ class _CollageScreenState extends State<CollageScreen> {
                           height: 4,
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: scheme.primary.withOpacity(0.15),
+                            color: scheme.primary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -793,7 +801,7 @@ class _CollageScreenState extends State<CollageScreen> {
                       Text(
                         'Choose the export size before saving your collage.',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurface.withOpacity(0.7),
+                          color: scheme.onSurface.withValues(alpha: 0.7),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -809,8 +817,9 @@ class _CollageScreenState extends State<CollageScreen> {
                               RadioListTile<int>(
                                 value: option.width,
                                 contentPadding: EdgeInsets.zero,
-                                title:
-                                    Text('${option.label} (${option.width}px)'),
+                                title: Text(
+                                  '${option.label} (${option.width}px)',
+                                ),
                                 subtitle: Text(
                                   '${option.width} x '
                                   '${(option.width / aspectRatio).round()}px',
@@ -831,8 +840,8 @@ class _CollageScreenState extends State<CollageScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: FilledButton(
-                              onPressed: () => Navigator.of(sheetContext)
-                                  .pop(selectedWidth),
+                              onPressed: () =>
+                                  Navigator.of(sheetContext).pop(selectedWidth),
                               style: FilledButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),

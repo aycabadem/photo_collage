@@ -52,7 +52,7 @@ class _CornerHandleWidgetState extends State<CornerHandleWidget> {
             height: size,
             decoration: BoxDecoration(
               color: scheme.primary,
-              border: Border.all(color: Colors.black.withOpacity(0.85), width: 1.5),
+              border: Border.all(color: Colors.black.withValues(alpha: 0.85), width: 1.5),
               borderRadius: BorderRadius.circular(size / 2),
               boxShadow: [
                 BoxShadow(

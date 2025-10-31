@@ -23,8 +23,6 @@ class MyApp extends StatelessWidget {
       onSecondary: Colors.black87,
       surface: surface,
       onSurface: Colors.black87,
-      background: background,
-      onBackground: Colors.black,
     );
 
     TextTheme bolden(TextTheme t) => TextTheme(
@@ -61,7 +59,7 @@ class MyApp extends StatelessWidget {
           iconTheme: IconThemeData(color: primary),
           actionsIconTheme: IconThemeData(color: primary),
         ),
-        dialogBackgroundColor: surface,
+        dialogTheme: DialogThemeData(backgroundColor: surface),
         cardColor: surfaceAlt,
         iconTheme: const IconThemeData(color: primary),
         textTheme: bolden(ThemeData.light().textTheme.apply(bodyColor: primary, displayColor: primary)),

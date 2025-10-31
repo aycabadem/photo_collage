@@ -35,12 +35,9 @@ class _BorderPanelState extends State<BorderPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewPadding.bottom - 16;
-
     final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      padding: EdgeInsets.only(bottom: bottomInset),
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: const BorderRadius.only(
@@ -89,15 +86,15 @@ class _BorderPanelState extends State<BorderPanel> {
               final bool willShow = !_showSlider;
               _showSlider = willShow;
               if (willShow && key == 'aspect') {
-                _aspectScalar =
-                    widget.collageManager.selectedAspect.ratio.clamp(0.5, 2.0);
+                _aspectScalar = widget.collageManager.selectedAspect.ratio
+                    .clamp(0.5, 2.0);
               }
             } else {
               _selectedEffect = key;
               _showSlider = true; // show for newly selected effect
               if (key == 'aspect') {
-                _aspectScalar =
-                    widget.collageManager.selectedAspect.ratio.clamp(0.5, 2.0);
+                _aspectScalar = widget.collageManager.selectedAspect.ratio
+                    .clamp(0.5, 2.0);
               }
             }
           });
@@ -196,6 +193,7 @@ class _BorderPanelState extends State<BorderPanel> {
           min: 0.0,
           max: 14.0,
           onChanged: (v) {
+            widget.collageManager.setShadowIntensity(v);
             update(() {
               _shadowDraft = v;
             });
@@ -216,8 +214,8 @@ class _BorderPanelState extends State<BorderPanel> {
   Widget _buildInnerMarginSlider() {
     return StatefulBuilder(
       builder: (context, update) {
-        final double value =
-            (_innerDraft ?? widget.collageManager.innerMargin).clamp(0.0, 20.0);
+        final double value = (_innerDraft ?? widget.collageManager.innerMargin)
+            .clamp(0.0, 20.0);
         return Row(
           children: [
             Expanded(
@@ -226,6 +224,7 @@ class _BorderPanelState extends State<BorderPanel> {
                 min: 0.0,
                 max: 20.0,
                 onChanged: (v) {
+                  widget.collageManager.setInnerMargin(v);
                   update(() {
                     _innerDraft = v;
                   });
@@ -251,8 +250,8 @@ class _BorderPanelState extends State<BorderPanel> {
   Widget _buildOuterMarginSlider() {
     return StatefulBuilder(
       builder: (context, update) {
-        final double value =
-            (_outerDraft ?? widget.collageManager.outerMargin).clamp(0.0, 20.0);
+        final double value = (_outerDraft ?? widget.collageManager.outerMargin)
+            .clamp(0.0, 20.0);
         return Row(
           children: [
             Expanded(
@@ -261,6 +260,7 @@ class _BorderPanelState extends State<BorderPanel> {
                 min: 0.0,
                 max: 20.0,
                 onChanged: (v) {
+                  widget.collageManager.setOuterMargin(v);
                   update(() {
                     _outerDraft = v;
                   });
@@ -286,9 +286,11 @@ class _BorderPanelState extends State<BorderPanel> {
   Widget _buildCornerRadiusSlider() {
     return StatefulBuilder(
       builder: (context, update) {
-        final double value = (_cornerDraft ??
-                widget.collageManager.cornerRadius)
-            .clamp(0.0, 160.0);
+        final double value =
+            (_cornerDraft ?? widget.collageManager.cornerRadius).clamp(
+              0.0,
+              160.0,
+            );
         return Row(
           children: [
             Expanded(
@@ -297,6 +299,7 @@ class _BorderPanelState extends State<BorderPanel> {
                 min: 0.0,
                 max: 160.0,
                 onChanged: (v) {
+                  widget.collageManager.setCornerRadius(v);
                   update(() {
                     _cornerDraft = v;
                   });
@@ -346,10 +349,7 @@ class _BorderPanelState extends State<BorderPanel> {
       decoration: BoxDecoration(
         color: scheme.primary.withOpacity(0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
       ),
       child: Text(
         '${value.round()} px',
@@ -398,36 +398,39 @@ class _BorderPanelState extends State<BorderPanel> {
         const SizedBox(height: 10),
         Row(
           children: [
-          AspectRatioSelector(
-            selectedAspect: manager.selectedAspect,
-            presets: manager.presetsWithCustom,
-            onAspectChanged: (aspect) {
-              setState(() {
-                _aspectScalar = aspect.ratio.clamp(0.5, 2.0);
-              });
-              manager.applyAspect(aspect);
-            },
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
+            AspectRatioSelector(
+              selectedAspect: manager.selectedAspect,
+              presets: manager.presetsWithCustom,
+              onAspectChanged: (aspect) {
+                setState(() {
+                  _aspectScalar = aspect.ratio.clamp(0.5, 2.0);
+                });
+                manager.applyAspect(aspect);
+              },
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
                   trackHeight: 4,
                   activeTrackColor: theme.colorScheme.primary,
-                  inactiveTrackColor:
-                      theme.colorScheme.primary.withOpacity(0.2),
-                  thumbColor: theme.colorScheme.primary,
-                  overlayColor:
-                      theme.colorScheme.primary.withOpacity(0.12),
-                  thumbShape:
-                      const RoundSliderThumbShape(enabledThumbRadius: 10),
-                  overlayShape:
-                      const RoundSliderOverlayShape(overlayRadius: 18),
-                  valueIndicatorColor: theme.colorScheme.primary,
-                  valueIndicatorTextStyle: theme.textTheme.labelMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                  inactiveTrackColor: theme.colorScheme.primary.withOpacity(
+                    0.2,
                   ),
+                  thumbColor: theme.colorScheme.primary,
+                  overlayColor: theme.colorScheme.primary.withOpacity(0.12),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 10,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 18,
+                  ),
+                  valueIndicatorColor: theme.colorScheme.primary,
+                  valueIndicatorTextStyle: theme.textTheme.labelMedium
+                      ?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
                   showValueIndicator: ShowValueIndicator.always,
                 ),
                 child: Slider(

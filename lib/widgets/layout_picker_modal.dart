@@ -36,7 +36,7 @@ class LayoutPickerModal extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: scheme.primary.withOpacity(0.18),
+            color: scheme.primary.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -107,7 +107,7 @@ class LayoutPickerModal extends StatelessWidget {
           color: scheme.secondary,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
           ),
         ),
         child: Row(
@@ -134,7 +134,7 @@ class LayoutPickerModal extends StatelessWidget {
                     'Create your own layout',
                     style: TextStyle(
                       fontSize: 14,
-                      color: scheme.onSurface.withOpacity(0.7),
+              color: scheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -142,7 +142,7 @@ class LayoutPickerModal extends StatelessWidget {
             ),
             Icon(
               Icons.arrow_forward_ios,
-              color: scheme.onSurface.withOpacity(0.6),
+              color: scheme.onSurface.withValues(alpha: 0.6),
               size: 16,
             ),
           ],
@@ -224,7 +224,7 @@ class LayoutPickerModal extends StatelessWidget {
           color: scheme.secondary,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
           ),
         ),
         child: Stack(
@@ -237,7 +237,7 @@ class LayoutPickerModal extends StatelessWidget {
                 painter: ModernLayoutPreviewPainter(
                   layout.photoLayouts,
                   fillColor: scheme.surface,
-                  strokeColor: Colors.black.withOpacity(0.15),
+                  strokeColor: Colors.black.withValues(alpha: 0.15),
                 ),
               ),
             ),
@@ -245,7 +245,7 @@ class LayoutPickerModal extends StatelessWidget {
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.45),
+                    color: Colors.black.withValues(alpha: 0.45),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Column(

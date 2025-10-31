@@ -43,7 +43,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
         decoration: BoxDecoration(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         ),
         child: Column(
           children: [
@@ -89,7 +89,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                   margin: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       width: 1.0,
                     ),
                     color: scheme.secondary,
@@ -169,7 +169,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                                 child: Icon(
                                   Icons.image,
                                   size: 64,
-                                  color: scheme.primary.withOpacity(0.6),
+                                  color: scheme.primary.withValues(alpha: 0.6),
                                 ),
                               ),
                             ),

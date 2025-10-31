@@ -96,15 +96,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final int trialDaysRemaining = collageManager.trialDaysRemaining;
     final int freeSavesRemaining = collageManager.freeSavesRemaining;
 
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Account'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      backgroundColor: scheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         children: [
@@ -155,18 +153,18 @@ class _UsageOverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const int _freeQuota = 3;
+    const int freeQuota = 3;
     final int remainingFree = freeSavesRemaining < 0
-        ? _freeQuota
-        : (freeSavesRemaining > _freeQuota ? _freeQuota : freeSavesRemaining);
-    final int usedFree = _freeQuota - remainingFree;
-    final double usageProgress = _freeQuota == 0 ? 0.0 : usedFree / _freeQuota;
+        ? freeQuota
+        : (freeSavesRemaining > freeQuota ? freeQuota : freeSavesRemaining);
+    final int usedFree = freeQuota - remainingFree;
+    final double usageProgress = freeQuota == 0 ? 0.0 : usedFree / freeQuota;
 
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.08), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Colors.black54,
@@ -211,13 +209,14 @@ class _UsageOverviewCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
                   value: usageProgress.clamp(0.0, 1.0),
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
+                  backgroundColor:
+                      theme.colorScheme.primary.withValues(alpha: 0.15),
                   color: theme.colorScheme.primary,
                   minHeight: 6,
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Used this week: $usedFree / $_freeQuota',
+                  'Used this week: $usedFree / $freeQuota',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.w600,
@@ -289,7 +288,7 @@ class _SubscriptionSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.08), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Colors.black54,
@@ -331,10 +330,12 @@ class _SubscriptionSection extends StatelessWidget {
                         onPlanSelected(index);
                       },
                       selectedColor: scheme.primary,
-                      backgroundColor: Colors.black.withOpacity(0.05),
+                      backgroundColor: Colors.black.withValues(alpha: 0.05),
                       showCheckmark: false,
                       labelStyle: TextStyle(
-                        color: selected ? Colors.white : scheme.primary.withOpacity(0.75),
+                        color: selected
+                            ? Colors.white
+                            : scheme.primary.withValues(alpha: 0.75),
                         fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -353,7 +354,7 @@ class _SubscriptionSection extends StatelessWidget {
               color: scheme.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.black.withOpacity(0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 width: 1.2,
               ),
             ),
@@ -392,8 +393,9 @@ class _SubscriptionSection extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: isPremium ? null : onSubscribe,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          isPremium ? Colors.black.withOpacity(0.08) : scheme.primary,
+                      backgroundColor: isPremium
+                          ? Colors.black.withValues(alpha: 0.08)
+                          : scheme.primary,
                       foregroundColor: isPremium ? Colors.black54 : Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -483,7 +485,7 @@ class _LegalSection extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.black.withOpacity(0.08), width: 1),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.08), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Colors.black54,
@@ -505,7 +507,7 @@ class _LegalSection extends StatelessWidget {
                   ),
                 ),
                 trailing: Icon(Icons.chevron_right_rounded,
-                    color: scheme.primary.withOpacity(0.7)),
+                    color: scheme.primary.withValues(alpha: 0.7)),
                 onTap: tile.onTap,
               ),
               if (!isLast)
@@ -514,7 +516,7 @@ class _LegalSection extends StatelessWidget {
                   thickness: 1,
                   indent: 16,
                   endIndent: 16,
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                 ),
             ],
           );
@@ -552,7 +554,7 @@ void _showPlaceholderDocument(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(color: Colors.black.withOpacity(0.08)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         child: Column(
@@ -567,7 +569,7 @@ void _showPlaceholderDocument(
                   color: Theme.of(context)
                       .colorScheme
                       .primary
-                      .withOpacity(0.18),
+                      .withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
