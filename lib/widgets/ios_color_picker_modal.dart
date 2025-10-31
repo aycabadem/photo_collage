@@ -130,13 +130,12 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   Widget _tab(String label, bool active, VoidCallback onTap) {
-    final Color textColor = Colors.white;
     final List<BoxShadow> shadows = [
       BoxShadow(
-        color: Colors.black.withOpacity(active ? 0.6 : 0.15),
-        blurRadius: active ? 18 : 6,
-        offset: Offset(0, active ? 6 : 2),
-        spreadRadius: active ? 1 : 0,
+        color: Colors.black.withOpacity(active ? 0.18 : 0.08),
+        blurRadius: active ? 20 : 10,
+        offset: Offset(0, active ? 8 : 3),
+        spreadRadius: active ? 2 : 0,
       ),
     ];
 
@@ -146,9 +145,12 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.black,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.black, width: 1.2),
+          border: Border.all(
+            color: Colors.black,
+            width: active ? 2 : 1.2,
+          ),
           boxShadow: shadows,
         ),
         child: Text(
@@ -157,16 +159,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
             fontWeight: FontWeight.w700,
             fontSize: 13.5,
             letterSpacing: 0.3,
-            color: textColor,
-            shadows: active
-                ? [
-                    Shadow(
-                      color: Colors.black.withOpacity(0.6),
-                      offset: const Offset(0, 2),
-                      blurRadius: 4,
-                    ),
-                  ]
-                : null,
+            color: Colors.black,
           ),
         ),
       ),
@@ -455,14 +448,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     String label,
     VoidCallback onTap,
   ) {
-    final theme = Theme.of(context);
-    final Color borderColor = active
-        ? theme.colorScheme.primary.withValues(alpha: 0.6)
-        : theme.colorScheme.primary.withValues(alpha: 0.25);
-    final Color labelColor = theme.colorScheme.primary.withValues(
-      alpha: active ? 0.9 : 0.6,
-    );
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -470,9 +455,12 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         constraints: const BoxConstraints(minHeight: 44),
         decoration: BoxDecoration(
-          color: theme.colorScheme.secondary,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: borderColor),
+          border: Border.all(
+            color: Colors.black,
+            width: active ? 2 : 1.2,
+          ),
           boxShadow: active
               ? [
                   BoxShadow(
@@ -504,7 +492,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
             Text(
               label,
               style: TextStyle(
-                color: labelColor,
+                color: Colors.black,
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
               ),
@@ -631,17 +619,18 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   Widget _buildResetButton({required VoidCallback onPressed}) {
-    final theme = Theme.of(context);
-    final Color primary = theme.colorScheme.primary;
     return FilledButton(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
-        backgroundColor: primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        side: BorderSide(color: Colors.black.withOpacity(0.2), width: 1.1),
+        side: BorderSide(
+          color: Colors.black.withOpacity(0.2),
+          width: 1.1,
+        ),
         elevation: 0,
       ),
       child: const Text('Reset'),
