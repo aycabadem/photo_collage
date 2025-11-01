@@ -66,8 +66,14 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final double panelHeight = size.height * 0.5;
-    return Container(
+    final double maxSolidHeight = size.height * 0.38;
+    final double maxGradientHeight = size.height * 0.5;
+    final double panelHeight =
+        _mode == BackgroundMode.solid ? maxSolidHeight : maxGradientHeight;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
       width: size.width,
       height: panelHeight,
       constraints: BoxConstraints(maxHeight: panelHeight),
@@ -86,33 +92,39 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 8),
-          Center(
-            child: Container(
-              width: 42,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.18),
-                borderRadius: BorderRadius.circular(2),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            Center(
+              child: Container(
+                width: 42,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          _buildModeTabs(),
-          const SizedBox(height: 4),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 28),
-              child: _mode == BackgroundMode.solid
-                  ? _buildHslControls()
-                  : _buildGradientTwoColorCompact(),
+            const SizedBox(height: 8),
+            _buildModeTabs(),
+            const SizedBox(height: 4),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 28),
+                child: _mode == BackgroundMode.solid
+                    ? _buildHslControls()
+                    : _buildGradientTwoColorCompact(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
