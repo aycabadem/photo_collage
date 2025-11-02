@@ -21,7 +21,6 @@ class LayoutPickerModal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final controller = scrollController ?? ScrollController();
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -39,7 +38,7 @@ class LayoutPickerModal extends StatelessWidget {
         ],
       ),
       child: CustomScrollView(
-        controller: controller,
+        controller: scrollController,
         slivers: [
           SliverToBoxAdapter(
             child: Column(

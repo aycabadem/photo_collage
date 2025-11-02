@@ -346,6 +346,7 @@ mixin _CollageLayoutControls on _CollageManagerBase {
       }
     }
 
+    suppressNextHistoryEntry();
     notifyListeners();
   }
 }

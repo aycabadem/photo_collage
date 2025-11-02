@@ -204,6 +204,98 @@ class _BottomBarItem extends StatelessWidget {
   }
 }
 
+class _UndoRedoButtons extends StatelessWidget {
+  final CollageManager manager;
+
+  const _UndoRedoButtons({required this.manager});
+
+  @override
+  Widget build(BuildContext context) {
+    final bool visible = manager.canUndo || manager.canRedo;
+    return AnimatedSlide(
+      offset: visible ? Offset.zero : const Offset(0, 0.5),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: const Duration(milliseconds: 180),
+        child: IgnorePointer(
+          ignoring: !visible,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.black, width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.16),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _IconSquareButton(
+                  icon: Icons.undo,
+                  enabled: manager.canUndo,
+                  onTap: manager.undo,
+                ),
+                const SizedBox(width: 8),
+                _IconSquareButton(
+                  icon: Icons.redo,
+                  enabled: manager.canRedo,
+                  onTap: manager.redo,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconSquareButton extends StatelessWidget {
+  final IconData icon;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  const _IconSquareButton({
+    required this.icon,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color iconColor =
+        enabled ? Colors.black : Colors.black.withOpacity(0.25);
+    return InkWell(
+      onTap: enabled ? onTap : null,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        width: 36,
+        height: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: enabled
+                ? Colors.black
+                : Colors.black.withOpacity(0.2),
+            width: 1.1,
+          ),
+        ),
+        child: Icon(icon, size: 18, color: iconColor),
+      ),
+    );
+  }
+}
+
 class _CurvedNavPainter extends CustomPainter {
   final Color color;
   final Color shadowColor;
@@ -401,6 +493,17 @@ class _CollageScreenState extends State<CollageScreen> {
                 Positioned(
                   left: 0,
                   right: 0,
+                  bottom: 108,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _UndoRedoButtons(manager: collageManager),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  left: 0,
+                  right: 0,
                   bottom: 0,
                   child: _CurvedBottomBar(
                     activeKey: _activeTool,
@@ -470,6 +573,7 @@ class _CollageScreenState extends State<CollageScreen> {
       return;
     }
     setState(() => _activeTool = 'background');
+    manager.startHistoryCheckpoint();
     _showColorPicker(context, manager);
   }
 
@@ -907,6 +1011,7 @@ class _CollageScreenState extends State<CollageScreen> {
           _activeTool = null;
         }
       });
+      collageManager.finalizeHistoryCheckpoint();
     });
   }
 
@@ -920,13 +1025,16 @@ class _CollageScreenState extends State<CollageScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent,
-      builder: (context) => BorderPanel(
-        collageManager: collageManager,
-        onClose: () {
-          // collageManager.setBottomUiInset(0);
-          Navigator.of(context).pop();
-        },
-      ),
+      builder: (context) {
+        collageManager.startHistoryCheckpoint();
+        return BorderPanel(
+          collageManager: collageManager,
+          onClose: () {
+            // collageManager.setBottomUiInset(0);
+            Navigator.of(context).pop();
+          },
+        );
+      },
     ).whenComplete(() {
       if (!mounted) return;
       setState(() {
@@ -934,6 +1042,7 @@ class _CollageScreenState extends State<CollageScreen> {
           _activeTool = null;
         }
       });
+      collageManager.finalizeHistoryCheckpoint();
     });
   }
 
