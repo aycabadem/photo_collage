@@ -205,6 +205,12 @@ class _BorderPanelState extends State<BorderPanel> {
           value: value,
           min: 0.0,
           max: 14.0,
+          onChangeStart: (v) {
+            widget.collageManager.startHistoryCheckpoint();
+            update(() {
+              _shadowDraft = v;
+            });
+          },
           onChanged: (v) {
             widget.collageManager.setShadowIntensity(v);
             update(() {
@@ -213,6 +219,7 @@ class _BorderPanelState extends State<BorderPanel> {
           },
           onChangeEnd: (v) {
             widget.collageManager.setShadowIntensity(v);
+            widget.collageManager.finalizeHistoryCheckpoint();
             update(() {
               _shadowDraft = null;
             });
@@ -236,6 +243,12 @@ class _BorderPanelState extends State<BorderPanel> {
                 value: value,
                 min: 0.0,
                 max: 20.0,
+                onChangeStart: (v) {
+                  widget.collageManager.startHistoryCheckpoint();
+                  update(() {
+                    _innerDraft = v;
+                  });
+                },
                 onChanged: (v) {
                   widget.collageManager.setInnerMargin(v);
                   update(() {
@@ -244,6 +257,7 @@ class _BorderPanelState extends State<BorderPanel> {
                 },
                 onChangeEnd: (v) {
                   widget.collageManager.setInnerMargin(v);
+                  widget.collageManager.finalizeHistoryCheckpoint();
                   update(() {
                     _innerDraft = null;
                   });
@@ -272,6 +286,12 @@ class _BorderPanelState extends State<BorderPanel> {
                 value: value,
                 min: 0.0,
                 max: 20.0,
+                onChangeStart: (v) {
+                  widget.collageManager.startHistoryCheckpoint();
+                  update(() {
+                    _outerDraft = v;
+                  });
+                },
                 onChanged: (v) {
                   widget.collageManager.setOuterMargin(v);
                   update(() {
@@ -280,6 +300,7 @@ class _BorderPanelState extends State<BorderPanel> {
                 },
                 onChangeEnd: (v) {
                   widget.collageManager.setOuterMargin(v);
+                  widget.collageManager.finalizeHistoryCheckpoint();
                   update(() {
                     _outerDraft = null;
                   });
@@ -311,6 +332,12 @@ class _BorderPanelState extends State<BorderPanel> {
                 value: value,
                 min: 0.0,
                 max: 160.0,
+                onChangeStart: (v) {
+                  widget.collageManager.startHistoryCheckpoint();
+                  update(() {
+                    _cornerDraft = v;
+                  });
+                },
                 onChanged: (v) {
                   widget.collageManager.setCornerRadius(v);
                   update(() {
@@ -319,6 +346,7 @@ class _BorderPanelState extends State<BorderPanel> {
                 },
                 onChangeEnd: (v) {
                   widget.collageManager.setCornerRadius(v);
+                  widget.collageManager.finalizeHistoryCheckpoint();
                   update(() {
                     _cornerDraft = null;
                   });
@@ -415,10 +443,12 @@ class _BorderPanelState extends State<BorderPanel> {
               selectedAspect: manager.selectedAspect,
               presets: manager.presetsWithCustom,
               onAspectChanged: (aspect) {
+                manager.startHistoryCheckpoint();
                 setState(() {
                   _aspectScalar = aspect.ratio.clamp(0.5, 2.0);
                 });
                 manager.applyAspect(aspect);
+                manager.finalizeHistoryCheckpoint();
               },
             ),
             const SizedBox(width: 16),
@@ -451,6 +481,9 @@ class _BorderPanelState extends State<BorderPanel> {
                   min: 0.5,
                   max: 2.0,
                   label: formatRatio(_aspectScalar),
+                  onChangeStart: (v) {
+                    manager.startHistoryCheckpoint();
+                  },
                   onChanged: (v) {
                     setState(() {
                       _aspectScalar = v;
@@ -462,6 +495,7 @@ class _BorderPanelState extends State<BorderPanel> {
                   onChangeEnd: (v) {
                     final spec = buildSpec(v);
                     manager.setCustomAspect(spec);
+                    manager.finalizeHistoryCheckpoint();
                   },
                 ),
               ),
@@ -480,6 +514,7 @@ class _GradientSlider extends StatelessWidget {
   final double max;
   final ValueChanged<double> onChanged;
   final ValueChanged<double>? onChangeEnd;
+  final ValueChanged<double>? onChangeStart;
   final String label;
 
   const _GradientSlider({
@@ -488,6 +523,7 @@ class _GradientSlider extends StatelessWidget {
     required this.max,
     required this.onChanged,
     this.onChangeEnd,
+    this.onChangeStart,
     required this.label,
   });
 
@@ -515,6 +551,7 @@ class _GradientSlider extends StatelessWidget {
           min: min,
           max: max,
           label: label,
+          onChangeStart: onChangeStart,
           onChanged: onChanged,
           onChangeEnd: onChangeEnd,
         ),

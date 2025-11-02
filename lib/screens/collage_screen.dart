@@ -573,7 +573,6 @@ class _CollageScreenState extends State<CollageScreen> {
       return;
     }
     setState(() => _activeTool = 'background');
-    manager.startHistoryCheckpoint();
     _showColorPicker(context, manager);
   }
 
@@ -994,6 +993,8 @@ class _CollageScreenState extends State<CollageScreen> {
         currentOpacity: collageManager.backgroundOpacity,
         initialMode: collageManager.backgroundMode,
         initialGradient: collageManager.backgroundGradient,
+        onInteractionStart: collageManager.startHistoryCheckpoint,
+        onInteractionEnd: collageManager.finalizeHistoryCheckpoint,
         onColorChanged: (color, opacity) {
           collageManager.setBackgroundMode(BackgroundMode.solid);
           collageManager.changeBackgroundColor(color);

@@ -8,6 +8,8 @@ class IOSColorPickerModal extends StatefulWidget {
   final BackgroundMode initialMode;
   final GradientSpec? initialGradient;
   final void Function(GradientSpec spec, double opacity)? onGradientChanged;
+  final VoidCallback? onInteractionStart;
+  final VoidCallback? onInteractionEnd;
 
   const IOSColorPickerModal({
     super.key,
@@ -17,6 +19,8 @@ class IOSColorPickerModal extends StatefulWidget {
     this.initialMode = BackgroundMode.solid,
     this.initialGradient,
     this.onGradientChanged,
+    this.onInteractionStart,
+    this.onInteractionEnd,
   });
 
   @override
@@ -36,6 +40,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   late Color _gB;
   bool _activeA = true; // which chip is active for HSL edits
   late double _gH, _gS, _gL; // working HSL for active chip
+  bool _interactionActive = false;
 
   @override
   void initState() {
@@ -59,6 +64,12 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       _gB = Colors.white;
     }
     _loadActiveStopHsl(fromA: _activeA);
+  }
+
+  @override
+  void dispose() {
+    _endInteraction();
+    super.dispose();
   }
 
   @override
@@ -130,6 +141,17 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   // Header removed for compact design
+  void _beginInteraction() {
+    if (_interactionActive) return;
+    _interactionActive = true;
+    widget.onInteractionStart?.call();
+  }
+
+  void _endInteraction() {
+    if (!_interactionActive) return;
+    _interactionActive = false;
+    widget.onInteractionEnd?.call();
+  }
 
   Widget _buildModeTabs() {
     return Padding(
@@ -137,17 +159,23 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       child: Row(
         children: [
           _tab('Color', _mode == BackgroundMode.solid, () {
+            if (_mode == BackgroundMode.solid) return;
+            _beginInteraction();
             setState(() => _mode = BackgroundMode.solid);
             // Apply current solid as live preview
             widget.onColorChanged(_selectedColor, _selectedOpacity);
+            _endInteraction();
           }),
           const SizedBox(width: 8),
           _tab('Gradient', _mode == BackgroundMode.gradient, () {
+            if (_mode == BackgroundMode.gradient) return;
+            _beginInteraction();
             setState(() => _mode = BackgroundMode.gradient);
             // Apply current gradient as live preview
             if (widget.onGradientChanged != null) {
               widget.onGradientChanged!(_gradient, _selectedOpacity);
             }
+            _endInteraction();
           }),
         ],
       ),
@@ -216,6 +244,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   void _resetToWhite() {
+    _beginInteraction();
     setState(() {
       _mode = BackgroundMode.solid;
       _selectedColor = Colors.white;
@@ -226,6 +255,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       _l = hsl.lightness;
     });
     widget.onColorChanged(_selectedColor, _selectedOpacity);
+    _endInteraction();
   }
 
   Widget _hueSlider() {
@@ -352,14 +382,22 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                   min: min,
                   max: max,
                   value: value,
-                  onChanged: onChanged,
+                  onChangeStart: (v) {
+                    _beginInteraction();
+                  },
+                  onChanged: (v) {
+                    if (!_interactionActive) _beginInteraction();
+                    onChanged(v);
+                  },
                   onChangeEnd: (v) {
-                    if (!snapToEnds) return;
-                    final thr = (max - min) * 0.02; // 2% snapping
-                    double snapped = v;
-                    if ((v - min).abs() <= thr) snapped = min;
-                    if ((max - v).abs() <= thr) snapped = max;
-                    if (snapped != v) onChanged(snapped);
+                    if (snapToEnds) {
+                      final thr = (max - min) * 0.02; // 2% snapping
+                      double snapped = v;
+                      if ((v - min).abs() <= thr) snapped = min;
+                      if ((max - v).abs() <= thr) snapped = max;
+                      if (snapped != v) onChanged(snapped);
+                    }
+                    _endInteraction();
                   },
                 ),
               ),
@@ -608,6 +646,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   void _swapAB() {
+    _beginInteraction();
     setState(() {
       final tmp = _gA;
       _gA = _gB;
@@ -615,6 +654,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       _activeA = !_activeA; // keep editing the same visual end
     });
     _applyGradientLive();
+    _endInteraction();
   }
 
   void _loadActiveStopHsl({required bool fromA}) {
@@ -670,6 +710,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   }
 
   void _resetGradientStops() {
+    _beginInteraction();
     final defaultSpec = _defaultGradientSpec();
     setState(() {
       _gradient = defaultSpec;
@@ -679,6 +720,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     });
     _loadActiveStopHsl(fromA: true);
     _applyGradientLive();
+    _endInteraction();
   }
 
   // Removed: _gradientPresetChip (unused)
