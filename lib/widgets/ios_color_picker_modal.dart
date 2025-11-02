@@ -76,7 +76,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final double maxSolidHeight = size.height * 0.38;
     final double maxGradientHeight = size.height * 0.5;
     final double panelHeight =
@@ -94,7 +93,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x30000000),
@@ -118,7 +117,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                 width: 42,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.18),
+                  color: Colors.black.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -185,7 +184,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
   Widget _tab(String label, bool active, VoidCallback onTap) {
     final List<BoxShadow> shadows = [
       BoxShadow(
-        color: Colors.black.withOpacity(active ? 0.18 : 0.08),
+        color: Colors.black.withValues(alpha: active ? 0.18 : 0.08),
         blurRadius: active ? 20 : 10,
         offset: Offset(0, active ? 8 : 3),
         spreadRadius: active ? 2 : 0,
@@ -321,7 +320,6 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     required double max,
     required double value,
     required ValueChanged<double> onChanged,
-    int? divisions,
     bool snapToEnds = false,
   }) {
     return Column(
@@ -361,7 +359,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
                   gradient: LinearGradient(colors: colors),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.12),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -534,12 +532,12 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
                 ]
-              : null,
+            : null,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -700,7 +698,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
         textStyle: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         side: BorderSide(
-          color: Colors.black.withOpacity(0.2),
+          color: Colors.black.withValues(alpha: 0.2),
           width: 1.1,
         ),
         elevation: 0,

@@ -176,7 +176,7 @@ class _HistoryIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color iconColor =
-        enabled ? Colors.black : Colors.black.withOpacity(0.25);
+        enabled ? Colors.black : Colors.black.withValues(alpha: 0.25);
     return InkResponse(
       onTap: enabled ? onTap : null,
       radius: 22,

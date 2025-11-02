@@ -48,7 +48,7 @@ class _BorderPanelModalState extends State<BorderPanelModal> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.18),
+              color: Colors.black.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(2),
             ),
           ),

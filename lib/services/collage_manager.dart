@@ -174,13 +174,21 @@ class _CollageSnapshot {
   });
 
   bool isEquivalentTo(_CollageSnapshot other) {
-    if (boxes.length != other.boxes.length) return false;
-    for (int i = 0; i < boxes.length; i++) {
-      if (!boxes[i].isEquivalentTo(other.boxes[i])) return false;
+    if (boxes.length != other.boxes.length) {
+      return false;
     }
-    if (selectedIndex != other.selectedIndex) return false;
+    for (int i = 0; i < boxes.length; i++) {
+      if (!boxes[i].isEquivalentTo(other.boxes[i])) {
+        return false;
+      }
+    }
+    if (selectedIndex != other.selectedIndex) {
+      return false;
+    }
     if (selectedAspect.w != other.selectedAspect.w ||
-        selectedAspect.h != other.selectedAspect.h) return false;
+        selectedAspect.h != other.selectedAspect.h) {
+      return false;
+    }
     if ((customAspect?.w ?? -1) != (other.customAspect?.w ?? -1) ||
         (customAspect?.h ?? -1) != (other.customAspect?.h ?? -1)) {
       return false;
@@ -189,12 +197,12 @@ class _CollageSnapshot {
         availableArea != other.availableArea ||
         isCustomMode != other.isCustomMode ||
         currentLayoutId != other.currentLayoutId ||
-        backgroundColor.value != other.backgroundColor.value ||
+        backgroundColor.toARGB32() != other.backgroundColor.toARGB32() ||
         backgroundOpacity != other.backgroundOpacity ||
         backgroundMode != other.backgroundMode ||
         gradientSpec.angleDeg != other.gradientSpec.angleDeg ||
         globalBorderWidth != other.globalBorderWidth ||
-        globalBorderColor.value != other.globalBorderColor.value ||
+        globalBorderColor.toARGB32() != other.globalBorderColor.toARGB32() ||
         hasGlobalBorder != other.hasGlobalBorder ||
         photoMargin != other.photoMargin ||
         shadowIntensity != other.shadowIntensity ||
@@ -209,7 +217,8 @@ class _CollageSnapshot {
     for (int i = 0; i < gradientSpec.stops.length; i++) {
       final a = gradientSpec.stops[i];
       final b = other.gradientSpec.stops[i];
-      if (a.offset != b.offset || a.color.value != b.color.value) {
+      if (a.offset != b.offset ||
+          a.color.toARGB32() != b.color.toARGB32()) {
         return false;
       }
     }

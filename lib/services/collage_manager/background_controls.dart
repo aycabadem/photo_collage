@@ -17,7 +17,7 @@ mixin _CollageBackgroundControls on _CollageManagerBase {
   }
 
   void changeBackgroundColor(Color color) {
-    if (_backgroundColor.value == color.value) return;
+    if (_backgroundColor.toARGB32() == color.toARGB32()) return;
     _backgroundColor = color;
     notifyListeners();
   }
@@ -59,7 +59,7 @@ mixin _CollageBackgroundControls on _CollageManagerBase {
   }
 
   void changeGlobalBorderColor(Color color) {
-    if (_globalBorderColor.value == color.value) return;
+    if (_globalBorderColor.toARGB32() == color.toARGB32()) return;
     _globalBorderColor = color;
     notifyListeners();
   }

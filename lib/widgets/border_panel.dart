@@ -62,7 +62,7 @@ class _BorderPanelState extends State<BorderPanel> {
               width: 42,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.18),
+                color: Colors.black.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -388,9 +388,9 @@ class _BorderPanelState extends State<BorderPanel> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.primary.withOpacity(0.08),
+        color: scheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
       ),
       child: Text(
         '${value.round()} px',
@@ -457,11 +457,12 @@ class _BorderPanelState extends State<BorderPanel> {
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 4,
                   activeTrackColor: theme.colorScheme.primary,
-                  inactiveTrackColor: theme.colorScheme.primary.withOpacity(
-                    0.2,
+                  inactiveTrackColor: theme.colorScheme.primary.withValues(
+                    alpha: 0.2,
                   ),
                   thumbColor: theme.colorScheme.primary,
-                  overlayColor: theme.colorScheme.primary.withOpacity(0.12),
+                  overlayColor:
+                      theme.colorScheme.primary.withValues(alpha: 0.12),
                   thumbShape: const RoundSliderThumbShape(
                     enabledThumbRadius: 10,
                   ),
@@ -474,7 +475,7 @@ class _BorderPanelState extends State<BorderPanel> {
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
-                  showValueIndicator: ShowValueIndicator.always,
+                  showValueIndicator: ShowValueIndicator.onDrag,
                 ),
                 child: Slider(
                   value: _aspectScalar,
