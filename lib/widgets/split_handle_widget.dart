@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 /// Provides a larger hit area but a subtle visual line centered in it.
 class SplitHandleWidget extends StatelessWidget {
   final bool
-  isVertical; // true: vertical divider (left/right), false: horizontal (top/bottom)
+      isVertical; // true: vertical divider (left/right), false: horizontal (top/bottom)
   final double thickness; // visual line thickness
   final VoidCallback? onTap;
   final void Function(double delta) onDrag; // delta in screen px along axis
+  final VoidCallback? onDragStart;
+  final VoidCallback? onDragEnd;
   final bool showIcon; // show a small splitter hint icon
   final double iconSize; // visual icon size inside the badge
   final Color? iconColor;
@@ -19,6 +21,8 @@ class SplitHandleWidget extends StatelessWidget {
     required this.onDrag,
     this.thickness = 2.0,
     this.onTap,
+    this.onDragStart,
+    this.onDragEnd,
     this.showIcon = true,
     this.iconSize = 22.0,
     this.iconColor,
@@ -35,8 +39,11 @@ class SplitHandleWidget extends StatelessWidget {
         iconColor ?? Colors.white.withValues(alpha: 0.95);
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
+      onPanStart: (_) => onDragStart?.call(),
       onPanUpdate: (details) =>
           onDrag(isVertical ? details.delta.dx : details.delta.dy),
+      onPanEnd: (_) => onDragEnd?.call(),
+      onPanCancel: () => onDragEnd?.call(),
       onTap: onTap,
       child: Stack(
         alignment: Alignment.center,

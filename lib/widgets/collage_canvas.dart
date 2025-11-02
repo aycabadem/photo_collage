@@ -455,6 +455,8 @@ class CollageCanvas extends StatelessWidget {
           height: h,
           child: SplitHandleWidget(
             isVertical: true,
+            onDragStart: collageManager.startHistoryCheckpoint,
+            onDragEnd: collageManager.finalizeHistoryCheckpoint,
             onDrag: (dxScreen) {
               final double scale = getCurrentScale();
               final double deltaTemplate = (dxScreen / scale) / sX;
@@ -491,6 +493,8 @@ class CollageCanvas extends StatelessWidget {
           height: h,
           child: SplitHandleWidget(
             isVertical: true,
+            onDragStart: collageManager.startHistoryCheckpoint,
+            onDragEnd: collageManager.finalizeHistoryCheckpoint,
             onDrag: (dxScreen) {
               final double scale = getCurrentScale();
               final double deltaTemplate = (dxScreen / scale) / sX;
@@ -526,6 +530,8 @@ class CollageCanvas extends StatelessWidget {
           height: 28,
           child: SplitHandleWidget(
             isVertical: false,
+            onDragStart: collageManager.startHistoryCheckpoint,
+            onDragEnd: collageManager.finalizeHistoryCheckpoint,
             onDrag: (dyScreen) {
               final double scale = getCurrentScale();
               final double deltaTemplate = (dyScreen / scale) / sY;
@@ -561,6 +567,8 @@ class CollageCanvas extends StatelessWidget {
           height: 28,
           child: SplitHandleWidget(
             isVertical: false,
+            onDragStart: collageManager.startHistoryCheckpoint,
+            onDragEnd: collageManager.finalizeHistoryCheckpoint,
             onDrag: (dyScreen) {
               final double scale = getCurrentScale();
               final double deltaTemplate = (dyScreen / scale) / sY;
