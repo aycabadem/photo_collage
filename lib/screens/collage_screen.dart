@@ -140,7 +140,7 @@ class _UndoRedoButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool visible = manager.canUndo || manager.canRedo;
     return AnimatedSlide(
-      offset: visible ? Offset.zero : const Offset(0, 0.5),
+      offset: visible ? Offset.zero : const Offset(0, 0.3),
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOut,
       child: AnimatedOpacity(
@@ -148,36 +148,21 @@ class _UndoRedoButtons extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         child: IgnorePointer(
           ignoring: !visible,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.black, width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.16),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _IconSquareButton(
-                  icon: Icons.undo,
-                  enabled: manager.canUndo,
-                  onTap: manager.undo,
-                ),
-                const SizedBox(width: 8),
-                _IconSquareButton(
-                  icon: Icons.redo,
-                  enabled: manager.canRedo,
-                  onTap: manager.redo,
-                ),
-              ],
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _HistoryIconButton(
+                icon: Icons.undo,
+                enabled: manager.canUndo,
+                onTap: manager.undo,
+              ),
+              const SizedBox(width: 8),
+              _HistoryIconButton(
+                icon: Icons.redo,
+                enabled: manager.canRedo,
+                onTap: manager.redo,
+              ),
+            ],
           ),
         ),
       ),
@@ -185,12 +170,12 @@ class _UndoRedoButtons extends StatelessWidget {
   }
 }
 
-class _IconSquareButton extends StatelessWidget {
+class _HistoryIconButton extends StatelessWidget {
   final IconData icon;
   final bool enabled;
   final VoidCallback onTap;
 
-  const _IconSquareButton({
+  const _HistoryIconButton({
     required this.icon,
     required this.enabled,
     required this.onTap,
@@ -200,25 +185,10 @@ class _IconSquareButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color iconColor =
         enabled ? Colors.black : Colors.black.withOpacity(0.25);
-    return InkWell(
+    return InkResponse(
       onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        width: 36,
-        height: 36,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: enabled
-                ? Colors.black
-                : Colors.black.withOpacity(0.2),
-            width: 1.1,
-          ),
-        ),
-        child: Icon(icon, size: 18, color: iconColor),
-      ),
+      radius: 22,
+      child: Icon(icon, size: 22, color: iconColor),
     );
   }
 }
