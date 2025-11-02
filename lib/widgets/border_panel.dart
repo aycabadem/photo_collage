@@ -235,14 +235,14 @@ class _BorderPanelState extends State<BorderPanel> {
     return StatefulBuilder(
       builder: (context, update) {
         final double value = (_innerDraft ?? widget.collageManager.innerMargin)
-            .clamp(0.0, 20.0);
+            .clamp(0.0, 40.0);
         return Row(
           children: [
             Expanded(
               child: _GradientSlider(
                 value: value,
                 min: 0.0,
-                max: 20.0,
+                max: 40.0,
                 onChangeStart: (v) {
                   widget.collageManager.startHistoryCheckpoint();
                   update(() {
@@ -278,14 +278,14 @@ class _BorderPanelState extends State<BorderPanel> {
     return StatefulBuilder(
       builder: (context, update) {
         final double value = (_outerDraft ?? widget.collageManager.outerMargin)
-            .clamp(0.0, 20.0);
+            .clamp(0.0, 60.0);
         return Row(
           children: [
             Expanded(
               child: _GradientSlider(
                 value: value,
                 min: 0.0,
-                max: 20.0,
+                max: 60.0,
                 onChangeStart: (v) {
                   widget.collageManager.startHistoryCheckpoint();
                   update(() {

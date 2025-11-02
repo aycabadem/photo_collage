@@ -72,14 +72,14 @@ mixin _CollageBackgroundControls on _CollageManagerBase {
   }
 
   void setInnerMargin(double margin) {
-    final double clamped = margin.clamp(0.0, 20.0);
+    final double clamped = margin.clamp(0.0, 40.0);
     if ((_innerMargin - clamped).abs() < 1e-6) return;
     _innerMargin = clamped;
     notifyListeners();
   }
 
   void setOuterMargin(double margin) {
-    final double clamped = margin.clamp(0.0, 20.0);
+    final double clamped = margin.clamp(0.0, 60.0);
     if ((_outerMargin - clamped).abs() < 1e-6) return;
     _outerMargin = clamped;
     notifyListeners();
