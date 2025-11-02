@@ -226,7 +226,7 @@ class _CollageSnapshot {
   }
 }
 
-/// Preset option used when exporting the collage image
+/// Preset option used when exporting the collage image 123
 class ResolutionOption {
   final String label;
   final int width;
