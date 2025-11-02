@@ -595,7 +595,13 @@ class CollageCanvas extends StatelessWidget {
     return handles;
   }
 
-  double _edgeEps() => math.max(3.0, collageManager.innerMargin * 0.5);
+  double _edgeEps() {
+    final double base = math.max(3.0, collageManager.innerMargin * 0.5);
+    if (collageManager.isCustomMode) {
+      return math.max(base, 6.0);
+    }
+    return base;
+  }
 
   bool _yOverlapEnough(PhotoBox a, PhotoBox b, double eps) {
     final double aTop = a.position.dy;
