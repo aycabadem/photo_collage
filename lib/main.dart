@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import 'screens/collage_screen.dart';
+import 'services/collage_manager.dart';
+import 'services/purchase_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -43,30 +47,49 @@ class MyApp extends StatelessWidget {
           labelSmall: t.labelSmall?.copyWith(fontWeight: FontWeight.w600),
         );
 
-    return MaterialApp(
-      title: 'Custom Collage',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.light,
-        colorScheme: scheme,
-        scaffoldBackgroundColor: background,
-        canvasColor: surface,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          foregroundColor: primary,
-          elevation: 0,
-          surfaceTintColor: Colors.transparent,
-          iconTheme: IconThemeData(color: primary),
-          actionsIconTheme: IconThemeData(color: primary),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => PurchaseService()..initialize(),
         ),
-        dialogTheme: DialogThemeData(backgroundColor: surface),
-        cardColor: surfaceAlt,
-        iconTheme: const IconThemeData(color: primary),
-        textTheme: bolden(ThemeData.light().textTheme.apply(bodyColor: primary, displayColor: primary)),
-        primaryTextTheme: bolden(ThemeData.light().primaryTextTheme.apply(bodyColor: primary, displayColor: primary)),
-        useMaterial3: true,
+        ChangeNotifierProxyProvider<PurchaseService, CollageManager>(
+          create: (_) => CollageManager(),
+          update: (_, purchaseService, collageManager) {
+            final CollageManager manager = collageManager ?? CollageManager();
+            manager.setPremium(purchaseService.hasActiveSubscription);
+            return manager;
+          },
+        ),
+      ],
+      child: MaterialApp(
+        title: 'Custom Collage',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          brightness: Brightness.light,
+          colorScheme: scheme,
+          scaffoldBackgroundColor: background,
+          canvasColor: surface,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.transparent,
+            foregroundColor: primary,
+            elevation: 0,
+            surfaceTintColor: Colors.transparent,
+            iconTheme: IconThemeData(color: primary),
+            actionsIconTheme: IconThemeData(color: primary),
+          ),
+          dialogTheme: DialogThemeData(backgroundColor: surface),
+          cardColor: surfaceAlt,
+          iconTheme: const IconThemeData(color: primary),
+          textTheme: bolden(
+            ThemeData.light().textTheme.apply(bodyColor: primary, displayColor: primary),
+          ),
+          primaryTextTheme: bolden(
+            ThemeData.light().primaryTextTheme.apply(bodyColor: primary, displayColor: primary),
+          ),
+          useMaterial3: true,
+        ),
+        home: const CollageScreen(),
       ),
-      home: const CollageScreen(),
     );
   }
 }
