@@ -188,7 +188,7 @@ class _HistoryIconButton extends StatelessWidget {
     return InkResponse(
       onTap: enabled ? onTap : null,
       radius: 22,
-      child: Icon(icon, size: 22, color: iconColor),
+      child: Icon(icon, size: 26, color: iconColor),
     );
   }
 }
