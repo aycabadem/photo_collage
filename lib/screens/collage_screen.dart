@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../models/background.dart';
 import '../models/photo_box.dart';
 import '../services/collage_manager.dart';
@@ -22,7 +22,7 @@ class CollageScreen extends StatefulWidget {
   State<CollageScreen> createState() => _CollageScreenState();
 }
 
-class _CurvedBottomBar extends StatelessWidget {
+class _SimpleBottomBar extends StatelessWidget {
   final String? activeKey;
   final VoidCallback onLayoutPressed;
   final VoidCallback onStylePressed;
@@ -30,7 +30,7 @@ class _CurvedBottomBar extends StatelessWidget {
   final VoidCallback onAddPhotoPressed;
   final VoidCallback onSavePressed;
 
-  const _CurvedBottomBar({
+  const _SimpleBottomBar({
     required this.activeKey,
     required this.onLayoutPressed,
     required this.onStylePressed,
@@ -41,102 +41,50 @@ class _CurvedBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final Color barColor = theme.colorScheme.surface;
-    final Color shadowColor = Colors.black.withValues(alpha: 0.18);
-
-    return SizedBox(
-      height: 84,
-      child: Stack(
-        alignment: Alignment.topCenter,
+    return Container(
+      height: 70,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
         children: [
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _CurvedNavPainter(
-                color: barColor,
-                shadowColor: shadowColor,
-                cornerRadius: 22,
-                notchRadius: 30,
-                notchDepth: 26,
-              ),
-            ),
+          _SimpleBarButton(
+            icon: const Icon(Icons.grid_view, size: 26, color: Colors.black),
+            active: activeKey == 'layout',
+            onTap: onLayoutPressed,
           ),
-          Positioned(
-            top: -10,
-            child: Material(
-              color: Colors.transparent,
-              elevation: 6,
-              shape: const CircleBorder(),
-              shadowColor: Colors.black.withValues(alpha: 0.25),
-              child: InkWell(
-                onTap: onAddPhotoPressed,
-                customBorder: const CircleBorder(),
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.add_a_photo,
-                    color: Colors.black,
-                    size: 26,
-                  ),
-                ),
-              ),
-            ),
+          _SimpleBarButton(
+            icon: const Icon(Icons.border_all, size: 26, color: Colors.black),
+            active: activeKey == 'style',
+            onTap: onStylePressed,
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 8,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _BottomBarItem(
-                      icon: Icons.grid_view,
-                      label: 'Layout',
-                      active: activeKey == 'layout',
-                      onTap: onLayoutPressed,
-                    ),
-                  ),
-                  Expanded(
-                    child: _BottomBarItem(
-                      icon: Icons.border_all,
-                      label: 'Style',
-                      active: activeKey == 'style',
-                      onTap: onStylePressed,
-                    ),
-                  ),
-                  const SizedBox(width: 64),
-                  Expanded(
-                    child: _BottomBarItem(
-                      icon: Icons.format_paint,
-                      label: 'Color',
-                      active: activeKey == 'background',
-                      onTap: onBackgroundPressed,
-                    ),
-                  ),
-                  Expanded(
-                    child: _BottomBarItem.custom(
-                      label: 'Save',
-                      active: false,
-                      onTap: onSavePressed,
-                      builder: (context, color) => SvgPicture.asset(
-                        'assets/icons/save_arrow.svg',
-                        width: 24,
-                        height: 24,
-                        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          _SimpleBarButton(
+            icon: const Icon(Icons.add_a_photo, size: 26, color: Colors.black),
+            active: false,
+            onTap: onAddPhotoPressed,
+          ),
+          _SimpleBarButton(
+            icon: const Icon(Icons.format_paint, size: 26, color: Colors.black),
+            active: activeKey == 'background',
+            onTap: onBackgroundPressed,
+          ),
+          _SimpleBarButton(
+            icon: SvgPicture.asset(
+              'assets/icons/save_arrow.svg',
+              width: 26,
+              height: 26,
+              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
             ),
+            active: false,
+            onTap: onSavePressed,
           ),
         ],
       ),
@@ -144,57 +92,35 @@ class _CurvedBottomBar extends StatelessWidget {
   }
 }
 
-class _BottomBarItem extends StatelessWidget {
-  final IconData? icon;
-  final String label;
+class _SimpleBarButton extends StatelessWidget {
+  final Widget icon;
   final bool active;
   final VoidCallback onTap;
-  final Widget? Function(BuildContext context, Color color)? builder;
 
-  const _BottomBarItem({
+  const _SimpleBarButton({
     required this.icon,
-    required this.label,
     required this.active,
     required this.onTap,
-  }) : builder = null;
-
-  const _BottomBarItem.custom({
-    required this.builder,
-    required this.label,
-    required this.active,
-    required this.onTap,
-  }) : icon = null;
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final Color displayColor = Colors.black;
-
-    Widget leading;
-    if (builder != null) {
-      leading = builder!(context, displayColor) ?? const SizedBox.shrink();
-    } else if (icon != null) {
-      leading = Icon(icon, size: 24, color: displayColor);
-    } else {
-      leading = const SizedBox.shrink();
-    }
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            leading,
+            icon,
             const SizedBox(height: 6),
-            Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: displayColor,
-                letterSpacing: 0.2,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 4,
+              width: 18,
+              decoration: BoxDecoration(
+                color: active ? Colors.black : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
           ],
@@ -203,6 +129,7 @@ class _BottomBarItem extends StatelessWidget {
     );
   }
 }
+
 
 class _UndoRedoButtons extends StatelessWidget {
   final CollageManager manager;
@@ -296,71 +223,6 @@ class _IconSquareButton extends StatelessWidget {
   }
 }
 
-class _CurvedNavPainter extends CustomPainter {
-  final Color color;
-  final Color shadowColor;
-  final double cornerRadius;
-  final double notchRadius;
-  final double notchDepth;
-
-  _CurvedNavPainter({
-    required this.color,
-    required this.shadowColor,
-    required this.cornerRadius,
-    required this.notchRadius,
-    required this.notchDepth,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Path path = Path();
-    final double centerX = size.width / 2;
-    final double notchSpan = notchRadius * 2 + 24;
-    final double leftNotch = centerX - notchSpan / 2;
-    final double rightNotch = centerX + notchSpan / 2;
-    final double c = cornerRadius;
-    final double depth = notchDepth;
-
-    path.moveTo(0, c);
-    path.quadraticBezierTo(0, 0, c, 0);
-    path.lineTo(leftNotch, 0);
-    path.cubicTo(
-      leftNotch + 12,
-      0,
-      centerX - notchRadius,
-      depth,
-      centerX,
-      depth,
-    );
-    path.cubicTo(
-      centerX + notchRadius,
-      depth,
-      rightNotch - 12,
-      0,
-      rightNotch,
-      0,
-    );
-    path.lineTo(size.width - c, 0);
-    path.quadraticBezierTo(size.width, 0, size.width, c);
-    path.lineTo(size.width, size.height - c);
-    path.quadraticBezierTo(
-      size.width,
-      size.height,
-      size.width - c,
-      size.height,
-    );
-    path.lineTo(c, size.height);
-    path.quadraticBezierTo(0, size.height, 0, size.height - c);
-    path.close();
-
-    canvas.drawShadow(path, shadowColor, 8, true);
-    final paint = Paint()..color = color;
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 
 class _CollageScreenState extends State<CollageScreen> {
   static const MethodChannel _galleryChannel = MethodChannel('collage/gallery');
@@ -493,7 +355,7 @@ class _CollageScreenState extends State<CollageScreen> {
                 Positioned(
                   left: 0,
                   right: 0,
-                  bottom: 108,
+                  bottom: 92,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -505,7 +367,7 @@ class _CollageScreenState extends State<CollageScreen> {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  child: _CurvedBottomBar(
+                  child: _SimpleBottomBar(
                     activeKey: _activeTool,
                     onLayoutPressed: () =>
                         _openLayoutPicker(context, collageManager),
