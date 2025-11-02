@@ -41,19 +41,11 @@ class _SimpleBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color background = Theme.of(context).scaffoldBackgroundColor;
     return Container(
       height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
+      color: background,
       child: Row(
         children: [
           _SimpleBarButton(
