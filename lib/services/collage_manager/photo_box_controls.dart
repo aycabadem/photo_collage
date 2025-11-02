@@ -2,6 +2,7 @@ part of '../collage_manager.dart';
 
 mixin _CollagePhotoBoxControls on _CollageManagerBase {
   void selectBox(PhotoBox? box) {
+    suppressNextHistoryEntry();
     _selectedBox = box;
     notifyListeners();
   }
