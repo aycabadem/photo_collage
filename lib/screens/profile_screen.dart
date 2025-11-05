@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/collage_manager.dart';
 import '../services/purchase_service.dart';
@@ -550,6 +551,13 @@ class _PlanOption {
 }
 
 class _LegalSection extends StatelessWidget {
+  static final Uri _termsOfUseUri = Uri.parse(
+    'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+  );
+  static final Uri _privacyPolicyUri = Uri.parse(
+    'https://aycabadem.github.io/custom-photo-collage/privacy',
+  );
+
   final ThemeData theme;
   final PurchaseService purchaseService;
 
@@ -560,19 +568,11 @@ class _LegalSection extends StatelessWidget {
     final tiles = [
       _LegalLink(
         title: 'Terms of Use',
-        onTap: () => _showPlaceholderDocument(
-          context,
-          title: 'Terms of Use',
-          body: _termsOfUseText,
-        ),
+        onTap: () => _openExternalUrl(context, _termsOfUseUri),
       ),
       _LegalLink(
         title: 'Privacy Policy',
-        onTap: () => _showPlaceholderDocument(
-          context,
-          title: 'Privacy Policy',
-          body: _privacyPolicyText,
-        ),
+        onTap: () => _openExternalUrl(context, _privacyPolicyUri),
       ),
       _LegalLink(
         title: 'Restore Purchases',
@@ -641,6 +641,32 @@ class _LegalSection extends StatelessWidget {
       ),
     );
   }
+
+  static Future<void> _openExternalUrl(
+    BuildContext context,
+    Uri uri,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        _showLaunchError(messenger);
+      }
+    } catch (_) {
+      _showLaunchError(messenger);
+    }
+  }
+
+  static void _showLaunchError(ScaffoldMessengerState messenger) {
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Unable to open link. Please try again later.'),
+      ),
+    );
+  }
 }
 
 class _StoreUnavailableBanner extends StatelessWidget {
@@ -674,93 +700,3 @@ class _LegalLink {
 
   const _LegalLink({required this.title, required this.onTap});
 }
-
-void _showPlaceholderDocument(
-  BuildContext context, {
-  required String title,
-  required String body,
-}) {
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.7,
-      maxChildSize: 0.9,
-      minChildSize: 0.5,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(color: Colors.black.withValues(alpha: 0.08)),
-        ),
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 14),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: scrollController,
-                child: Text(body),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-const String _termsOfUseText = '''
-Terms of Use
-
-By downloading or using this App, you agree to the following terms:
-
-• The App is provided for personal use only.
-• Users must not misuse or modify the App.
-• Free users have limited weekly usage. Premium features are available through paid subscriptions.
-• All purchases and subscriptions are processed through Google Play or the App Store, following their payment terms and refund policies.
-• The App may change features, prices, or terms at any time.
-
-Version: 1.0.0.
-''';
-
-const String _privacyPolicyText = '''
-Privacy Policy
-Last updated: October 2025
-
-This app (“Custom Collage”) respects your privacy. By using the App, you agree to this Privacy Policy.
-
-1. Data Collection
-The App does not collect or store any personal data. It only asks for access to your device’s photos in order to create collages. Your photos are never uploaded or shared; all processing happens locally on your device.
-
-2. Purchases and Payments
-The App uses Google Play Billing and App Store Subscriptions to manage premium features and payments. These services handle your payment information securely and follow their own privacy policies.
-
-3. Security
-The App does not transfer or store any user data on external servers.
-
-4. Changes
-This Privacy Policy may be updated from time to time. The latest version will always be available within the App or on the developer’s website.
-''';

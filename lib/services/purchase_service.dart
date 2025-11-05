@@ -21,9 +21,9 @@ class PurchaseService extends ChangeNotifier {
   }
 
   static const Set<String> _defaultProductIds = {
-    'collage_pro_weekly',
-    'collage_pro_monthly',
-    'collage_pro_yearly',
+    'com.framelabs.customcollage.premium.weekly',
+    'com.framelabs.customcollage.premium.monthly',
+    'com.framelabs.customcollage.premium.yearly',
   };
 
   final InAppPurchase _iap = InAppPurchase.instance;
