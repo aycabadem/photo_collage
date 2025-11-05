@@ -802,6 +802,7 @@ class _CollageScreenState extends State<CollageScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent,
+      constraints: _fullWidthSheetConstraints(context),
       builder: (context) => IOSColorPickerModal(
         currentColor: collageManager.backgroundColor,
         currentOpacity: collageManager.backgroundOpacity,
@@ -840,6 +841,7 @@ class _CollageScreenState extends State<CollageScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent,
+      constraints: _fullWidthSheetConstraints(context),
       builder: (context) {
         collageManager.startHistoryCheckpoint();
         return BorderPanel(
@@ -869,6 +871,7 @@ class _CollageScreenState extends State<CollageScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.transparent,
+      constraints: _fullWidthSheetConstraints(context),
       builder: (context) {
         return DraggableScrollableSheet(
           initialChildSize: 0.5,
@@ -900,5 +903,14 @@ class _CollageScreenState extends State<CollageScreen> {
         }
       });
     });
+  }
+
+  BoxConstraints _fullWidthSheetConstraints(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final width = media.size.width;
+    final horizontalSafeArea = media.viewPadding.left + media.viewPadding.right;
+    final effectiveWidth =
+        width - horizontalSafeArea > 0 ? width - horizontalSafeArea : width;
+    return BoxConstraints(minWidth: effectiveWidth, maxWidth: effectiveWidth);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../models/background.dart';
 
@@ -74,17 +76,27 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final theme = Theme.of(context);
-    final double maxSolidHeight = size.height * 0.38;
-    final double maxGradientHeight = size.height * 0.5;
-    final double panelHeight =
-        _mode == BackgroundMode.solid ? maxSolidHeight : maxGradientHeight;
+    const double solidPreferredHeight = 320;
+    const double gradientPreferredHeight = 430;
+    final media = MediaQuery.of(context);
+    final size = media.size;
+    final double availableHeight = size.height - media.viewPadding.bottom;
+    final double preferredHeight = _mode == BackgroundMode.solid
+        ? solidPreferredHeight
+        : gradientPreferredHeight;
+    final double heightFactor = _mode == BackgroundMode.solid ? 0.9 : 0.92;
+    final double maxUsable =
+        availableHeight > 0 ? availableHeight * heightFactor : preferredHeight;
+    final double rawHeight =
+        math.min(preferredHeight, maxUsable > 0 ? maxUsable : preferredHeight);
+    final double panelHeight = rawHeight
+        .clamp(0.0, availableHeight > 0 ? availableHeight : preferredHeight)
+        .toDouble();
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOut,
-      width: size.width,
+      width: double.infinity,
       height: panelHeight,
       constraints: BoxConstraints(maxHeight: panelHeight),
       decoration: BoxDecoration(
