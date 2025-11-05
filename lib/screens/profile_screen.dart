@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -23,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       productId: 'com.framelabs.customcollage.premium.weekly',
       label: 'Weekly',
       priceLabel: '€1.99 / week',
-      billingDetail: 'Renews automatically • cancel anytime',
+      fallbackBillingDetail: 'Renews automatically • cancel anytime',
       perks: ['Unlimited collage exports', 'Access all premium layouts'],
     ),
     _PlanOption(
@@ -31,8 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       productId: 'com.framelabs.customcollage.premium.monthly',
       label: 'Monthly',
       priceLabel: '€5.99 / month',
-      billingDetail:
-          'Save 25% vs weekly • renews automatically, cancel anytime',
+      fallbackBillingDetail: 'Renews automatically • cancel anytime',
       perks: ['Unlimited collage exports', 'Access all premium layouts'],
       highlighted: true,
     ),
@@ -41,8 +41,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       productId: 'com.framelabs.customcollage.premium.yearly',
       label: 'Yearly',
       priceLabel: '€39.99 / year',
-      billingDetail:
-          'Save 61% vs weekly • renews automatically, cancel anytime',
+      fallbackBillingDetail: 'Renews automatically • cancel anytime',
       perks: ['Unlimited collage exports', 'Access all premium layouts'],
     ),
   ];
@@ -114,6 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final collageManager = context.watch<CollageManager>();
     final purchaseService = context.watch<PurchaseService>();
     final bool isPremium = collageManager.isPremium;
+    final String premiumName = collageManager.premiumName;
     final bool trialActive = collageManager.isTrialActive;
     final bool trialAvailable = collageManager.canStartTrial;
     final int trialDaysRemaining = collageManager.trialDaysRemaining;
@@ -172,6 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             trialActive: trialActive,
             trialDaysRemaining: trialDaysRemaining,
             freeSavesRemaining: freeSavesRemaining,
+            premiumName: premiumName,
             onStartTrial: trialAvailable
                 ? () => _startTrial(collageManager)
                 : null,
@@ -203,6 +204,7 @@ class _UsageOverviewCard extends StatelessWidget {
   final int trialDaysRemaining;
   final int freeSavesRemaining;
   final VoidCallback? onStartTrial;
+  final String premiumName;
 
   const _UsageOverviewCard({
     required this.theme,
@@ -212,6 +214,7 @@ class _UsageOverviewCard extends StatelessWidget {
     required this.trialDaysRemaining,
     required this.freeSavesRemaining,
     required this.onStartTrial,
+    required this.premiumName,
   });
 
   @override
@@ -245,7 +248,7 @@ class _UsageOverviewCard extends StatelessWidget {
         children: [
           Text(
             isPremium
-                ? 'Premium active'
+                ? '$premiumName - Active'
                 : trialActive
                 ? 'Free trial active'
                 : 'Free plan',
@@ -347,6 +350,9 @@ class _SubscriptionSection extends StatelessWidget {
     required this.onSubscribe,
   });
 
+  static const double _weeksPerMonthEstimate = 4.0;
+  static const double _weeksPerYearEstimate = 52.0;
+
   @override
   Widget build(BuildContext context) {
     final _PlanOption plan = plans[selectedIndex];
@@ -356,9 +362,26 @@ class _SubscriptionSection extends StatelessWidget {
       plan.productId,
     );
     final String priceLabel = productDetails?.price ?? plan.priceLabel;
+    _PlanOption? weeklyOption;
+    for (final option in plans) {
+      if (option.id == 'weekly') {
+        weeklyOption = option;
+        break;
+      }
+    }
+    final ProductDetails? weeklyDetails = weeklyOption == null
+        ? null
+        : purchaseService.productForId(weeklyOption.productId);
+    final String billingDetail = _buildBillingDetail(
+      plan: plan,
+      planDetails: productDetails,
+      weeklyDetails: weeklyDetails,
+    );
 
     final scheme = theme.colorScheme;
-
+    if (isPremium) {
+      return Container();
+    }
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
@@ -454,7 +477,7 @@ class _SubscriptionSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  plan.billingDetail,
+                  billingDetail,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colorScheme.primary.withValues(alpha: 0.9),
@@ -528,6 +551,62 @@ class _SubscriptionSection extends StatelessWidget {
       ),
     );
   }
+
+  String _buildBillingDetail({
+    required _PlanOption plan,
+    required ProductDetails? planDetails,
+    required ProductDetails? weeklyDetails,
+  }) {
+    final String fallback = plan.fallbackBillingDetail;
+
+    if (plan.id == 'weekly') {
+      return fallback;
+    }
+
+    if (planDetails == null || weeklyDetails == null) {
+      return fallback;
+    }
+
+    final double weeklyPrice = weeklyDetails.rawPrice;
+    final double planPrice = planDetails.rawPrice;
+
+    if (weeklyPrice <= 0 || planPrice <= 0) {
+      return fallback;
+    }
+
+    double weeksEquivalent;
+    switch (plan.id) {
+      case 'monthly':
+        weeksEquivalent = _weeksPerMonthEstimate;
+        break;
+      case 'yearly':
+        weeksEquivalent = _weeksPerYearEstimate;
+        break;
+      default:
+        return fallback;
+    }
+
+    final double referenceCost = weeklyPrice * weeksEquivalent;
+    if (referenceCost <= 0) {
+      return fallback;
+    }
+
+    final double savingsRatio =
+        (referenceCost - planPrice) / referenceCost * 100;
+    print('$savingsRatio');
+
+    if (savingsRatio.abs() < 0.005) {
+      return 'Same cost as weekly • renews automatically, cancel anytime';
+    }
+
+    final String percentage = savingsRatio.abs().toStringAsFixed(0);
+
+    if (savingsRatio > 0) {
+      return 'Save $percentage% vs weekly • renews automatically, cancel anytime';
+    }
+
+    return 'Costs $percentage% more vs weekly • renews automatically, cancel anytime';
+  }
 }
 
 class _PlanOption {
@@ -535,7 +614,7 @@ class _PlanOption {
   final String productId;
   final String label;
   final String priceLabel;
-  final String billingDetail;
+  final String fallbackBillingDetail;
   final List<String> perks;
   final bool highlighted;
 
@@ -544,7 +623,7 @@ class _PlanOption {
     required this.productId,
     required this.label,
     required this.priceLabel,
-    required this.billingDetail,
+    required this.fallbackBillingDetail,
     required this.perks,
     this.highlighted = false,
   });
@@ -565,7 +644,7 @@ class _LegalSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tiles = [
+    final tiles = <_LegalLink>[
       _LegalLink(
         title: 'Terms of Use',
         onTap: () => _openExternalUrl(context, _termsOfUseUri),
@@ -590,6 +669,19 @@ class _LegalSection extends StatelessWidget {
         },
       ),
     ];
+
+    final Uri? managementUri = purchaseService.subscriptionManagementUri;
+    if (purchaseService.hasActiveSubscription && managementUri != null) {
+      tiles.add(
+        _LegalLink(
+          title: 'Cancel Subscription',
+          onTap: () => _openSubscriptionManagement(
+            context,
+            purchaseService,
+          ),
+        ),
+      );
+    }
 
     final scheme = theme.colorScheme;
 
@@ -642,10 +734,7 @@ class _LegalSection extends StatelessWidget {
     );
   }
 
-  static Future<void> _openExternalUrl(
-    BuildContext context,
-    Uri uri,
-  ) async {
+  static Future<void> _openExternalUrl(BuildContext context, Uri uri) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final launched = await launchUrl(
@@ -666,6 +755,35 @@ class _LegalSection extends StatelessWidget {
         content: Text('Unable to open link. Please try again later.'),
       ),
     );
+  }
+
+  static Future<void> _openSubscriptionManagement(
+    BuildContext context,
+    PurchaseService purchaseService,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final Uri? uri = purchaseService.subscriptionManagementUri;
+    if (uri == null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Subscription management is not available on this platform.',
+          ),
+        ),
+      );
+      return;
+    }
+    try {
+      final bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        _showLaunchError(messenger);
+      }
+    } catch (_) {
+      _showLaunchError(messenger);
+    }
   }
 }
 

@@ -25,6 +25,11 @@ class PurchaseService extends ChangeNotifier {
     'com.framelabs.customcollage.premium.monthly',
     'com.framelabs.customcollage.premium.yearly',
   };
+  static final Uri _appStoreSubscriptionsUri = Uri.https(
+    'apps.apple.com',
+    'account/subscriptions',
+  );
+  static const String _androidPackageId = 'com.cemergin.photocollage';
 
   final InAppPurchase _iap = InAppPurchase.instance;
   final Set<String> _productIds;
@@ -47,6 +52,21 @@ class PurchaseService extends ChangeNotifier {
   bool get hasActiveSubscription => _entitlements.isNotEmpty;
   String? get activePlanProductId =>
       _entitlements.isEmpty ? null : _entitlements.first;
+  Uri? get subscriptionManagementUri {
+    if (kIsWeb) return null;
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return _buildPlayStoreSubscriptionsUri(
+          _androidPackageId,
+          activePlanProductId,
+        );
+      case TargetPlatform.iOS:
+      case TargetPlatform.macOS:
+        return _appStoreSubscriptionsUri;
+      default:
+        return null;
+    }
+  }
 
   /// Returns the locally cached [ProductDetails] for the given [productId].
   ProductDetails? productForId(String productId) {
@@ -202,5 +222,23 @@ class PurchaseService extends ChangeNotifier {
   void dispose() {
     _subscription?.cancel();
     super.dispose();
+  }
+
+  static Uri _buildPlayStoreSubscriptionsUri(
+    String packageId,
+    String? productId,
+  ) {
+    final Map<String, String> query = <String, String>{};
+    if (packageId.isNotEmpty) {
+      query['package'] = packageId;
+    }
+    if (productId != null && productId.isNotEmpty) {
+      query['sku'] = productId;
+    }
+    return Uri.https(
+      'play.google.com',
+      'store/account/subscriptions',
+      query.isEmpty ? null : query,
+    );
   }
 }

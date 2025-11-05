@@ -65,8 +65,7 @@ class _PhotoBoxSnapshot {
 
   PhotoBox toPhotoBox() {
     final String? path = imagePath;
-    final File? file =
-        (path != null && path.isNotEmpty) ? File(path) : null;
+    final File? file = (path != null && path.isNotEmpty) ? File(path) : null;
     return PhotoBox(
       position: position,
       size: size,
@@ -111,9 +110,7 @@ CustomLayoutSnapshot? _cloneCustomLayoutSnapshot(
   if (snapshot == null) return null;
   return CustomLayoutSnapshot(
     photoLayouts: snapshot.photoLayouts
-        .map(
-          (p) => PhotoLayout(position: p.position, size: p.size),
-        )
+        .map((p) => PhotoLayout(position: p.position, size: p.size))
         .toList(),
     originalAspect: snapshot.originalAspect,
     photoPathsMap: Map<int, String>.from(snapshot.photoPathsMap),
@@ -121,8 +118,9 @@ CustomLayoutSnapshot? _cloneCustomLayoutSnapshot(
     photoAlignsMap: Map<int, Alignment>.from(snapshot.photoAlignsMap),
     photoScalesMap: Map<int, double>.from(snapshot.photoScalesMap),
     photoRotationsMap: Map<int, double>.from(snapshot.photoRotationsMap),
-    photoRotationBasesMap:
-        Map<int, double>.from(snapshot.photoRotationBasesMap),
+    photoRotationBasesMap: Map<int, double>.from(
+      snapshot.photoRotationBasesMap,
+    ),
   );
 }
 
@@ -217,8 +215,7 @@ class _CollageSnapshot {
     for (int i = 0; i < gradientSpec.stops.length; i++) {
       final a = gradientSpec.stops[i];
       final b = other.gradientSpec.stops[i];
-      if (a.offset != b.offset ||
-          a.color.toARGB32() != b.color.toARGB32()) {
+      if (a.offset != b.offset || a.color.toARGB32() != b.color.toARGB32()) {
         return false;
       }
     }
@@ -231,10 +228,7 @@ class ResolutionOption {
   final String label;
   final int width;
 
-  const ResolutionOption({
-    required this.label,
-    required this.width,
-  });
+  const ResolutionOption({required this.label, required this.width});
 }
 
 /// Shared state and defaults for the collage manager service.
@@ -320,6 +314,7 @@ abstract class _CollageManagerBase extends ChangeNotifier {
 
   // Premium access
   bool _isPremium = false;
+  String _premiumName = '';
   int _weeklySavesUsed = 0;
   DateTime? _trialStart;
 
@@ -331,8 +326,9 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   List<PhotoBox> get photoBoxes => List.unmodifiable(_photoBoxes);
   PhotoBox? get selectedBox => _selectedBox;
   List<AspectSpec> get presets => List.unmodifiable(_presets);
-  List<AspectSpec> get presetsWithCustom =>
-      _customAspect != null ? List.unmodifiable([..._presets, _customAspect!]) : presets;
+  List<AspectSpec> get presetsWithCustom => _customAspect != null
+      ? List.unmodifiable([..._presets, _customAspect!])
+      : presets;
   AspectSpec? get customAspect => _customAspect;
 
   // Background color and opacity getters
@@ -357,13 +353,15 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   bool get isCustomMode => _isCustomMode;
 
   // Export resolution getters
-  List<ResolutionOption> get resolutionOptions => List.unmodifiable(_resolutionOptions);
+  List<ResolutionOption> get resolutionOptions =>
+      List.unmodifiable(_resolutionOptions);
   int get selectedExportWidth => _selectedExportWidth;
 
   // Photo margin getter
   double get photoMargin => _photoMargin;
 
   bool get isPremium => _isPremium;
+  String get premiumName => _premiumName;
   bool get isFreeUser => !_isPremium;
   int get weeklySavesUsed => _weeklySavesUsed;
   bool get canStartTrial => !_isPremium && _trialStart == null;
@@ -409,6 +407,17 @@ abstract class _CollageManagerBase extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setPremiumName(String name) {
+    if (name == "premium_yearly") {
+      _premiumName = "Yearly Plan";
+    } else if (name == "premium_monthly") {
+      _premiumName = "Monthly Plan";
+    } else {
+      _premiumName = "Weekly Plan";
+    }
+    notifyListeners();
+  }
+
   bool startTrial() {
     if (!canStartTrial) return false;
     _trialStart = DateTime.now();
@@ -436,8 +445,10 @@ abstract class _CollageManagerBase extends ChangeNotifier {
     double width = box.size.width;
     double height = box.size.height;
 
-    final Offset desiredCenter =
-        Offset(position.dx + width * 0.5, position.dy + height * 0.5);
+    final Offset desiredCenter = Offset(
+      position.dx + width * 0.5,
+      position.dy + height * 0.5,
+    );
 
     final double angle = box.rotationRadians;
     final double absCos = math.cos(angle).abs();
@@ -447,7 +458,8 @@ abstract class _CollageManagerBase extends ChangeNotifier {
     double boundHeight = (absSin * width) + (absCos * height);
 
     double scale = 1.0;
-    if (boundWidth > _templateSize.width || boundHeight > _templateSize.height) {
+    if (boundWidth > _templateSize.width ||
+        boundHeight > _templateSize.height) {
       final double sx = _templateSize.width / boundWidth;
       final double sy = _templateSize.height / boundHeight;
       scale = math.min(math.min(sx, sy), 1.0);
@@ -477,13 +489,16 @@ abstract class _CollageManagerBase extends ChangeNotifier {
       maxCenterY = cy;
     }
 
-    final double clampedCenterX = desiredCenter.dx.clamp(minCenterX, maxCenterX);
-    final double clampedCenterY = desiredCenter.dy.clamp(minCenterY, maxCenterY);
-
-    return Offset(
-      clampedCenterX - width * 0.5,
-      clampedCenterY - height * 0.5,
+    final double clampedCenterX = desiredCenter.dx.clamp(
+      minCenterX,
+      maxCenterX,
     );
+    final double clampedCenterY = desiredCenter.dy.clamp(
+      minCenterY,
+      maxCenterY,
+    );
+
+    return Offset(clampedCenterX - width * 0.5, clampedCenterY - height * 0.5);
   }
 
   void suppressNextHistoryEntry() {
@@ -622,8 +637,9 @@ abstract class _CollageManagerBase extends ChangeNotifier {
     _innerMargin = snapshot.innerMargin;
     _outerMargin = snapshot.outerMargin;
     _cornerRadius = snapshot.cornerRadius;
-    _customLayoutSnapshot =
-        _cloneCustomLayoutSnapshot(snapshot.customLayoutSnapshot);
+    _customLayoutSnapshot = _cloneCustomLayoutSnapshot(
+      snapshot.customLayoutSnapshot,
+    );
   }
 
   void startHistoryCheckpoint() {

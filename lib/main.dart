@@ -30,32 +30,37 @@ class MyApp extends StatelessWidget {
     );
 
     TextTheme bolden(TextTheme t) => TextTheme(
-          displayLarge: t.displayLarge?.copyWith(fontWeight: FontWeight.w600),
-          displayMedium: t.displayMedium?.copyWith(fontWeight: FontWeight.w600),
-          displaySmall: t.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-          headlineLarge: t.headlineLarge?.copyWith(fontWeight: FontWeight.w600),
-          headlineMedium: t.headlineMedium?.copyWith(fontWeight: FontWeight.w600),
-          headlineSmall: t.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
-          titleLarge: t.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-          titleMedium: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-          titleSmall: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-          bodyLarge: t.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
-          bodyMedium: t.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-          bodySmall: t.bodySmall?.copyWith(fontWeight: FontWeight.w500),
-          labelLarge: t.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-          labelMedium: t.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-          labelSmall: t.labelSmall?.copyWith(fontWeight: FontWeight.w600),
-        );
+      displayLarge: t.displayLarge?.copyWith(fontWeight: FontWeight.w600),
+      displayMedium: t.displayMedium?.copyWith(fontWeight: FontWeight.w600),
+      displaySmall: t.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+      headlineLarge: t.headlineLarge?.copyWith(fontWeight: FontWeight.w600),
+      headlineMedium: t.headlineMedium?.copyWith(fontWeight: FontWeight.w600),
+      headlineSmall: t.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+      titleLarge: t.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+      titleMedium: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      titleSmall: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+      bodyLarge: t.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+      bodyMedium: t.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+      bodySmall: t.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+      labelLarge: t.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      labelMedium: t.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+      labelSmall: t.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+    );
 
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => PurchaseService()..initialize(),
-        ),
+        ChangeNotifierProvider(create: (_) => PurchaseService()..initialize()),
         ChangeNotifierProxyProvider<PurchaseService, CollageManager>(
           create: (_) => CollageManager(),
           update: (_, purchaseService, collageManager) {
             final CollageManager manager = collageManager ?? CollageManager();
+            if (purchaseService.activePlanProductId != null) {
+              final productDetails = purchaseService.productForId(
+                purchaseService.activePlanProductId!,
+              );
+              manager.setPremiumName(productDetails?.title ?? '');
+            }
+
             manager.setPremium(purchaseService.hasActiveSubscription);
             return manager;
           },
@@ -81,10 +86,16 @@ class MyApp extends StatelessWidget {
           cardColor: surfaceAlt,
           iconTheme: const IconThemeData(color: primary),
           textTheme: bolden(
-            ThemeData.light().textTheme.apply(bodyColor: primary, displayColor: primary),
+            ThemeData.light().textTheme.apply(
+              bodyColor: primary,
+              displayColor: primary,
+            ),
           ),
           primaryTextTheme: bolden(
-            ThemeData.light().primaryTextTheme.apply(bodyColor: primary, displayColor: primary),
+            ThemeData.light().primaryTextTheme.apply(
+              bodyColor: primary,
+              displayColor: primary,
+            ),
           ),
           useMaterial3: true,
         ),
