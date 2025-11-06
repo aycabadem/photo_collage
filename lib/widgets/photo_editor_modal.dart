@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:extended_image/extended_image.dart';
-import 'dart:ui' as ui;
 import 'dart:math' as math;
+import 'dart:ui' as ui;
+
+import 'package:extended_image/extended_image.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
 import '../models/photo_box.dart';
 
 class PhotoEditorModal extends StatefulWidget {
@@ -98,81 +101,7 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
                     width: widget.photoBox.size.width,
                     height: widget.photoBox.size.height,
                     child: ClipRect(
-                      child: widget.photoBox.imageFile != null
-                          ? ExtendedImage.file(
-                              widget.photoBox.imageFile!,
-                              key: editorKey,
-                              fit: BoxFit
-                                  .contain, // required by ExtendedImage editor
-                              alignment: widget.photoBox.alignment,
-                              mode: ExtendedImageMode.editor,
-                              enableLoadState: true,
-                              loadStateChanged: (ExtendedImageState state) {
-                                if (state.extendedImageLoadState ==
-                                    LoadState.completed) {
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    // ignore: avoid_print
-                                    print(
-                                      '[PhotoEditorModal] load completed; opening with alignment='
-                                      '${widget.photoBox.alignment} scale=${widget.photoBox.photoScale}',
-                                    );
-                                    _syncInitialViewUsingController(state);
-                                  });
-                                }
-                                return null; // use default completed widget
-                              },
-                              initGestureConfigHandler: (state) {
-                                // Map PhotoBox's cover-based scale to editor's contain-based scale
-                                double initialScale =
-                                    widget.photoBox.photoScale;
-                                final ui.Image? raw =
-                                    state.extendedImageInfo?.image;
-                                if (raw != null) {
-                                  final boxW = widget.photoBox.size.width;
-                                  final boxH = widget.photoBox.size.height;
-                                  final wr = boxW / raw.width;
-                                  final hr = boxH / raw.height;
-                                  final containBase = math.min(wr, hr);
-                                  final coverBase = math.max(wr, hr);
-                                  final coverToContain =
-                                      coverBase / containBase; // >= 1
-                                  initialScale =
-                                      widget.photoBox.photoScale *
-                                      coverToContain;
-                                }
-                                return GestureConfig(
-                                  inPageView: false,
-                                  minScale: 1.0,
-                                  maxScale: 8.0,
-                                  animationMaxScale: 8.0,
-                                  initialScale: initialScale,
-                                );
-                              },
-                              initEditorConfigHandler: (state) {
-                                return EditorConfig(
-                                  maxScale: 8.0,
-                                  cropRectPadding: const EdgeInsets.all(0),
-                                  hitTestSize: 20.0,
-                                  initCropRectType: InitCropRectType.layoutRect,
-                                  cropAspectRatio:
-                                      widget.photoBox.size.width /
-                                      widget.photoBox.size.height,
-                                  controller: _editorController,
-                                );
-                              },
-                            )
-                          : Container(
-                              color: scheme.secondary,
-                              child: Center(
-                                child: Icon(
-                                  Icons.image,
-                                  size: 64,
-                                  color: scheme.primary.withValues(alpha: 0.6),
-                                ),
-                              ),
-                            ),
+                      child: _buildEditorContent(context, scheme),
                     ),
                   ),
                 ),
@@ -264,6 +193,85 @@ class _PhotoEditorModalState extends State<PhotoEditorModal> {
     }
 
     Navigator.of(context).pop();
+  }
+
+  Widget _buildEditorContent(BuildContext context, ColorScheme scheme) {
+    if (kIsWeb) {
+      return Center(
+        child: Text(
+          'Photo editing is unavailable on web preview.',
+          style: Theme.of(context).textTheme.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    final imageFile = widget.photoBox.imageFile;
+    if (imageFile != null) {
+      return ExtendedImage.file(
+        imageFile as dynamic,
+        key: editorKey,
+        fit: BoxFit.contain,
+        alignment: widget.photoBox.alignment,
+        mode: ExtendedImageMode.editor,
+        enableLoadState: true,
+        loadStateChanged: (ExtendedImageState state) {
+          if (state.extendedImageLoadState == LoadState.completed) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // ignore: avoid_print
+              print(
+                '[PhotoEditorModal] load completed; opening with alignment='
+                '${widget.photoBox.alignment} scale=${widget.photoBox.photoScale}',
+              );
+              _syncInitialViewUsingController(state);
+            });
+          }
+          return null;
+        },
+        initGestureConfigHandler: (state) {
+          double initialScale = widget.photoBox.photoScale;
+          final ui.Image? raw = state.extendedImageInfo?.image;
+          if (raw != null) {
+            final boxW = widget.photoBox.size.width;
+            final boxH = widget.photoBox.size.height;
+            final wr = boxW / raw.width;
+            final hr = boxH / raw.height;
+            final containBase = math.min(wr, hr);
+            final coverBase = math.max(wr, hr);
+            final coverToContain = coverBase / containBase;
+            initialScale = widget.photoBox.photoScale * coverToContain;
+          }
+          return GestureConfig(
+            inPageView: false,
+            minScale: 1.0,
+            maxScale: 8.0,
+            animationMaxScale: 8.0,
+            initialScale: initialScale,
+          );
+        },
+        initEditorConfigHandler: (state) {
+          return EditorConfig(
+            maxScale: 8.0,
+            cropRectPadding: const EdgeInsets.all(0),
+            hitTestSize: 20.0,
+            initCropRectType: InitCropRectType.layoutRect,
+            cropAspectRatio:
+                widget.photoBox.size.width / widget.photoBox.size.height,
+            controller: _editorController,
+          );
+        },
+      );
+    }
+
+    return Container(
+      color: scheme.secondary,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.image,
+        size: 64,
+        color: scheme.primary.withValues(alpha: 0.6),
+      ),
+    );
   }
 
 
