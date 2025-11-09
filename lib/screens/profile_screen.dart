@@ -16,7 +16,6 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedPlanIndex = 1; // Default to monthly
   String? _lastPurchaseError;
-  bool _wasPremium = false;
 
   static const List<_PlanOption> _plans = [
     _PlanOption(
@@ -90,6 +89,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
+    print('trying to buy ${plan.productId}');
     await purchaseService.buy(plan.productId);
   }
 
@@ -135,19 +135,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _lastPurchaseError = null;
     }
 
-    if (isPremium && !_wasPremium) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Premium unlocked! Enjoy unlimited access.'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      });
-    }
-    _wasPremium = isPremium;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Account'),
@@ -190,6 +177,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 18),
           _LegalSection(theme: theme, purchaseService: purchaseService),
+          const SizedBox(height: 18),
+          _DebugInfoSection(
+            theme: theme,
+            purchaseService: purchaseService,
+            collageManager: collageManager,
+          ),
         ],
       ),
     );
@@ -675,10 +668,7 @@ class _LegalSection extends StatelessWidget {
       tiles.add(
         _LegalLink(
           title: 'Cancel Subscription',
-          onTap: () => _openSubscriptionManagement(
-            context,
-            purchaseService,
-          ),
+          onTap: () => _openSubscriptionManagement(context, purchaseService),
         ),
       );
     }
@@ -784,6 +774,203 @@ class _LegalSection extends StatelessWidget {
     } catch (_) {
       _showLaunchError(messenger);
     }
+  }
+}
+
+class _DebugInfoSection extends StatelessWidget {
+  final ThemeData theme;
+  final PurchaseService purchaseService;
+  final CollageManager collageManager;
+
+  const _DebugInfoSection({
+    required this.theme,
+    required this.purchaseService,
+    required this.collageManager,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = theme.textTheme.bodySmall?.copyWith(height: 1.4);
+
+    final List<String> productDescriptions = purchaseService.products.isEmpty
+        ? const ['No products returned from the store yet.']
+        : purchaseService.products.map((product) {
+            final DateTime? expiration = purchaseService.expirationForProduct(
+              product.id,
+            );
+            final bool isActive =
+                purchaseService.activePlanProductId == product.id;
+            final String status = isActive
+                ? 'ACTIVE'
+                : purchaseService.hasActiveSubscription
+                ? 'INACTIVE'
+                : 'NOT PURCHASED';
+            return '${product.id} • ${product.price} '
+                '(${product.currencyCode}) • status: $status '
+                '• expires: ${expiration == null ? '—' : expiration.toLocal()}';
+          }).toList();
+
+    final String notFoundProducts = purchaseService.notFoundProductIds.isEmpty
+        ? '—'
+        : purchaseService.notFoundProductIds.join(', ');
+
+    final Uri? managementUri = purchaseService.subscriptionManagementUri;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.black.withValues(alpha: 0.08),
+          width: 1,
+        ),
+      ),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Diagnostics (TestFlight)',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _DebugInfoRow(
+            label: 'IAP available',
+            value: '${purchaseService.isAvailable}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Loading',
+            value: '${purchaseService.isLoading}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Processing',
+            value: '${purchaseService.isProcessing}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Active product',
+            value: purchaseService.activePlanProductId ?? '—',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Has entitlement',
+            value: '${purchaseService.hasActiveSubscription}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Last error',
+            value: purchaseService.errorMessage ?? '—',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Management URL',
+            value: managementUri?.toString() ?? '—',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Not found products',
+            value: notFoundProducts,
+            style: textStyle,
+          ),
+          const Divider(height: 28),
+          Text(
+            'User details',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _DebugInfoRow(
+            label: 'Premium flag',
+            value: '${collageManager.isPremium}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Premium name',
+            value: collageManager.premiumName.isEmpty
+                ? '—'
+                : collageManager.premiumName,
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Trial active',
+            value: '${collageManager.isTrialActive}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Trial days left',
+            value: '${collageManager.trialDaysRemaining}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Free saves left',
+            value: collageManager.freeSavesRemaining < 0
+                ? 'Unlimited'
+                : '${collageManager.freeSavesRemaining}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Weekly saves used',
+            value: '${collageManager.weeklySavesUsed}',
+            style: textStyle,
+          ),
+          _DebugInfoRow(
+            label: 'Weekly limit',
+            value: collageManager.weeklySaveLimit < 0
+                ? 'Unlimited'
+                : '${collageManager.weeklySaveLimit}',
+            style: textStyle,
+          ),
+          const Divider(height: 28),
+          Text(
+            'Store products',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...productDescriptions.map(
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: SelectableText(line, style: textStyle),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DebugInfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final TextStyle? style;
+
+  const _DebugInfoRow({required this.label, required this.value, this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    final TextStyle labelStyle =
+        (style ?? Theme.of(context).textTheme.bodySmall ?? const TextStyle())
+            .copyWith(fontWeight: FontWeight.w600);
+    final TextStyle valueStyle =
+        style ?? Theme.of(context).textTheme.bodySmall ?? const TextStyle();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: 140, child: Text(label, style: labelStyle)),
+          const SizedBox(width: 8),
+          Expanded(child: SelectableText(value, style: valueStyle)),
+        ],
+      ),
+    );
   }
 }
 

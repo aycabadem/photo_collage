@@ -9,11 +9,9 @@ import 'receipt_validator.dart';
 /// Coordinates querying product metadata, launching purchases, and tracking
 /// entitlement state for the app's premium unlock.
 class PurchaseService extends ChangeNotifier {
-  PurchaseService({
-    Set<String>? productIds,
-    ReceiptValidator? receiptValidator,
-  }) : _productIds = productIds ?? _defaultProductIds,
-       _receiptValidator = receiptValidator ?? _createDefaultValidator() {
+  PurchaseService({Set<String>? productIds, ReceiptValidator? receiptValidator})
+    : _productIds = productIds ?? _defaultProductIds,
+      _receiptValidator = receiptValidator ?? _createDefaultValidator() {
     _subscription = _iap.purchaseStream.listen(
       _handlePurchaseUpdates,
       onDone: () => _subscription?.cancel(),
@@ -48,8 +46,7 @@ class PurchaseService extends ChangeNotifier {
   List<ProductDetails> _products = <ProductDetails>[];
   Set<String> _notFoundIds = <String>{};
   final Set<String> _entitlements = <String>{};
-  final Map<String, DateTime?> _entitlementExpirations =
-      <String, DateTime?>{};
+  final Map<String, DateTime?> _entitlementExpirations = <String, DateTime?>{};
 
   bool get isAvailable => _isAvailable;
   bool get isLoading => _isLoading;
@@ -130,7 +127,6 @@ class PurchaseService extends ChangeNotifier {
     }
 
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-    _isProcessing = true;
     _errorMessage = null;
     notifyListeners();
 
@@ -178,15 +174,13 @@ class PurchaseService extends ChangeNotifier {
           break;
         case PurchaseStatus.canceled:
           _isProcessing = false;
-          shouldNotify =
-              _revokeEntitlement(purchase.productID) || shouldNotify;
+          shouldNotify = _revokeEntitlement(purchase.productID) || shouldNotify;
           break;
         case PurchaseStatus.error:
           _errorMessage =
               purchase.error?.message ?? 'An unknown purchase error occurred.';
           _isProcessing = false;
-          shouldNotify =
-              _revokeEntitlement(purchase.productID) || shouldNotify;
+          shouldNotify = _revokeEntitlement(purchase.productID) || shouldNotify;
           break;
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
@@ -234,10 +228,9 @@ class PurchaseService extends ChangeNotifier {
     for (final PurchaseDetails purchase in response.pastPurchases) {
       observedProductIds.add(purchase.productID);
       if (_shouldKeepPurchase(purchase)) {
-        changed = await _verifyAndApplyPurchase(
-          purchase,
-          notifyOnChange: false,
-        ) || changed;
+        changed =
+            await _verifyAndApplyPurchase(purchase, notifyOnChange: false) ||
+            changed;
       } else {
         changed = _revokeEntitlement(purchase.productID) || changed;
       }
