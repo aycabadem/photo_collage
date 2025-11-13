@@ -19,6 +19,10 @@ class PhotoBoxWidget extends StatelessWidget {
 
   /// Callback when the box is dragged
   final void Function(DragUpdateDetails) onPanUpdate;
+  /// Callback when drag starts (used to auto-select)
+  final VoidCallback? onPanStart;
+  /// Callback when drag ends/cancels (used to auto-deselect)
+  final VoidCallback? onPanEnd;
 
   /// Callback when the edit button is tapped
   final VoidCallback onEdit;
@@ -47,6 +51,8 @@ class PhotoBoxWidget extends StatelessWidget {
     required this.onTap,
     required this.onBringToFront,
     required this.onPanUpdate,
+    this.onPanStart,
+    this.onPanEnd,
     required this.onEdit,
     required this.onDelete,
     this.onAddPhoto,
@@ -79,7 +85,10 @@ class PhotoBoxWidget extends StatelessWidget {
         }
       },
       onDoubleTap: onBringToFront,
-      onPanUpdate: isSelected ? onPanUpdate : null,
+      onPanStart: (_) => onPanStart?.call(),
+      onPanUpdate: onPanUpdate,
+      onPanEnd: (_) => onPanEnd?.call(),
+      onPanCancel: () => onPanEnd?.call(),
       behavior: HitTestBehavior.opaque, // Prevent background taps
       child: Container(
         decoration: _frameDecoration(

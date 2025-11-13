@@ -86,7 +86,6 @@ mixin _CollagePhotoBoxControls on _CollageManagerBase {
       target.rotationRadians = 0.0;
       target.rotationBaseRadians = 0.0;
 
-      _selectedBox = target;
       notifyListeners();
       return;
     }
@@ -106,7 +105,6 @@ mixin _CollagePhotoBoxControls on _CollageManagerBase {
     );
 
     _photoBoxes.add(newBox);
-    _selectedBox = newBox;
     notifyListeners();
   }
 
@@ -121,7 +119,6 @@ mixin _CollagePhotoBoxControls on _CollageManagerBase {
     targetBox.imageFile = File(pickedFile.path);
     targetBox.imagePath = pickedFile.path;
 
-    _selectedBox = targetBox;
     notifyListeners();
   }
 
