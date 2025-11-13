@@ -73,7 +73,10 @@ class _SimpleBottomBar extends StatelessWidget {
               'assets/icons/save_arrow.svg',
               width: 26,
               height: 26,
-              colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              colorFilter: const ColorFilter.mode(
+                Colors.black,
+                BlendMode.srcIn,
+              ),
             ),
             active: false,
             onTap: onSavePressed,
@@ -121,7 +124,6 @@ class _SimpleBarButton extends StatelessWidget {
     );
   }
 }
-
 
 class _UndoRedoButtons extends StatelessWidget {
   final CollageManager manager;
@@ -175,8 +177,9 @@ class _HistoryIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color iconColor =
-        enabled ? Colors.black : Colors.black.withValues(alpha: 0.25);
+    final Color iconColor = enabled
+        ? Colors.black
+        : Colors.black.withValues(alpha: 0.25);
     return InkResponse(
       onTap: enabled ? onTap : null,
       radius: 22,
@@ -184,7 +187,6 @@ class _HistoryIconButton extends StatelessWidget {
     );
   }
 }
-
 
 class _CollageScreenState extends State<CollageScreen> {
   static const MethodChannel _galleryChannel = MethodChannel('collage/gallery');
@@ -221,9 +223,7 @@ class _CollageScreenState extends State<CollageScreen> {
         children: [
           // Gradient outer background (behind white canvas)
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(color: Colors.white),
-            ),
+            child: Container(decoration: BoxDecoration(color: Colors.white)),
           ),
           // Main canvas and interactions
           Padding(
@@ -288,19 +288,15 @@ class _CollageScreenState extends State<CollageScreen> {
                               dy / scale,
                             );
                           },
-                          onBackgroundTap: () =>
-                              collageManager.selectBox(null),
+                          onBackgroundTap: () => collageManager.selectBox(null),
                           guidelines: collageManager.selectedBox != null
                               ? collageManager.getAlignmentGuidelines(
                                   collageManager.selectedBox!,
                                 )
                               : [],
                           collageManager: collageManager,
-                          onEditBox: (box) => _openPhotoEditor(
-                            context,
-                            collageManager,
-                            box,
-                          ),
+                          onEditBox: (box) =>
+                              _openPhotoEditor(context, collageManager, box),
                         ),
                       ),
                     ),
@@ -315,9 +311,7 @@ class _CollageScreenState extends State<CollageScreen> {
             bottom: 92,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _UndoRedoButtons(manager: collageManager),
-              ],
+              children: [_UndoRedoButtons(manager: collageManager)],
             ),
           ),
           Positioned(
@@ -459,7 +453,7 @@ class _CollageScreenState extends State<CollageScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Free saves used up'),
         content: const Text(
-          'You have used your 3 free saves for this week. Start your free 3-day trial or upgrade to keep exporting collages without limits.',
+          'You have used your 3 free saves for this week. Upgrade to keep exporting collages without limits.',
         ),
         actions: [
           TextButton(
@@ -760,8 +754,9 @@ class _CollageScreenState extends State<CollageScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: FilledButton(
-                                  onPressed: () => Navigator.of(sheetContext)
-                                      .pop(selectedWidth),
+                                  onPressed: () => Navigator.of(
+                                    sheetContext,
+                                  ).pop(selectedWidth),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.black,
@@ -771,8 +766,9 @@ class _CollageScreenState extends State<CollageScreen> {
                                       width: 1.2,
                                     ),
                                     alignment: Alignment.center,
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 14),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -909,8 +905,9 @@ class _CollageScreenState extends State<CollageScreen> {
     final media = MediaQuery.of(context);
     final width = media.size.width;
     final horizontalSafeArea = media.viewPadding.left + media.viewPadding.right;
-    final effectiveWidth =
-        width - horizontalSafeArea > 0 ? width - horizontalSafeArea : width;
+    final effectiveWidth = width - horizontalSafeArea > 0
+        ? width - horizontalSafeArea
+        : width;
     return BoxConstraints(minWidth: effectiveWidth, maxWidth: effectiveWidth);
   }
 }

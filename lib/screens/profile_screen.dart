@@ -152,18 +152,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           if (!purchaseService.isLoading && !purchaseService.isAvailable)
             const _StoreUnavailableBanner(),
-          _UsageOverviewCard(
-            theme: theme,
-            isPremium: isPremium,
-            trialAvailable: trialAvailable,
-            trialActive: trialActive,
-            trialDaysRemaining: trialDaysRemaining,
-            freeSavesRemaining: freeSavesRemaining,
-            premiumName: premiumName,
-            onStartTrial: trialAvailable
-                ? () => _startTrial(collageManager)
-                : null,
-          ),
+          // TODO(Ayca): remove this comment when needed
+          // _UsageOverviewCard(
+          //   theme: theme,
+          //   isPremium: isPremium,
+          //   trialAvailable: trialAvailable,
+          //   trialActive: trialActive,
+          //   trialDaysRemaining: trialDaysRemaining,
+          //   freeSavesRemaining: freeSavesRemaining,
+          //   premiumName: premiumName,
+          //   onStartTrial: trialAvailable
+          //       ? () => _startTrial(collageManager)
+          //       : null,
+          // ),
           const SizedBox(height: 18),
           _SubscriptionSection(
             theme: theme,
@@ -178,11 +179,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 18),
           _LegalSection(theme: theme, purchaseService: purchaseService),
           const SizedBox(height: 18),
-          _DebugInfoSection(
-            theme: theme,
-            purchaseService: purchaseService,
-            collageManager: collageManager,
-          ),
+          // TODO(Ayca): remove this comment when needed
+          // _DebugInfoSection(
+          //   theme: theme,
+          //   purchaseService: purchaseService,
+          //   collageManager: collageManager,
+          // ),
         ],
       ),
     );
