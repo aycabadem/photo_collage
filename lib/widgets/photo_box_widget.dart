@@ -4,7 +4,7 @@ import '../widgets/smart_border_overlay.dart';
 import '../services/collage_manager.dart';
 
 /// Widget for displaying a single photo box in the collage
-class PhotoBoxWidget extends StatelessWidget {
+class PhotoBoxWidget extends StatefulWidget {
   /// The photo box data to display
   final PhotoBox box;
 
@@ -64,7 +64,20 @@ class PhotoBoxWidget extends StatelessWidget {
   });
 
   @override
+  State<PhotoBoxWidget> createState() => _PhotoBoxWidgetState();
+}
+
+class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
+  double _inlineScaleStart = 1.0;
+  Alignment _inlineAlignmentStart = Alignment.center;
+  Offset _inlineFocalStart = Offset.zero;
+
+  bool get _inlineEditing =>
+      !widget.collageManager.isCustomMode && widget.box.imageFile != null;
+
+  @override
   Widget build(BuildContext context) {
+    final box = widget.box;
     final bool hasImage = box.imageFile != null;
     final theme = Theme.of(context);
     final Color placeholderBorderColor =
@@ -79,20 +92,29 @@ class PhotoBoxWidget extends StatelessWidget {
 
     return GestureDetector(
       onTap: () async {
-        onTap();
-        if (!hasImage && onAddPhoto != null) {
-          await onAddPhoto!();
+        widget.onTap();
+        if (!hasImage && widget.onAddPhoto != null) {
+          await widget.onAddPhoto!();
         }
       },
-      onDoubleTap: onBringToFront,
-      onPanStart: (_) => onPanStart?.call(),
-      onPanUpdate: onPanUpdate,
-      onPanEnd: (_) => onPanEnd?.call(),
-      behavior: HitTestBehavior.opaque, // Prevent background taps
+      onDoubleTap: widget.onBringToFront,
+      onPanStart: widget.collageManager.isCustomMode
+          ? (_) => widget.onPanStart?.call()
+          : null,
+      onPanUpdate: widget.collageManager.isCustomMode && widget.isSelected
+          ? widget.onPanUpdate
+          : null,
+      onPanEnd: widget.collageManager.isCustomMode
+          ? (_) => widget.onPanEnd?.call()
+          : null,
+      onScaleStart: _inlineEditing ? _handleInlineScaleStart : null,
+      onScaleUpdate: _inlineEditing ? _handleInlineScaleUpdate : null,
+      onScaleEnd: _inlineEditing ? _handleInlineScaleEnd : null,
+      behavior: HitTestBehavior.opaque,
       child: Container(
         decoration: _frameDecoration(
-          cornerRadius: collageManager.cornerRadius,
-          intensity: collageManager.shadowIntensity,
+          cornerRadius: widget.collageManager.cornerRadius,
+          intensity: widget.collageManager.shadowIntensity,
           frameColor: frameColor,
           isDarkMode: isDarkMode,
         ),
@@ -101,7 +123,7 @@ class PhotoBoxWidget extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(
-                collageManager.cornerRadius,
+                widget.collageManager.cornerRadius,
               ),
               child: ColoredBox(
                 color: frameColor,
@@ -124,7 +146,7 @@ class PhotoBoxWidget extends StatelessWidget {
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(
-                              collageManager.cornerRadius,
+                              widget.collageManager.cornerRadius,
                             ),
                             border: Border.all(
                               color: placeholderBorderColor,
@@ -136,9 +158,9 @@ class PhotoBoxWidget extends StatelessWidget {
                     if (!hasImage)
                       Center(
                         child: GestureDetector(
-                          onTap: onAddPhoto == null
+                          onTap: widget.onAddPhoto == null
                               ? null
-                              : () async => await onAddPhoto!(),
+                              : () async => await widget.onAddPhoto!(),
                           child: Icon(
                             Icons.add_a_photo,
                             color: theme.colorScheme.primary,
@@ -146,17 +168,17 @@ class PhotoBoxWidget extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (hasGlobalBorder && globalBorderWidth > 0)
+                    if (widget.hasGlobalBorder && widget.globalBorderWidth > 0)
                       IgnorePointer(
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(
-                            collageManager.cornerRadius,
+                            widget.collageManager.cornerRadius,
                           ),
                           child: SmartBorderOverlay(
                             box: box,
-                            borderWidth: globalBorderWidth,
-                            borderColor: globalBorderColor,
-                            otherBoxes: otherBoxes,
+                            borderWidth: widget.globalBorderWidth,
+                            borderColor: widget.globalBorderColor,
+                            otherBoxes: widget.otherBoxes,
                           ),
                         ),
                       ),
@@ -164,15 +186,16 @@ class PhotoBoxWidget extends StatelessWidget {
                 ),
               ),
             ),
-            if (isSelected && hasImage)
+            if (widget.isSelected && hasImage)
               Positioned(
                 bottom: 10,
                 left: 0,
                 right: 0,
                 child: Center(
                   child: _SelectionButtons(
-                    onEdit: hasImage ? onEdit : null,
-                    onDelete: onDelete,
+                    onEdit: hasImage ? widget.onEdit : null,
+                    onDelete: widget.onDelete,
+                    showEdit: widget.collageManager.isCustomMode,
                   ),
                 ),
               ),
@@ -181,13 +204,58 @@ class PhotoBoxWidget extends StatelessWidget {
       ),
     );
   }
+
+  void _handleInlineScaleStart(ScaleStartDetails details) {
+    _inlineScaleStart = widget.box.photoScale;
+    _inlineAlignmentStart = widget.box.alignment;
+    _inlineFocalStart = details.localFocalPoint;
+  }
+
+  void _handleInlineScaleUpdate(ScaleUpdateDetails details) {
+    if (!_inlineEditing) return;
+    final renderBox = context.findRenderObject() as RenderBox?;
+    final size = renderBox?.size;
+    if (size == null) return;
+
+    double nextScale = (_inlineScaleStart * details.scale).clamp(1.0, 8.0);
+    final overflowW = size.width * (nextScale - 1);
+    final overflowH = size.height * (nextScale - 1);
+    final dx = details.localFocalPoint.dx - _inlineFocalStart.dx;
+    final dy = details.localFocalPoint.dy - _inlineFocalStart.dy;
+
+    double nextAlignX = _inlineAlignmentStart.x;
+    double nextAlignY = _inlineAlignmentStart.y;
+    if (overflowW > 0.0001) {
+      nextAlignX = (_inlineAlignmentStart.x - (dx / (overflowW / 2)))
+          .clamp(-1.0, 1.0);
+    }
+    if (overflowH > 0.0001) {
+      nextAlignY = (_inlineAlignmentStart.y - (dy / (overflowH / 2)))
+          .clamp(-1.0, 1.0);
+    }
+
+    setState(() {
+      widget.box.photoScale = nextScale;
+      widget.box.alignment = Alignment(nextAlignX, nextAlignY);
+    });
+    widget.collageManager.refresh();
+  }
+
+  void _handleInlineScaleEnd(ScaleEndDetails details) {
+    // Values already persisted via setState/manager refresh.
+  }
 }
 
 class _SelectionButtons extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback onDelete;
+  final bool showEdit;
 
-  const _SelectionButtons({required this.onEdit, required this.onDelete});
+  const _SelectionButtons({
+    required this.onEdit,
+    required this.onDelete,
+    this.showEdit = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -199,22 +267,25 @@ class _SelectionButtons extends StatelessWidget {
             ? const SizedBox(height: 12)
             : const SizedBox(width: 14);
 
+        final bool includeEdit = showEdit && onEdit != null;
+
+        List<Widget> controls = [];
+        if (includeEdit) {
+          controls.add(_ToolbarIcon(icon: Icons.edit_outlined, onTap: onEdit));
+        }
+        if (includeEdit) {
+          controls.add(spacing);
+        }
+        controls.add(_ToolbarIcon(icon: Icons.delete_outline, onTap: onDelete));
+
         final Widget content = useColumn
             ? Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  _ToolbarIcon(icon: Icons.edit_outlined, onTap: onEdit),
-                  spacing,
-                  _ToolbarIcon(icon: Icons.delete_outline, onTap: onDelete),
-                ],
+                children: controls,
               )
             : Row(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  _ToolbarIcon(icon: Icons.edit_outlined, onTap: onEdit),
-                  spacing,
-                  _ToolbarIcon(icon: Icons.delete_outline, onTap: onDelete),
-                ],
+                children: controls,
               );
 
         return DecoratedBox(
