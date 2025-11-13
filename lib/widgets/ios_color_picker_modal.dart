@@ -72,22 +72,31 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
 
   @override
   Widget build(BuildContext context) {
-    const double solidPreferredHeight = 320;
-    const double gradientPreferredHeight = 430;
     final media = MediaQuery.of(context);
     final size = media.size;
-    final double availableHeight = size.height - media.viewPadding.bottom;
+    const double solidPreferredHeight = 340.0;
+    const double gradientPreferredHeight = 460.0;
+    final bool isTablet = size.shortestSide >= 600;
+    final double safeHeight = size.height -
+        media.viewPadding.top -
+        media.viewPadding.bottom;
     final double preferredHeight = _mode == BackgroundMode.solid
         ? solidPreferredHeight
         : gradientPreferredHeight;
-    final double heightFactor = _mode == BackgroundMode.solid ? 0.9 : 0.92;
-    final double maxUsable =
-        availableHeight > 0 ? availableHeight * heightFactor : preferredHeight;
-    final double rawHeight =
-        math.min(preferredHeight, maxUsable > 0 ? maxUsable : preferredHeight);
-    final double panelHeight = rawHeight
-        .clamp(0.0, availableHeight > 0 ? availableHeight : preferredHeight)
-        .toDouble();
+    final double minHeight =
+        _mode == BackgroundMode.solid ? 300.0 : 360.0; // keep controls visible
+    final double phoneFactor = _mode == BackgroundMode.solid ? 0.82 : 0.88;
+    final double tabletFactor = _mode == BackgroundMode.solid ? 0.58 : 0.64;
+    final double heightFactor = isTablet ? tabletFactor : phoneFactor;
+    final double maxHeight =
+        safeHeight > 0 ? safeHeight : preferredHeight;
+    final double computed = safeHeight > 0
+        ? safeHeight * heightFactor
+        : preferredHeight;
+    final double target = math.min(preferredHeight, computed);
+    final double minBound = math.min(minHeight, maxHeight);
+    final double panelHeight =
+        target.clamp(minBound, maxHeight).toDouble();
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -131,11 +140,15 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
               ),
             ),
             const SizedBox(height: 8),
+            _panelHeaderLabel(),
+            const SizedBox(height: 6),
             _buildModeTabs(),
             const SizedBox(height: 4),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 28),
+                padding: EdgeInsets.only(
+                  bottom: media.viewPadding.bottom + 2,
+                ),
                 child: _mode == BackgroundMode.solid
                     ? _buildHslControls()
                     : _buildGradientTwoColorCompact(),
@@ -158,6 +171,32 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     if (!_interactionActive) return;
     _interactionActive = false;
     widget.onInteractionEnd?.call();
+  }
+
+  Widget _panelHeaderLabel() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.wallpaper_outlined,
+            size: 16,
+            color: Colors.black.withValues(alpha: 0.75),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            'Background Editor',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.black.withValues(alpha: 0.82),
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildModeTabs() {
@@ -244,7 +283,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
             alignment: Alignment.centerRight,
             child: _buildResetButton(onPressed: _resetToWhite),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 2),
         ],
       ),
     );
@@ -510,7 +549,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
             child: _buildResetButton(onPressed: _resetGradientStops),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 2),
       ],
     );
   }
