@@ -78,10 +78,10 @@ class PhotoBoxWidget extends StatelessWidget {
     );
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         onTap();
         if (!hasImage && onAddPhoto != null) {
-          onAddPhoto!();
+          await onAddPhoto!();
         }
       },
       onDoubleTap: onBringToFront,

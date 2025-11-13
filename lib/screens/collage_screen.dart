@@ -261,8 +261,8 @@ class _CollageScreenState extends State<CollageScreen> {
                           );
                         },
                         onBoxDeleted: (box) => collageManager.deleteBox(box),
-                        onAddPhotoToBox: (box) async =>
-                            await collageManager.addPhotoToBox(box),
+                        onAddPhotoToBox: (box) =>
+                            _handleAddPhotoToBox(collageManager, box),
                         onResizeHandleDragged: (box, dx, dy, alignment) {
                           collageManager.resizeBoxFromHandle(
                             box,
@@ -306,11 +306,7 @@ class _CollageScreenState extends State<CollageScreen> {
               onStylePressed: () => _openStylePanel(context, collageManager),
               onBackgroundPressed: () =>
                   _openBackgroundPicker(context, collageManager),
-              onAddPhotoPressed: () {
-                Navigator.of(context).maybePop();
-                setState(() => _activeTool = null);
-                collageManager.addPhotoBox();
-              },
+              onAddPhotoPressed: () => _handleAddPhotoButton(collageManager),
               onSavePressed: () {
                 Navigator.of(context).maybePop();
                 setState(() => _activeTool = null);
@@ -364,6 +360,42 @@ class _CollageScreenState extends State<CollageScreen> {
     }
     setState(() => _activeTool = 'background');
     _showColorPicker(context, manager);
+  }
+
+  Future<void> _handleAddPhotoButton(CollageManager manager) async {
+    Navigator.of(context).maybePop();
+    setState(() => _activeTool = null);
+    await _runWithBlockingDialog(
+      action: () => manager.addPhotoBox(),
+    );
+  }
+
+  Future<void> _handleAddPhotoToBox(
+    CollageManager manager,
+    PhotoBox box,
+  ) async {
+    await _runWithBlockingDialog(
+      action: () => manager.addPhotoToBox(box),
+    );
+  }
+
+  Future<void> _runWithBlockingDialog({
+    required Future<void> Function() action,
+  }) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.transparent,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      await action();
+    } finally {
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+    }
   }
 
   // Legacy custom aspect dialog removed (handled via bottom sheet)
@@ -880,7 +912,8 @@ class _CollageScreenState extends State<CollageScreen> {
   BoxConstraints _fullWidthSheetConstraints(BuildContext context) {
     final media = MediaQuery.of(context);
     final width = media.size.width;
-    final horizontalSafeArea = media.viewPadding.left + media.viewPadding.right;
+    final horizontalSafeArea =
+        media.viewPadding.left + media.viewPadding.right;
     final effectiveWidth = width - horizontalSafeArea > 0
         ? width - horizontalSafeArea
         : width;
