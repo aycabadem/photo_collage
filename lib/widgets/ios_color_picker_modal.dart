@@ -51,11 +51,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     _selectedOpacity = widget.currentOpacity;
     _mode = widget.initialMode;
     _gradient = widget.initialGradient ?? _defaultGradientSpec();
-    final hsl = HSLColor.fromColor(_selectedColor);
-    _h = hsl.hue;
-    _s = 1.0; // Start Saturation slider at max by default
-    _l = hsl.lightness;
-    // İlk açılışta mevcut rengi aynen koru; otomatik doygunluk/aydınlık ayarı yapma.
+    _primeSolidHslFromColor(_selectedColor);
 
     // Initialize gradient A/B from current gradient spec (first/last stops)
     if (_gradient.stops.length >= 2) {
@@ -260,10 +256,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
       _mode = BackgroundMode.solid;
       _selectedColor = Colors.white;
       _selectedOpacity = 1.0;
-      final hsl = HSLColor.fromColor(_selectedColor);
-      _h = hsl.hue;
-      _s = 0.0;
-      _l = hsl.lightness;
+      _primeSolidHslFromColor(_selectedColor);
     });
     widget.onColorChanged(_selectedColor, _selectedOpacity);
     _endInteraction();
@@ -671,8 +664,8 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     final c = fromA ? _gA : _gB;
     final hsl = HSLColor.fromColor(c);
     _gH = hsl.hue;
-    _gS = hsl.saturation < 0.6 ? 0.9 : hsl.saturation;
-    _gL = (hsl.lightness > 0.85 || hsl.lightness < 0.15) ? 0.5 : hsl.lightness;
+    _gS = _normalizeSaturation(hsl.saturation);
+    _gL = _normalizeLightness(hsl.lightness);
   }
 
   void _commitActiveHsl() {
@@ -686,6 +679,18 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
     });
     _applyGradientLive();
   }
+
+  void _primeSolidHslFromColor(Color color) {
+    final hsl = HSLColor.fromColor(color);
+    _h = hsl.hue;
+    _s = _normalizeSaturation(hsl.saturation);
+    _l = _normalizeLightness(hsl.lightness);
+  }
+
+  double _normalizeSaturation(double value) => value < 0.6 ? 0.9 : value;
+
+  double _normalizeLightness(double value) =>
+      (value > 0.85 || value < 0.15) ? 0.5 : value;
 
   void _applyGradientLive() {
     _gradient = GradientSpec(
