@@ -186,7 +186,7 @@ class _IOSColorPickerModalState extends State<IOSColorPickerModal> {
           ),
           const SizedBox(width: 6),
           Text(
-            'Background Editor',
+            'Background Color Picker',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
