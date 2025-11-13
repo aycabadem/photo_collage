@@ -190,8 +190,6 @@ class _HistoryIconButton extends StatelessWidget {
 
 class _CollageScreenState extends State<CollageScreen> {
   static const MethodChannel _galleryChannel = MethodChannel('collage/gallery');
-  final TransformationController _transformationController =
-      TransformationController();
 
   String? _activeTool;
 
@@ -241,63 +239,47 @@ class _CollageScreenState extends State<CollageScreen> {
 
                 return GestureDetector(
                   onTap: () {
-                    // Deselect when tapping outside the InteractiveViewer
+                    // Deselect when tapping outside the canvas
                     collageManager.selectBox(null);
                   },
-                  child: InteractiveViewer(
-                    transformationController: _transformationController,
-                    minScale: 0.3,
-                    maxScale: 3.0,
-                    panEnabled: true,
-                    scaleEnabled: true,
-                    boundaryMargin: EdgeInsets.zero,
-                    child: SizedBox(
-                      width: constraints.maxWidth,
-                      height: constraints.maxHeight,
-                      child: Center(
-                        child: CollageCanvas(
-                          templateSize: collageManager.templateSize,
-                          photoBoxes: collageManager.photoBoxes,
-                          selectedBox: collageManager.selectedBox,
-                          animateSize: true,
-                          getCurrentScale: _getCurrentScale,
-                          onBoxSelected: (box) => collageManager.selectBox(box),
-                          onBoxBroughtToFront: (box) =>
-                              collageManager.bringBoxToFront(box),
-                          onBoxDragged: (box, details) {
-                            // Handle box dragging with scale
-                            final scale = _getCurrentScale();
-                            collageManager.moveBox(
-                              box,
-                              Offset(
-                                details.delta.dx / scale,
-                                details.delta.dy / scale,
-                              ),
-                            );
-                          },
-                          onBoxDeleted: (box) => collageManager.deleteBox(box),
-                          onAddPhotoToBox: (box) async =>
-                              await collageManager.addPhotoToBox(box),
-                          onResizeHandleDragged: (box, dx, dy, alignment) {
-                            // Handle resize with scale
-                            final scale = _getCurrentScale();
-                            collageManager.resizeBoxFromHandle(
-                              box,
-                              alignment,
-                              dx / scale,
-                              dy / scale,
-                            );
-                          },
-                          onBackgroundTap: () => collageManager.selectBox(null),
-                          guidelines: collageManager.selectedBox != null
-                              ? collageManager.getAlignmentGuidelines(
-                                  collageManager.selectedBox!,
-                                )
-                              : [],
-                          collageManager: collageManager,
-                          onEditBox: (box) =>
-                              _openPhotoEditor(context, collageManager, box),
-                        ),
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    child: Center(
+                      child: CollageCanvas(
+                        templateSize: collageManager.templateSize,
+                        photoBoxes: collageManager.photoBoxes,
+                        selectedBox: collageManager.selectedBox,
+                        animateSize: true,
+                        onBoxSelected: (box) => collageManager.selectBox(box),
+                        onBoxBroughtToFront: (box) =>
+                            collageManager.bringBoxToFront(box),
+                        onBoxDragged: (box, details) {
+                          collageManager.moveBox(
+                            box,
+                            details.delta,
+                          );
+                        },
+                        onBoxDeleted: (box) => collageManager.deleteBox(box),
+                        onAddPhotoToBox: (box) async =>
+                            await collageManager.addPhotoToBox(box),
+                        onResizeHandleDragged: (box, dx, dy, alignment) {
+                          collageManager.resizeBoxFromHandle(
+                            box,
+                            alignment,
+                            dx,
+                            dy,
+                          );
+                        },
+                        onBackgroundTap: () => collageManager.selectBox(null),
+                        guidelines: collageManager.selectedBox != null
+                            ? collageManager.getAlignmentGuidelines(
+                                collageManager.selectedBox!,
+                              )
+                            : [],
+                        collageManager: collageManager,
+                        onEditBox: (box) =>
+                            _openPhotoEditor(context, collageManager, box),
                       ),
                     ),
                   ),
@@ -382,12 +364,6 @@ class _CollageScreenState extends State<CollageScreen> {
     }
     setState(() => _activeTool = 'background');
     _showColorPicker(context, manager);
-  }
-
-  /// Get current scale from transformation controller
-  double _getCurrentScale() {
-    final matrix = _transformationController.value;
-    return matrix.getMaxScaleOnAxis();
   }
 
   // Legacy custom aspect dialog removed (handled via bottom sheet)

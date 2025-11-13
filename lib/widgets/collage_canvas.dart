@@ -44,8 +44,6 @@ class CollageCanvas extends StatelessWidget {
   final List<AlignmentGuideline> guidelines;
 
   final CollageManager collageManager;
-  // Callback to read current zoom scale from parent (InteractiveViewer)
-  final double Function() getCurrentScale;
   // Trigger edit flow for the selected photo box
   final void Function(PhotoBox box) onEditBox;
 
@@ -64,7 +62,6 @@ class CollageCanvas extends StatelessWidget {
     this.guidelines = const [],
     required this.collageManager,
     this.animateSize = true,
-    required this.getCurrentScale,
     required this.onEditBox,
   });
 
@@ -458,8 +455,7 @@ class CollageCanvas extends StatelessWidget {
             onDragStart: collageManager.startHistoryCheckpoint,
             onDragEnd: collageManager.finalizeHistoryCheckpoint,
             onDrag: (dxScreen) {
-              final double scale = getCurrentScale();
-              final double deltaTemplate = (dxScreen / scale) / sX;
+              final double deltaTemplate = dxScreen / sX;
               final double edgeX = selected.position.dx;
               final negativeGroup = _boxesWithRightEdgeAt(edgeX, eps);
               final positiveGroup = _boxesWithLeftEdgeAt(edgeX, eps);
@@ -496,8 +492,7 @@ class CollageCanvas extends StatelessWidget {
             onDragStart: collageManager.startHistoryCheckpoint,
             onDragEnd: collageManager.finalizeHistoryCheckpoint,
             onDrag: (dxScreen) {
-              final double scale = getCurrentScale();
-              final double deltaTemplate = (dxScreen / scale) / sX;
+              final double deltaTemplate = dxScreen / sX;
               final double edgeX = selected.position.dx + selected.size.width;
               final negativeGroup = _boxesWithRightEdgeAt(edgeX, eps);
               final positiveGroup = _boxesWithLeftEdgeAt(edgeX, eps);
@@ -533,8 +528,7 @@ class CollageCanvas extends StatelessWidget {
             onDragStart: collageManager.startHistoryCheckpoint,
             onDragEnd: collageManager.finalizeHistoryCheckpoint,
             onDrag: (dyScreen) {
-              final double scale = getCurrentScale();
-              final double deltaTemplate = (dyScreen / scale) / sY;
+              final double deltaTemplate = dyScreen / sY;
               final double edgeY = selected.position.dy;
               final negativeGroup = _boxesWithBottomEdgeAt(edgeY, eps);
               final positiveGroup = _boxesWithTopEdgeAt(edgeY, eps);
@@ -570,8 +564,7 @@ class CollageCanvas extends StatelessWidget {
             onDragStart: collageManager.startHistoryCheckpoint,
             onDragEnd: collageManager.finalizeHistoryCheckpoint,
             onDrag: (dyScreen) {
-              final double scale = getCurrentScale();
-              final double deltaTemplate = (dyScreen / scale) / sY;
+              final double deltaTemplate = dyScreen / sY;
               final double edgeY = selected.position.dy + selected.size.height;
               final negativeGroup = _boxesWithBottomEdgeAt(edgeY, eps);
               final positiveGroup = _boxesWithTopEdgeAt(edgeY, eps);
