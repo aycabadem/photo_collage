@@ -88,7 +88,6 @@ class PhotoBoxWidget extends StatelessWidget {
       onPanStart: (_) => onPanStart?.call(),
       onPanUpdate: onPanUpdate,
       onPanEnd: (_) => onPanEnd?.call(),
-      onPanCancel: () => onPanEnd?.call(),
       behavior: HitTestBehavior.opaque, // Prevent background taps
       child: Container(
         decoration: _frameDecoration(
