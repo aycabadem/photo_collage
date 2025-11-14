@@ -307,7 +307,7 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   CustomLayoutSnapshot? _customLayoutSnapshot;
 
   // Export resolution state
-  int _selectedExportWidth = _resolutionOptions[1].width;
+  int _selectedExportWidth = _resolutionOptions.first.width;
 
   // Image picker
   final ImagePicker _imagePicker = ImagePicker();

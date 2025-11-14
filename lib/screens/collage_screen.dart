@@ -737,77 +737,119 @@ class _CollageScreenState extends State<CollageScreen> {
                               for (final option in options)
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 10),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(14),
-                                    onTap: () {
-                                      setState(() => selectedWidth = option.width);
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 14,
-                                        vertical: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(14),
-                                        color: Colors.white,
-                                        border: Border.all(
-                                          color: selectedWidth == option.width
-                                              ? scheme.primary
-                                              : scheme.outline.withValues(alpha: 0.35),
-                                          width: 1.2,
+                                  child: Opacity(
+                                    opacity: option.label == 'Ultra' &&
+                                            !(manager.isPremium || manager.isTrialActive)
+                                        ? 0.45
+                                        : 1,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(14),
+                                      onTap: option.label == 'Ultra' &&
+                                              !(manager.isPremium || manager.isTrialActive)
+                                          ? null
+                                          : () {
+                                              setState(
+                                                () => selectedWidth = option.width,
+                                              );
+                                            },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 12,
                                         ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 22,
-                                            height: 22,
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(14),
+                                          color: Colors.white,
+                                          border: Border.all(
+                                            color: selectedWidth == option.width
+                                                ? scheme.primary
+                                                : scheme.outline.withValues(alpha: 0.35),
+                                            width: 1.2,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 22,
+                                              height: 22,
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(
+                                                  color: selectedWidth == option.width
+                                                      ? scheme.primary
+                                                      : scheme.outline
+                                                          .withValues(alpha: 0.6),
+                                                  width: 1.4,
+                                                ),
                                                 color: selectedWidth == option.width
                                                     ? scheme.primary
-                                                    : scheme.outline.withValues(alpha: 0.6),
-                                                width: 1.4,
+                                                    : Colors.transparent,
                                               ),
-                                              color: selectedWidth == option.width
-                                                  ? scheme.primary
-                                                  : Colors.transparent,
+                                              alignment: Alignment.center,
+                                              child: selectedWidth == option.width
+                                                  ? const Icon(
+                                                      Icons.check,
+                                                      size: 14,
+                                                      color: Colors.white,
+                                                    )
+                                                  : null,
                                             ),
-                                            alignment: Alignment.center,
-                                            child: selectedWidth == option.width
-                                                ? const Icon(
-                                                    Icons.check,
-                                                    size: 14,
-                                                    color: Colors.white,
-                                                  )
-                                                : null,
-                                          ),
-                                          const SizedBox(width: 14),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  option.label,
-                                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                                    fontWeight: FontWeight.w600,
+                                            const SizedBox(width: 14),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Text(
+                                                        option.label,
+                                                        style: theme.textTheme.bodyMedium
+                                                            ?.copyWith(
+                                                          fontWeight: FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                      if (option.label == 'Ultra') ...[
+                                                        const SizedBox(width: 6),
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                            horizontal: 6,
+                                                            vertical: 2,
+                                                          ),
+                                                          decoration: BoxDecoration(
+                                                            color: scheme.primary
+                                                                .withValues(alpha: 0.1),
+                                                            borderRadius: BorderRadius.circular(10),
+                                                          ),
+                                                          child: Text(
+                                                            'Premium',
+                                                            style: theme.textTheme.labelSmall?.copyWith(
+                                                              fontSize: 11,
+                                                              color: scheme.primary,
+                                                              fontWeight: FontWeight.w600,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ],
                                                   ),
-                                                ),
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  '${option.width}px × '
-                                                  '${(option.width / aspectRatio).round()}px',
-                                                  style: theme.textTheme.labelSmall?.copyWith(
-                                                    fontSize: 11,
-                                                    color: scheme.onSurface.withValues(alpha: 0.65),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    '${option.width}px × '
+                                                    '${(option.width / aspectRatio).round()}px',
+                                                    style:
+                                                        theme.textTheme.labelSmall?.copyWith(
+                                                      fontSize: 11,
+                                                      color: scheme.onSurface
+                                                          .withValues(alpha: 0.65),
+                                                    ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
