@@ -557,15 +557,20 @@ class _CollageScreenState extends State<CollageScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              ElevatedButton.icon(
+              FilledButton.icon(
                 onPressed: () async {
                   Navigator.of(dialogContext).pop();
                   await _openPhotosApp(context);
                 },
-                icon: const Icon(Icons.photo_library_outlined),
+                icon: const Icon(Icons.photo_library_outlined, color: Colors.white),
                 label: const Text('Open Photos'),
-                style: ElevatedButton.styleFrom(
+                style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(44),
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               TextButton(
