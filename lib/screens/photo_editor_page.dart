@@ -33,10 +33,10 @@ class _PhotoEditorPageState extends State<PhotoEditorPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Photo'),
-        actions: [
-          TextButton(onPressed: _resetToOriginal, child: const Text('Reset')),
-          TextButton(onPressed: _saveChanges, child: const Text('Save')),
-        ],
+      ),
+      bottomNavigationBar: _EditorBottomBar(
+        onReset: _resetToOriginal,
+        onSave: _saveChanges,
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -336,5 +336,51 @@ class _PhotoEditorPageState extends State<PhotoEditorPage> {
     }
     _alignmentRetry = 0;
     _applyInitialViewFromPhotoBox(state, details);
+  }
+}
+
+class _EditorBottomBar extends StatelessWidget {
+  final VoidCallback onReset;
+  final VoidCallback onSave;
+
+  const _EditorBottomBar({
+    required this.onReset,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            OutlinedButton(
+              onPressed: onReset,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(120, 44),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('Reset'),
+            ),
+            const SizedBox(width: 16),
+            FilledButton(
+              onPressed: onSave,
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(140, 44),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
