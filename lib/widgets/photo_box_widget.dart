@@ -220,13 +220,16 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     final dy = details.localFocalPoint.dy - _inlineFocalStart.dy;
     final double widthHalf = size.width / 2;
     final double heightHalf = size.height / 2;
+    final double scaleFactor = nextScale <= 0 ? 1.0 : nextScale;
+    final double widthFactor = widthHalf * scaleFactor;
+    final double heightFactor = heightHalf * scaleFactor;
     final Alignment currentAlignment = widget.box.alignment;
 
     final double nextAlignX = (currentAlignment.x -
-            (widthHalf > 0 ? dx / widthHalf : 0.0))
+            (widthFactor > 0 ? dx / widthFactor : 0.0))
         .clamp(-1.0, 1.0);
     final double nextAlignY = (currentAlignment.y -
-            (heightHalf > 0 ? dy / heightHalf : 0.0))
+            (heightFactor > 0 ? dy / heightFactor : 0.0))
         .clamp(-1.0, 1.0);
 
     setState(() {
