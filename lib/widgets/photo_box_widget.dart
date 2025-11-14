@@ -410,15 +410,19 @@ class _SelectionButtons extends StatelessWidget {
                 children: controls,
               );
 
+        final BorderRadius radius = BorderRadius.circular(useColumn ? 14 : 18);
         return DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(useColumn ? 18 : 28),
+            color: Colors.white,
+            borderRadius: radius,
+            border: Border.all(
+              color: Colors.black.withValues(alpha: 0.08),
+            ),
           ),
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: useColumn ? 6 : 8,
-              vertical: useColumn ? 8 : 6,
+              vertical: useColumn ? 8 : 8,
             ),
             child: content,
           ),
@@ -438,21 +442,18 @@ class _ToolbarIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color activeColor = Theme.of(context).colorScheme.primary;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.92),
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: 16,
-          color: onTap != null ? activeColor : Colors.grey,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(
+            icon,
+            size: 20,
+            color: onTap != null ? activeColor : Colors.grey,
+          ),
         ),
       ),
     );
