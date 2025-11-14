@@ -107,6 +107,9 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     final box = widget.box;
     final bool hasImage = box.imageFile != null;
     final bool isLoading = box.isLoading;
+    final bool isCustomMode = widget.collageManager.isCustomMode;
+    final bool inlineLoading = isLoading && !isCustomMode;
+    final bool overlayLoading = isLoading && isCustomMode;
     final theme = Theme.of(context);
     final Color placeholderBorderColor =
         theme.colorScheme.primary.withValues(alpha: 0.65);
@@ -197,7 +200,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                           ),
                         ),
                       ),
-                    if (!hasImage && isLoading)
+                    if (!hasImage && inlineLoading)
                       const Center(
                         child: SizedBox(
                           width: 28,
@@ -205,7 +208,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                           child: CircularProgressIndicator(strokeWidth: 2.2),
                         ),
                       ),
-                    if (hasImage && isLoading)
+                    if (hasImage && inlineLoading)
                       const Positioned.fill(
                         child: IgnorePointer(
                           child: Center(
@@ -237,6 +240,24 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                 ),
               ),
             ),
+            if (overlayLoading)
+              Positioned.fill(
+                child: AbsorbPointer(
+                  absorbing: true,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.35),
+                    ),
+                    child: const Center(
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: CircularProgressIndicator(strokeWidth: 2.6),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             if (widget.isSelected && hasImage)
               Positioned(
                 bottom: 10,
