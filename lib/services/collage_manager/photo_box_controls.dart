@@ -63,63 +63,88 @@ mixin _CollagePhotoBoxControls on _CollageManagerBase {
   }
 
   Future<void> addPhotoBox() async {
-    final XFile? pickedFile = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 95,
-    );
+    PhotoBox? pendingSlot;
+    final bool fillingTemplateSlot = _currentLayout != null && !_isCustomMode;
+    if (fillingTemplateSlot) {
+      pendingSlot = _nextLayoutSlotForInsertion();
+      if (pendingSlot == null) {
+        return;
+      }
+      pendingSlot.isLoading = true;
+      notifyListeners();
+    }
 
-    if (pickedFile == null) return;
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 95,
+      );
 
-    if (_currentLayout != null && !_isCustomMode) {
-      final PhotoBox? target = _nextLayoutSlotForInsertion();
-      if (target == null) {
+      if (pickedFile == null) return;
+
+      if (fillingTemplateSlot && pendingSlot != null) {
+        pendingSlot
+          ..imageFile = File(pickedFile.path)
+          ..imagePath = pickedFile.path
+          ..imageFit = BoxFit.cover
+          ..photoOffset = Offset.zero
+          ..photoScale = 1.0
+          ..cropRect = const Rect.fromLTWH(0, 0, 1, 1)
+          ..alignment = Alignment.center
+          ..rotationRadians = 0.0
+          ..rotationBaseRadians = 0.0
+          ..isLoading = false;
+
+        notifyListeners();
         return;
       }
 
-      target.imageFile = File(pickedFile.path);
-      target.imagePath = pickedFile.path;
-      target.imageFit = BoxFit.cover;
-      target.photoOffset = Offset.zero;
-      target.photoScale = 1.0;
-      target.cropRect = const Rect.fromLTWH(0, 0, 1, 1);
-      target.alignment = Alignment.center;
-      target.rotationRadians = 0.0;
-      target.rotationBaseRadians = 0.0;
+      const Size defaultSize = Size(220, 220);
+      final Offset pos = CollageUtils.findNonOverlappingPosition(
+        _photoBoxes,
+        _templateSize,
+        defaultSize,
+      );
 
+      final newBox = PhotoBox(
+        position: pos,
+        size: defaultSize,
+        imageFile: File(pickedFile.path),
+        imagePath: pickedFile.path,
+      );
+
+      _photoBoxes.add(newBox);
       notifyListeners();
-      return;
+    } finally {
+      if (pendingSlot != null && pendingSlot.isLoading) {
+        pendingSlot.isLoading = false;
+        notifyListeners();
+      }
     }
-
-    const Size defaultSize = Size(220, 220);
-    final Offset pos = CollageUtils.findNonOverlappingPosition(
-      _photoBoxes,
-      _templateSize,
-      defaultSize,
-    );
-
-    final newBox = PhotoBox(
-      position: pos,
-      size: defaultSize,
-      imageFile: File(pickedFile.path),
-      imagePath: pickedFile.path,
-    );
-
-    _photoBoxes.add(newBox);
-    notifyListeners();
   }
 
   Future<void> addPhotoToBox(PhotoBox targetBox) async {
-    final XFile? pickedFile = await _imagePicker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 95,
-    );
-
-    if (pickedFile == null) return;
-
-    targetBox.imageFile = File(pickedFile.path);
-    targetBox.imagePath = pickedFile.path;
-
+    if (targetBox.isLoading) return;
+    targetBox.isLoading = true;
     notifyListeners();
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 95,
+      );
+
+      if (pickedFile == null) return;
+
+      targetBox.imageFile = File(pickedFile.path);
+      targetBox.imagePath = pickedFile.path;
+      targetBox.isLoading = false;
+      notifyListeners();
+    } finally {
+      if (targetBox.isLoading) {
+        targetBox.isLoading = false;
+        notifyListeners();
+      }
+    }
   }
 
   void deleteBox(PhotoBox box) {

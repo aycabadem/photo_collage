@@ -35,6 +35,9 @@ class PhotoBox {
   /// Rotation baseline captured at gesture start (not persisted)
   double rotationBaseRadians;
 
+  /// Whether the box is currently busy loading a new image
+  bool isLoading;
+
   PhotoBox({
     required this.position,
     required this.size,
@@ -47,5 +50,6 @@ class PhotoBox {
     this.alignment = Alignment.center,
     this.rotationRadians = 0.0,
     this.rotationBaseRadians = 0.0,
+    this.isLoading = false,
   });
 }

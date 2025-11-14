@@ -365,37 +365,14 @@ class _CollageScreenState extends State<CollageScreen> {
   Future<void> _handleAddPhotoButton(CollageManager manager) async {
     Navigator.of(context).maybePop();
     setState(() => _activeTool = null);
-    await _runWithBlockingDialog(
-      action: () => manager.addPhotoBox(),
-    );
+    await manager.addPhotoBox();
   }
 
   Future<void> _handleAddPhotoToBox(
     CollageManager manager,
     PhotoBox box,
   ) async {
-    await _runWithBlockingDialog(
-      action: () => manager.addPhotoToBox(box),
-    );
-  }
-
-  Future<void> _runWithBlockingDialog({
-    required Future<void> Function() action,
-  }) async {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.transparent,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-    try {
-      await action();
-    } finally {
-      if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-      }
-    }
+    await manager.addPhotoToBox(box);
   }
 
   // Legacy custom aspect dialog removed (handled via bottom sheet)

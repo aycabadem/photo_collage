@@ -76,7 +76,9 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   ImageStreamListener? _imageStreamListener;
 
   bool get _inlineEditing =>
-      !widget.collageManager.isCustomMode && widget.box.imageFile != null;
+      !widget.collageManager.isCustomMode &&
+      widget.box.imageFile != null &&
+      !widget.box.isLoading;
 
   @override
   void initState() {
@@ -104,6 +106,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   Widget build(BuildContext context) {
     final box = widget.box;
     final bool hasImage = box.imageFile != null;
+    final bool isLoading = box.isLoading;
     final theme = Theme.of(context);
     final Color placeholderBorderColor =
         theme.colorScheme.primary.withValues(alpha: 0.65);
@@ -117,19 +120,20 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
 
     return GestureDetector(
       onTap: () async {
+        if (isLoading) return;
         widget.onTap();
         if (!hasImage && widget.onAddPhoto != null) {
           await widget.onAddPhoto!();
         }
       },
-      onDoubleTap: widget.onBringToFront,
-      onPanStart: widget.collageManager.isCustomMode
+      onDoubleTap: isLoading ? null : widget.onBringToFront,
+      onPanStart: widget.collageManager.isCustomMode && !isLoading
           ? (_) => widget.onPanStart?.call()
           : null,
-      onPanUpdate: widget.collageManager.isCustomMode && widget.isSelected
+      onPanUpdate: widget.collageManager.isCustomMode && widget.isSelected && !isLoading
           ? widget.onPanUpdate
           : null,
-      onPanEnd: widget.collageManager.isCustomMode
+      onPanEnd: widget.collageManager.isCustomMode && !isLoading
           ? (_) => widget.onPanEnd?.call()
           : null,
       onScaleStart: _inlineEditing ? _handleInlineScaleStart : null,
@@ -180,7 +184,7 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                           ),
                         ),
                       ),
-                    if (!hasImage)
+                    if (!hasImage && !isLoading)
                       Center(
                         child: GestureDetector(
                           onTap: widget.onAddPhoto == null
@@ -190,6 +194,28 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
                             Icons.add_a_photo,
                             color: theme.colorScheme.primary,
                             size: 32,
+                          ),
+                        ),
+                      ),
+                    if (!hasImage && isLoading)
+                      const Center(
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(strokeWidth: 2.2),
+                        ),
+                      ),
+                    if (hasImage && isLoading)
+                      const Positioned.fill(
+                        child: IgnorePointer(
+                          child: Center(
+                            child: SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                              ),
+                            ),
                           ),
                         ),
                       ),
