@@ -69,10 +69,34 @@ class PhotoBoxWidget extends StatefulWidget {
 
 class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   double _inlineScaleStart = 1.0;
-  Offset _inlineFocalStart = Offset.zero;
+  Size? _imagePixelSize;
+  ImageStream? _imageStream;
+  ImageStreamListener? _imageStreamListener;
 
   bool get _inlineEditing =>
       !widget.collageManager.isCustomMode && widget.box.imageFile != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveImageMetrics();
+  }
+
+  @override
+  void didUpdateWidget(PhotoBoxWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final String? oldPath = oldWidget.box.imageFile?.path;
+    final String? newPath = widget.box.imageFile?.path;
+    if (oldPath != newPath) {
+      _resolveImageMetrics();
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeImageStream();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +230,6 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
 
   void _handleInlineScaleStart(ScaleStartDetails details) {
     _inlineScaleStart = widget.box.photoScale;
-    _inlineFocalStart = details.localFocalPoint;
   }
 
   void _handleInlineScaleUpdate(ScaleUpdateDetails details) {
@@ -215,29 +238,77 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     final size = renderBox?.size;
     if (size == null) return;
 
-    double nextScale = (_inlineScaleStart * details.scale).clamp(1.0, 8.0);
-    final dx = details.localFocalPoint.dx - _inlineFocalStart.dx;
-    final dy = details.localFocalPoint.dy - _inlineFocalStart.dy;
-    final double widthHalf = size.width / 2;
-    final double heightHalf = size.height / 2;
-    final double scaleFactor = nextScale <= 0 ? 1.0 : nextScale;
-    final double widthFactor = widthHalf * scaleFactor;
-    final double heightFactor = heightHalf * scaleFactor;
+    final double nextScale =
+        (_inlineScaleStart * details.scale).clamp(1.0, 8.0);
+
+    final dx = details.focalPointDelta.dx;
+    final dy = details.focalPointDelta.dy;
+
     final Alignment currentAlignment = widget.box.alignment;
 
-    final double nextAlignX = (currentAlignment.x -
-            (widthFactor > 0 ? dx / widthFactor : 0.0))
-        .clamp(-1.0, 1.0);
-    final double nextAlignY = (currentAlignment.y -
-            (heightFactor > 0 ? dy / heightFactor : 0.0))
-        .clamp(-1.0, 1.0);
+    final double normX =
+        size.width > 0 ? dx / (size.width * nextScale) : 0.0;
+    final double normY =
+        size.height > 0 ? dy / (size.height * nextScale) : 0.0;
+
+    final double nextAlignX =
+        (currentAlignment.x - normX).clamp(-1.0, 1.0);
+    final double nextAlignY =
+        (currentAlignment.y - normY).clamp(-1.0, 1.0);
 
     setState(() {
       widget.box.photoScale = nextScale;
       widget.box.alignment = Alignment(nextAlignX, nextAlignY);
     });
+
     widget.collageManager.refresh();
-    _inlineFocalStart = details.localFocalPoint;
+  }
+
+  void _resolveImageMetrics() {
+    _disposeImageStream();
+    final file = widget.box.imageFile;
+    if (file == null) {
+      if (_imagePixelSize != null) {
+        setState(() {
+          _imagePixelSize = null;
+        });
+      }
+      return;
+    }
+
+    final ImageProvider provider = FileImage(file);
+    final ImageStream stream = provider.resolve(ImageConfiguration.empty);
+    _imageStream = stream;
+    _imageStreamListener = ImageStreamListener(
+      (ImageInfo info, bool _) {
+        if (!mounted) return;
+        final Size rawSize = Size(
+          info.image.width.toDouble(),
+          info.image.height.toDouble(),
+        );
+        if (_imagePixelSize == rawSize) return;
+        setState(() {
+          _imagePixelSize = rawSize;
+        });
+      },
+      onError: (_, __) {
+        if (!mounted) return;
+        if (_imagePixelSize != null) {
+          setState(() {
+            _imagePixelSize = null;
+          });
+        }
+      },
+    );
+    stream.addListener(_imageStreamListener!);
+  }
+
+  void _disposeImageStream() {
+    if (_imageStream != null && _imageStreamListener != null) {
+      _imageStream!.removeListener(_imageStreamListener!);
+    }
+    _imageStream = null;
+    _imageStreamListener = null;
   }
 
   void _handleInlineScaleEnd(ScaleEndDetails details) {
