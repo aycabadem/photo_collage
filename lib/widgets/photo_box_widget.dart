@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../models/photo_box.dart';
 import '../widgets/smart_border_overlay.dart';
@@ -241,15 +243,18 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     final double nextScale =
         (_inlineScaleStart * details.scale).clamp(1.0, 8.0);
 
-    final dx = details.focalPointDelta.dx;
-    final dy = details.focalPointDelta.dy;
+    final double dx = details.focalPointDelta.dx;
+    final double dy = details.focalPointDelta.dy;
 
     final Alignment currentAlignment = widget.box.alignment;
 
-    final double normX =
-        size.width > 0 ? dx / (size.width * nextScale) : 0.0;
-    final double normY =
-        size.height > 0 ? dy / (size.height * nextScale) : 0.0;
+    final double base =
+        size.shortestSide > 0 ? size.shortestSide * nextScale : 1.0;
+
+    const double speed = 1.0;
+
+    final double normX = (dx / base) * speed;
+    final double normY = (dy / base) * speed;
 
     final double nextAlignX =
         (currentAlignment.x - normX).clamp(-1.0, 1.0);
