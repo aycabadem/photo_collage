@@ -49,12 +49,21 @@ class _SimpleBottomBar extends StatelessWidget {
       child: Row(
         children: [
           _SimpleBarButton(
-            icon: const Icon(Icons.grid_view, size: 26, color: Colors.black),
+            icon: SizedBox(
+              width: 22,
+              height: 22,
+              child: SvgPicture.asset(
+                'assets/icons/grid-1x2.svg',
+                fit: BoxFit.contain,
+                colorFilter:
+                    const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              ),
+            ),
             active: activeKey == 'layout',
             onTap: onLayoutPressed,
           ),
           _SimpleBarButton(
-            icon: const Icon(Icons.border_all, size: 26, color: Colors.black),
+            icon: const Icon(Icons.tune, size: 26, color: Colors.black),
             active: activeKey == 'style',
             onTap: onStylePressed,
           ),
