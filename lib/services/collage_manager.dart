@@ -264,7 +264,7 @@ abstract class _CollageManagerBase extends ChangeNotifier {
   ];
 
   // State variables
-  AspectSpec _selectedAspect = _presets.firstWhere((a) => a.label == '9:16');
+  AspectSpec _selectedAspect = _presets.firstWhere((a) => a.label == '3:4');
   AspectSpec? _customAspect; // Last custom ratio selected via slider
   Size _templateSize = const Size(_kCollageBaseWidth, _kCollageBaseWidth);
   Size? _availableArea; // last known canvas available area from LayoutBuilder
