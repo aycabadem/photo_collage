@@ -731,36 +731,88 @@ class _CollageScreenState extends State<CollageScreen> {
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Choose the export size before saving your collage.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurface.withValues(alpha: 0.7),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          RadioGroup<int>(
-                            groupValue: selectedWidth,
-                            onChanged: (value) {
-                              if (value == null) return;
-                              setState(() => selectedWidth = value);
-                            },
-                            child: Column(
-                              children: [
-                                for (final option in options)
-                                  RadioListTile<int>(
-                                    value: option.width,
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(
-                                      '${option.label} (${option.width}px)',
-                                    ),
-                                    subtitle: Text(
-                                      '${option.width} x '
-                                      '${(option.width / aspectRatio).round()}px',
+                          const SizedBox(height: 12),
+                          Column(
+                            children: [
+                              for (final option in options)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 10),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(14),
+                                    onTap: () {
+                                      setState(() => selectedWidth = option.width);
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 14,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(14),
+                                        color: Colors.white,
+                                        border: Border.all(
+                                          color: selectedWidth == option.width
+                                              ? scheme.primary
+                                              : scheme.outline.withValues(alpha: 0.35),
+                                          width: 1.2,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 22,
+                                            height: 22,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: selectedWidth == option.width
+                                                    ? scheme.primary
+                                                    : scheme.outline.withValues(alpha: 0.6),
+                                                width: 1.4,
+                                              ),
+                                              color: selectedWidth == option.width
+                                                  ? scheme.primary
+                                                  : Colors.transparent,
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: selectedWidth == option.width
+                                                ? const Icon(
+                                                    Icons.check,
+                                                    size: 14,
+                                                    color: Colors.white,
+                                                  )
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  option.label,
+                                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  '${option.width}px × '
+                                                  '${(option.width / aspectRatio).round()}px',
+                                                  style: theme.textTheme.labelSmall?.copyWith(
+                                                    fontSize: 11,
+                                                    color: scheme.onSurface.withValues(alpha: 0.65),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                              ],
-                            ),
+                                ),
+                            ],
                           ),
                           const SizedBox(height: 12),
                           Row(
@@ -779,14 +831,9 @@ class _CollageScreenState extends State<CollageScreen> {
                                     sheetContext,
                                   ).pop(selectedWidth),
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.black,
+                                    backgroundColor: Colors.black,
+                                    foregroundColor: Colors.white,
                                     elevation: 0,
-                                    side: const BorderSide(
-                                      color: Colors.black,
-                                      width: 1.2,
-                                    ),
-                                    alignment: Alignment.center,
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 14,
                                     ),
