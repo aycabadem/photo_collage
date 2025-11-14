@@ -43,8 +43,8 @@ class _SimpleBottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final Color background = Theme.of(context).scaffoldBackgroundColor;
     return Container(
-      height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      height: 82,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       color: background,
       child: Row(
         children: [
@@ -103,22 +103,28 @@ class _SimpleBarButton extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            icon,
-            const SizedBox(height: 6),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              height: 4,
-              width: 18,
-              decoration: BoxDecoration(
-                color: active ? Colors.black : Colors.transparent,
-                borderRadius: BorderRadius.circular(999),
+        behavior: HitTestBehavior.translucent,
+        child: SizedBox(
+          height: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: icon,
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                height: 4,
+                width: 20,
+                decoration: BoxDecoration(
+                  color: active ? Colors.black : Colors.transparent,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
