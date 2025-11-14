@@ -1,16 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'screens/collage_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'services/collage_manager.dart';
 import 'services/purchase_service.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final hasSeenOnboarding =
+      prefs.getBool(OnboardingScreen.onboardingSeenKey) ?? false;
+  runApp(MyApp(initialOnboardingSeen: hasSeenOnboarding));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  const MyApp({super.key, this.initialOnboardingSeen = false});
+
+  final bool initialOnboardingSeen;
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late bool _hasSeenOnboarding;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasSeenOnboarding = widget.initialOnboardingSeen;
+  }
+
+  Future<void> _handleOnboardingCompleted() async {
+    if (!mounted) return;
+    setState(() {
+      _hasSeenOnboarding = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +127,11 @@ class MyApp extends StatelessWidget {
           ),
           useMaterial3: true,
         ),
-        home: const CollageScreen(),
+        home: _hasSeenOnboarding
+            ? const CollageScreen()
+            : OnboardingScreen(
+                onFinished: _handleOnboardingCompleted,
+              ),
       ),
     );
   }

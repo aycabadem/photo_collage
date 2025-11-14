@@ -40,6 +40,9 @@ dependencies:
   flutter_svg: ^2.0.10+1
   in_app_purchase: ^3.2.3
   http: ^1.2.1
+  shared_preferences: ^2.2.3
+  introduction_screen: ^3.1.14
+  video_player: ^2.9.2
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.1
@@ -64,6 +67,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/
+    - assets/videos/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

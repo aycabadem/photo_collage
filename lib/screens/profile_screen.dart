@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/collage_manager.dart';
 import '../services/purchase_service.dart';
+import 'onboarding_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -107,6 +108,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _openOnboardingGuide() async {
+    final navigator = Navigator.of(context);
+    await navigator.push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => OnboardingScreen(
+          onFinished: () async {
+            if (navigator.mounted) {
+              navigator.pop();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -175,6 +192,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPlanSelected: _onPlanSelected,
             onSubscribe: () =>
                 _handleSubscribe(collageManager, purchaseService),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _openOnboardingGuide,
+              icon: const Icon(Icons.play_circle_outline),
+              label: const Text('How to Use'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                foregroundColor: theme.colorScheme.primary,
+                side: BorderSide(
+                  color:
+                      theme.colorScheme.primary.withValues(alpha: 0.35),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 18),
           _LegalSection(theme: theme, purchaseService: purchaseService),
