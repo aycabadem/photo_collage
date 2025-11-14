@@ -69,7 +69,6 @@ class PhotoBoxWidget extends StatefulWidget {
 
 class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
   double _inlineScaleStart = 1.0;
-  Alignment _inlineAlignmentStart = Alignment.center;
   Offset _inlineFocalStart = Offset.zero;
 
   bool get _inlineEditing =>
@@ -207,7 +206,6 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
 
   void _handleInlineScaleStart(ScaleStartDetails details) {
     _inlineScaleStart = widget.box.photoScale;
-    _inlineAlignmentStart = widget.box.alignment;
     _inlineFocalStart = details.localFocalPoint;
   }
 
@@ -218,27 +216,25 @@ class _PhotoBoxWidgetState extends State<PhotoBoxWidget> {
     if (size == null) return;
 
     double nextScale = (_inlineScaleStart * details.scale).clamp(1.0, 8.0);
-    final overflowW = size.width * (nextScale - 1);
-    final overflowH = size.height * (nextScale - 1);
     final dx = details.localFocalPoint.dx - _inlineFocalStart.dx;
     final dy = details.localFocalPoint.dy - _inlineFocalStart.dy;
+    final double widthHalf = size.width / 2;
+    final double heightHalf = size.height / 2;
+    final Alignment currentAlignment = widget.box.alignment;
 
-    double nextAlignX = _inlineAlignmentStart.x;
-    double nextAlignY = _inlineAlignmentStart.y;
-    if (overflowW > 0.0001) {
-      nextAlignX = (_inlineAlignmentStart.x - (dx / (overflowW / 2)))
-          .clamp(-1.0, 1.0);
-    }
-    if (overflowH > 0.0001) {
-      nextAlignY = (_inlineAlignmentStart.y - (dy / (overflowH / 2)))
-          .clamp(-1.0, 1.0);
-    }
+    final double nextAlignX = (currentAlignment.x -
+            (widthHalf > 0 ? dx / widthHalf : 0.0))
+        .clamp(-1.0, 1.0);
+    final double nextAlignY = (currentAlignment.y -
+            (heightHalf > 0 ? dy / heightHalf : 0.0))
+        .clamp(-1.0, 1.0);
 
     setState(() {
       widget.box.photoScale = nextScale;
       widget.box.alignment = Alignment(nextAlignX, nextAlignY);
     });
     widget.collageManager.refresh();
+    _inlineFocalStart = details.localFocalPoint;
   }
 
   void _handleInlineScaleEnd(ScaleEndDetails details) {
